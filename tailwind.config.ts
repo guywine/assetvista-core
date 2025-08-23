@@ -61,6 +61,12 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				financial: {
+					primary: 'hsl(var(--financial-primary))',
+					success: 'hsl(var(--financial-success))',
+					warning: 'hsl(var(--financial-warning))',
+					danger: 'hsl(var(--financial-danger))'
 				}
 			},
 			borderRadius: {

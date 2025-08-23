@@ -1,14 +1,57 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { PortfolioDashboard } from '@/components/portfolio/PortfolioDashboard';
+import { Asset } from '@/types/portfolio';
+import { generateId } from '@/lib/portfolio-utils';
+
+// Sample data for demonstration
+const sampleAssets: Asset[] = [
+  {
+    id: generateId(),
+    name: 'Apple Inc.',
+    class: 'Public Equity',
+    sub_class: 'Big Tech',
+    ISIN: 'US0378331005',
+    account_entity: 'Roy',
+    account_bank: 'Julius Bär',
+    origin_currency: 'USD',
+    quantity: 100,
+    price: 175.50,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: generateId(),
+    name: 'US Treasury 10Y',
+    class: 'Fixed Income',
+    sub_class: 'Gov long',
+    ISIN: 'US912828XG48',
+    account_entity: 'Hagit',
+    account_bank: 'Julius Bär',
+    origin_currency: 'USD',
+    quantity: 10000,
+    price: 98.75,
+    ytw: 4.25,
+    maturity_date: '2034-02-15',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: generateId(),
+    name: 'Tech Venture Fund III',
+    class: 'Private Equity',
+    sub_class: 'Growth',
+    account_entity: 'SW2009',
+    account_bank: 'Poalim',
+    origin_currency: 'USD',
+    quantity: 1,
+    price: 500000,
+    factor: 0.75,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+];
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  return <PortfolioDashboard initialAssets={sampleAssets} />;
 };
 
 export default Index;
