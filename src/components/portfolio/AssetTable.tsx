@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Edit, Trash2, ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { PortfolioFilters } from './PortfolioFilters';
-import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
+import { GroupByField } from './PortfolioGrouping';
 
 interface AssetTableProps {
   assets: Asset[];
@@ -19,8 +18,6 @@ interface AssetTableProps {
   onEditAsset: (asset: Asset) => void;
   onDeleteAsset: (asset: Asset) => void;
   onAddAsset: () => void;
-  onFiltersChange: (filters: FilterCriteria) => void;
-  onGroupByChange: (groupByFields: GroupByField[]) => void;
 }
 
 export function AssetTable({ 
@@ -31,9 +28,7 @@ export function AssetTable({
   groupByFields = [],
   onEditAsset, 
   onDeleteAsset, 
-  onAddAsset,
-  onFiltersChange,
-  onGroupByChange
+  onAddAsset 
 }: AssetTableProps) {
   const [sortField, setSortField] = useState<keyof Asset | 'value' | 'percentage'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
@@ -157,29 +152,20 @@ export function AssetTable({
   };
 
   return (
-    <div className="space-y-6">
-      <PortfolioFilters
-        filters={filters}
-        onFiltersChange={onFiltersChange}
-      />
-      <PortfolioGrouping
-        groupByFields={groupByFields}
-        onGroupByChange={onGroupByChange}
-      />
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Assets ({filteredAssets.length})</CardTitle>
-            <Button 
-              onClick={onAddAsset}
-              className="bg-gradient-to-r from-financial-success to-financial-success/80 hover:from-financial-success/90 hover:to-financial-success/70 text-white shadow-lg"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Asset
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Assets ({filteredAssets.length})</CardTitle>
+          <Button 
+            onClick={onAddAsset}
+            className="bg-gradient-to-r from-financial-success to-financial-success/80 hover:from-financial-success/90 hover:to-financial-success/70 text-white shadow-lg"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Asset
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -419,8 +405,7 @@ export function AssetTable({
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
-        </CardContent>
-      </Card>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
