@@ -8,39 +8,39 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 248 250 252;
-    --foreground: 226 232 240;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
-    --card: 255 255 255;
-    --card-foreground: 51 65 85;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
 
-    --popover: 255 255 255;
-    --popover-foreground: 51 65 85;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 219 234 254;
-    --primary-foreground: 30 58 138;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 241 245 249;
-    --secondary-foreground: 71 85 105;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
 
-    --muted: 248 250 252;
-    --muted-foreground: 100 116 139;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 209 250 229;
-    --accent-foreground: 6 78 59;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
 
-    --destructive: 239 68 68;
-    --destructive-foreground: 255 255 255;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 226 232 240;
-    --input: 241 245 249;
-    --ring: 59 130 246;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
 
     /* Financial App Specific Colors */
-    --financial-primary: 30 58 138;
-    --financial-success: 6 78 59;
-    --financial-warning: 161 98 7;
-    --financial-danger: 185 28 28;
+    --financial-primary: 221.2 83.2% 53.3%;
+    --financial-success: 142.1 76.2% 36.3%;
+    --financial-warning: 47.9 95.8% 53.1%;
+    --financial-danger: 0 84.2% 60.2%;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(219 78% 22%), hsl(219 78% 15%));
