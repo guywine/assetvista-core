@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      assets: {
+        Row: {
+          account_bank: string
+          account_entity: string
+          class: string
+          created_at: string
+          factor: number | null
+          id: string
+          isin: string | null
+          maturity_date: string | null
+          name: string
+          origin_currency: string
+          price: number
+          quantity: number
+          sub_class: string
+          updated_at: string
+          user_id: string | null
+          ytw: number | null
+        }
+        Insert: {
+          account_bank: string
+          account_entity: string
+          class: string
+          created_at?: string
+          factor?: number | null
+          id?: string
+          isin?: string | null
+          maturity_date?: string | null
+          name: string
+          origin_currency: string
+          price: number
+          quantity: number
+          sub_class: string
+          updated_at?: string
+          user_id?: string | null
+          ytw?: number | null
+        }
+        Update: {
+          account_bank?: string
+          account_entity?: string
+          class?: string
+          created_at?: string
+          factor?: number | null
+          id?: string
+          isin?: string | null
+          maturity_date?: string | null
+          name?: string
+          origin_currency?: string
+          price?: number
+          quantity?: number
+          sub_class?: string
+          updated_at?: string
+          user_id?: string | null
+          ytw?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
