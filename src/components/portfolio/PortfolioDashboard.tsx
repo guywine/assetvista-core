@@ -28,8 +28,6 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     fxRates,
     lastUpdated,
     isLoading: fxLoading,
-    isUpdating: fxUpdating,
-    updateFXRates,
     updateManualRate,
   } = useFXRates();
   const [filters, setFilters] = useState<FilterCriteria>({});
@@ -160,9 +158,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           <FXRatesBar 
             fxRates={fxRates}
             lastUpdated={lastUpdated}
-            isUpdating={fxUpdating}
             onRatesChange={() => {}} // Legacy prop, not used anymore
-            onUpdateRates={updateFXRates}
             onManualRateChange={updateManualRate}
           />
 

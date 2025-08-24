@@ -2,25 +2,21 @@ import { useState } from 'react';
 import { FXRates, Currency } from '@/types/portfolio';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit2, Check, X, RefreshCw, Clock } from 'lucide-react';
+import { Edit2, Check, X, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FXRatesBarProps {
   fxRates: FXRates;
   lastUpdated: Date | null;
-  isUpdating: boolean;
   onRatesChange: (rates: FXRates) => void;
-  onUpdateRates: () => void;
   onManualRateChange: (currency: string, rate: number) => void;
 }
 
 export function FXRatesBar({ 
   fxRates, 
   lastUpdated, 
-  isUpdating, 
   onRatesChange, 
-  onUpdateRates,
   onManualRateChange 
 }: FXRatesBarProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -153,40 +149,21 @@ export function FXRatesBar({
                 </Button>
               </>
             ) : (
-              <>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={onUpdateRates}
-                      disabled={isUpdating}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                    >
-                      <RefreshCw className={`h-3 w-3 ${isUpdating ? 'animate-spin' : ''}`} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Update FX rates</p>
-                  </TooltipContent>
-                </Tooltip>
-                
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={handleStartEdit}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-                    >
-                      <Edit2 className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit manually</p>
-                  </TooltipContent>
-                </Tooltip>
-              </>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={handleStartEdit}
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Edit manually</p>
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         </div>

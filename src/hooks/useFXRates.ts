@@ -16,7 +16,6 @@ export function useFXRates() {
   const [fxRates, setFxRates] = useState<FXRates>({});
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const { toast } = useToast();
 
   // Load FX rates from database
@@ -62,36 +61,6 @@ export function useFXRates() {
     }
   };
 
-  // Update FX rates from API
-  const updateFXRates = async () => {
-    setIsUpdating(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('update-fx-rates');
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "FX rates updated",
-          description: `Updated ${data.updated} currencies`,
-        });
-        
-        // Reload rates from database
-        await loadFXRates();
-      } else {
-        throw new Error(data.error || 'Failed to update rates');
-      }
-    } catch (error) {
-      console.error('Error updating FX rates:', error);
-      toast({
-        title: "Failed to update FX rates",
-        description: "Please try again later",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUpdating(false);
-    }
-  };
 
   // Update manual rate
   const updateManualRate = async (currency: string, toILS: number) => {
@@ -139,8 +108,6 @@ export function useFXRates() {
     fxRates,
     lastUpdated,
     isLoading,
-    isUpdating,
-    updateFXRates,
     updateManualRate,
     refreshRates: loadFXRates,
   };
