@@ -227,7 +227,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             <CardTitle className="text-lg font-bold text-financial-primary">Asset Allocation</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-44">
+            <div className="h-52 p-4">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -236,7 +236,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                     cy="50%"
                     labelLine={false}
                     label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                    outerRadius={55}
+                    outerRadius={45}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -288,7 +288,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-40">
+                  <div className="h-48 p-4">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -297,7 +297,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                           cy="50%"
                           labelLine={false}
                           label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                          outerRadius={50}
+                          outerRadius={40}
                           fill="#8884d8"
                           dataKey="value"
                         >
