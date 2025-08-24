@@ -71,6 +71,42 @@ export type Database = {
         }
         Relationships: []
       }
+      fx_rates: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          is_manual_override: boolean
+          last_updated: string
+          source: string
+          to_ils_rate: number
+          to_usd_rate: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency: string
+          id?: string
+          is_manual_override?: boolean
+          last_updated?: string
+          source?: string
+          to_ils_rate?: number
+          to_usd_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          is_manual_override?: boolean
+          last_updated?: string
+          source?: string
+          to_ils_rate?: number
+          to_usd_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portfolio_snapshots: {
         Row: {
           assets: Json
