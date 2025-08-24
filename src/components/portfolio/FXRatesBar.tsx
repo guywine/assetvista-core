@@ -2,15 +2,27 @@ import { useState } from 'react';
 import { FXRates, Currency } from '@/types/portfolio';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit2, Check, X } from 'lucide-react';
+import { Edit2, Check, X, RefreshCw, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FXRatesBarProps {
   fxRates: FXRates;
+  lastUpdated: Date | null;
+  isUpdating: boolean;
   onRatesChange: (rates: FXRates) => void;
+  onUpdateRates: () => void;
+  onManualRateChange: (currency: string, rate: number) => void;
 }
 
-export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
+export function FXRatesBar({ 
+  fxRates, 
+  lastUpdated, 
+  isUpdating, 
+  onRatesChange, 
+  onUpdateRates,
+  onManualRateChange 
+}: FXRatesBarProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingRates, setEditingRates] = useState<FXRates>(fxRates);
 
@@ -22,7 +34,16 @@ export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
   };
 
   const handleSave = () => {
-    onRatesChange(editingRates);
+    // Update manual rates for changed values
+    currencies.forEach(currency => {
+      if (currency !== 'ILS') {
+        const originalRate = fxRates[currency]?.to_ILS || 0;
+        const newRate = editingRates[currency]?.to_ILS || 0;
+        if (Math.abs(originalRate - newRate) > 0.001) {
+          onManualRateChange(currency, newRate);
+        }
+      }
+    });
     setIsEditing(false);
   };
 
@@ -45,13 +66,37 @@ export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
 
   const displayRates = isEditing ? editingRates : fxRates;
 
+  const formatLastUpdated = (date: Date | null) => {
+    if (!date) return 'Never';
+    const now = new Date();
+    const diffMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}h ago`;
+    return date.toLocaleDateString();
+  };
+
   return (
     <Card className="bg-muted/30 border-border/50 shadow-sm">
       <div className="p-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-6 flex-1 overflow-x-auto">
-            <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-              FX Rates:
+            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground whitespace-nowrap">
+              <span>FX Rates:</span>
+              {lastUpdated && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                      <Clock className="h-3 w-3" />
+                      <span>{formatLastUpdated(lastUpdated)}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Last updated: {lastUpdated.toLocaleString()}</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
             
             {currencies.map((currency, index) => (
@@ -108,14 +153,40 @@ export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
                 </Button>
               </>
             ) : (
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleStartEdit}
-                className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
+              <>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={onUpdateRates}
+                      disabled={isUpdating}
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <RefreshCw className={`h-3 w-3 ${isUpdating ? 'animate-spin' : ''}`} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Update FX rates</p>
+                  </TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={handleStartEdit}
+                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                    >
+                      <Edit2 className="h-3 w-3" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Edit manually</p>
+                  </TooltipContent>
+                </Tooltip>
+              </>
             )}
           </div>
         </div>

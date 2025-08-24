@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
 import { DEFAULT_FX_RATES, calculateAssetValue } from '@/lib/portfolio-utils';
 import { useAssets } from '@/hooks/useAssets';
+import { useFXRates } from '@/hooks/useFXRates';
 import { PortfolioHeader } from './PortfolioHeader';
 import { AssetTable } from './AssetTable';
 import { AssetForm } from './AssetForm';
@@ -22,7 +23,15 @@ interface PortfolioDashboardProps {
 export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardProps) {
   const { assets, isLoading, addAsset, updateAsset, deleteAsset } = useAssets();
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
-  const [fxRates, setFxRates] = useState<FXRates>(DEFAULT_FX_RATES);
+  
+  const {
+    fxRates,
+    lastUpdated,
+    isLoading: fxLoading,
+    isUpdating: fxUpdating,
+    updateFXRates,
+    updateManualRate,
+  } = useFXRates();
   const [filters, setFilters] = useState<FilterCriteria>({});
   const [groupByFields, setGroupByFields] = useState<GroupByField[]>([]);
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
@@ -55,9 +64,12 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
 
   // Calculate aggregated data based on filtered assets
   const { totalValue, assetCount, classTotals } = useMemo(() => {
+    // Use default rates if FX rates haven't loaded yet
+    const effectiveFxRates = Object.keys(fxRates).length > 0 ? fxRates : DEFAULT_FX_RATES;
+    
     const calculations = filteredAssets.map(asset => ({
       asset,
-      calculation: calculateAssetValue(asset, fxRates, viewCurrency),
+      calculation: calculateAssetValue(asset, effectiveFxRates, viewCurrency),
     }));
 
     const total = calculations.reduce((sum, { calculation }) => sum + calculation.display_value, 0);
@@ -145,10 +157,14 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           onManageFX={handleManageFX}
         />
 
-        <FXRatesBar 
-          fxRates={fxRates}
-          onRatesChange={setFxRates}
-        />
+          <FXRatesBar 
+            fxRates={fxRates}
+            lastUpdated={lastUpdated}
+            isUpdating={fxUpdating}
+            onRatesChange={() => {}} // Legacy prop, not used anymore
+            onUpdateRates={updateFXRates}
+            onManualRateChange={updateManualRate}
+          />
 
         <Tabs defaultValue="assets" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 max-w-md bg-muted/50 p-1">
