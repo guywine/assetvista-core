@@ -71,6 +71,54 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_snapshots: {
+        Row: {
+          assets: Json
+          created_at: string
+          description: string | null
+          fixed_income_value_usd: number | null
+          fx_rates: Json
+          id: string
+          name: string
+          private_equity_value_usd: number | null
+          public_equity_value_usd: number | null
+          snapshot_date: string
+          total_value_usd: number | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assets?: Json
+          created_at?: string
+          description?: string | null
+          fixed_income_value_usd?: number | null
+          fx_rates?: Json
+          id?: string
+          name: string
+          private_equity_value_usd?: number | null
+          public_equity_value_usd?: number | null
+          snapshot_date?: string
+          total_value_usd?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assets?: Json
+          created_at?: string
+          description?: string | null
+          fixed_income_value_usd?: number | null
+          fx_rates?: Json
+          id?: string
+          name?: string
+          private_equity_value_usd?: number | null
+          public_equity_value_usd?: number | null
+          snapshot_date?: string
+          total_value_usd?: number | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

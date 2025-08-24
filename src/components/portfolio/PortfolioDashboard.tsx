@@ -6,6 +6,9 @@ import { PortfolioHeader } from './PortfolioHeader';
 import { AssetTable } from './AssetTable';
 import { AssetForm } from './AssetForm';
 import { PortfolioSummary } from './PortfolioSummary';
+import { SavePortfolioDialog } from './SavePortfolioDialog';
+import { PortfolioHistory } from './PortfolioHistory';
+import { usePortfolioSnapshots } from '@/hooks/usePortfolioSnapshots';
 import { PortfolioFilters } from './PortfolioFilters';
 import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
 import { FXRatesBar } from './FXRatesBar';
@@ -26,6 +29,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
   
   const { toast } = useToast();
+  const { saveSnapshot, isLoading: isSaving } = usePortfolioSnapshots();
 
   // Filter assets based on current filters
   const filteredAssets = useMemo(() => {
@@ -122,6 +126,10 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     setFilters(newFilters);
   };
 
+  const handleSavePortfolio = async (name: string, description: string) => {
+    await saveSnapshot(name, description, assets, fxRates);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <div className="container mx-auto p-6 space-y-8">
@@ -140,7 +148,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
         />
 
         <Tabs defaultValue="assets" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-3 max-w-md bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-3 max-w-md bg-muted/50 p-1">
             <TabsTrigger 
               value="assets" 
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
@@ -154,22 +162,34 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               Summary
             </TabsTrigger>
             <TabsTrigger 
-              value="charts" 
-              className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold hidden lg:block"
+              value="history" 
+              className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
             >
-              Analytics
+              History
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="assets" className="space-y-6">
-            <PortfolioFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-            />
-            <PortfolioGrouping
-              groupByFields={groupByFields}
-              onGroupByChange={setGroupByFields}
-            />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <PortfolioFilters
+                  filters={filters}
+                  onFiltersChange={handleFiltersChange}
+                />
+                <PortfolioGrouping
+                  groupByFields={groupByFields}
+                  onGroupByChange={setGroupByFields}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <SavePortfolioDialog
+                  assets={assets}
+                  fxRates={fxRates}
+                  viewCurrency={viewCurrency}
+                  onSave={handleSavePortfolio}
+                />
+              </div>
+            </div>
             <AssetTable
               assets={assets}
               viewCurrency={viewCurrency}
@@ -190,15 +210,8 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
             />
           </TabsContent>
 
-          <TabsContent value="charts" className="space-y-6">
-            <div className="grid gap-6">
-              <div className="text-center py-12">
-                <h3 className="text-2xl font-bold text-financial-primary mb-4">Advanced Analytics</h3>
-                <p className="text-muted-foreground">
-                  Advanced charting and analytics features coming soon.
-                </p>
-              </div>
-            </div>
+          <TabsContent value="history" className="space-y-6">
+            <PortfolioHistory />
           </TabsContent>
         </Tabs>
 

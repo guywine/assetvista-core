@@ -60,6 +60,20 @@ export interface Snapshot {
   fx_rates: FXRates;
 }
 
+export interface PortfolioSnapshot {
+  id: string;
+  name: string;
+  description?: string;
+  snapshot_date: string;
+  assets: Asset[];
+  fx_rates: FXRates;
+  total_value_usd: number;
+  private_equity_value_usd: number;
+  public_equity_value_usd: number;
+  fixed_income_value_usd: number;
+  created_at: string;
+}
+
 export type ViewCurrency = 'USD' | 'ILS';
 
 export interface AssetCalculations {
