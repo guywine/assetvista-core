@@ -227,7 +227,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             <CardTitle className="text-lg font-bold text-financial-primary">Asset Allocation</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-52 p-4">
+            <div className="h-52 p-2">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -235,10 +235,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                    outerRadius={45}
+                    label={({ percentage }) => `${percentage.toFixed(0)}%`}
+                    outerRadius={70}
                     fill="#8884d8"
                     dataKey="value"
+                    fontSize={12}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -288,7 +289,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-48 p-4">
+                  <div className="h-48 p-2">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
@@ -296,10 +297,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                          outerRadius={40}
+                          label={({ percentage }) => `${percentage.toFixed(0)}%`}
+                          outerRadius={60}
                           fill="#8884d8"
                           dataKey="value"
+                          fontSize={10}
                         >
                           {data.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
