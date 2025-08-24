@@ -124,18 +124,6 @@ export function PortfolioHeader({
         ))}
       </div>
 
-      {/* Class Tags */}
-      <div className="flex flex-wrap gap-2">
-        {classTotals.map(({ class: assetClass, value, count }) => (
-          <Badge 
-            key={assetClass} 
-            variant="outline" 
-            className="px-3 py-1 text-sm font-medium border-border/50 hover:bg-muted/30 transition-colors"
-          >
-            {assetClass}: {formatCurrency(value, viewCurrency)} ({count})
-          </Badge>
-        ))}
-      </div>
     </div>
   );
 }
