@@ -65,7 +65,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
 
     const assetToSave: Asset = {
       id: asset?.id || generateId(),
-      name: formData.name!,
+      name: formData.name || (formData.class === 'Cash & other' && formData.sub_class === 'Cash' ? `${formData.origin_currency} Cash` : formData.name!),
       class: formData.class!,
       sub_class: formData.sub_class!,
       ISIN: formData.ISIN,
@@ -130,12 +130,14 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name" className="font-semibold">Asset Name *</Label>
+              <Label htmlFor="name" className="font-semibold">
+                Asset Name {!(formData.class === 'Cash & other' && formData.sub_class === 'Cash') && '*'}
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter asset name"
+                placeholder={formData.class === 'Cash & other' && formData.sub_class === 'Cash' ? 'Optional for cash' : 'Enter asset name'}
                 className="border-border/50 focus:border-financial-primary"
               />
             </div>

@@ -103,7 +103,10 @@ export function getBankOptions(entity: AccountEntity): string[] {
 export function validateAsset(asset: Partial<Asset>): string[] {
   const errors: string[] = [];
   
-  if (!asset.name?.trim()) errors.push('Name is required');
+  // Name validation: required for all except Cash assets
+  if (!(asset.class === 'Cash & other' && asset.sub_class === 'Cash')) {
+    if (!asset.name?.trim()) errors.push('Name is required');
+  }
   if (!asset.class) errors.push('Asset class is required');
   if (!asset.account_entity) errors.push('Account entity is required');
   if (!asset.account_bank) errors.push('Account bank is required');
