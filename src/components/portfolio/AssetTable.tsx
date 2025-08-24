@@ -145,6 +145,12 @@ export function AssetTable({
                 </TableHead>
                 <TableHead 
                   className="cursor-pointer font-semibold text-financial-primary" 
+                  onClick={() => handleSort('account_bank')}
+                >
+                  Bank Account
+                </TableHead>
+                <TableHead 
+                  className="cursor-pointer font-semibold text-financial-primary" 
                   onClick={() => handleSort('quantity')}
                 >
                   Quantity
@@ -181,6 +187,7 @@ export function AssetTable({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground">{asset.account_entity}</TableCell>
+                    <TableCell className="text-muted-foreground">{asset.account_bank}</TableCell>
                     <TableCell className="text-right font-mono">
                       {asset.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                     </TableCell>
