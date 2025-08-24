@@ -14,7 +14,7 @@ export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingRates, setEditingRates] = useState<FXRates>(fxRates);
 
-  const currencies: Currency[] = ['USD', 'ILS', 'EUR', 'CHF', 'CAD', 'HKD'];
+  const currencies: Currency[] = ['ILS', 'USD', 'EUR', 'CHF', 'CAD', 'HKD'];
 
   const handleStartEdit = () => {
     setEditingRates(fxRates);
@@ -62,7 +62,7 @@ export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
                   <span className="text-sm font-medium">{currency}</span>
                   <span className="text-muted-foreground">=</span>
                   
-                  {currency === 'USD' ? (
+                  {currency === 'ILS' ? (
                     <span className="text-sm font-semibold">1.00</span>
                   ) : (
                     <div className="flex items-center gap-1">
@@ -70,16 +70,16 @@ export function FXRatesBar({ fxRates, onRatesChange }: FXRatesBarProps) {
                         <Input
                           type="number"
                           step="0.001"
-                          value={displayRates[currency]?.to_USD || 0}
-                          onChange={(e) => handleRateChange(currency, 'to_USD', e.target.value)}
+                          value={displayRates[currency]?.to_ILS || 0}
+                          onChange={(e) => handleRateChange(currency, 'to_ILS', e.target.value)}
                           className="w-16 h-6 text-xs p-1 text-center"
                         />
                       ) : (
                         <span className="text-sm font-semibold">
-                          {displayRates[currency]?.to_USD?.toFixed(3) || '0.000'}
+                          {displayRates[currency]?.to_ILS?.toFixed(3) || '0.000'}
                         </span>
                       )}
-                      <span className="text-xs text-muted-foreground">USD</span>
+                      <span className="text-xs text-muted-foreground">ILS</span>
                     </div>
                   )}
                 </div>
