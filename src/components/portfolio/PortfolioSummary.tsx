@@ -72,14 +72,48 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
       return sum + (calc?.display_value || 0);
     }, 0) : 0;
 
-  // Pie chart data
+  // Pie chart data for asset allocation
   const pieData = Object.entries(holdingsByClass).map(([className, data]) => ({
     name: className,
     value: data.value,
     percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
   }));
 
+  // Sub-class breakdown by asset class
+  const subClassBreakdown = assets.reduce((acc, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    
+    if (!acc[asset.class]) {
+      acc[asset.class] = {};
+    }
+    if (!acc[asset.class][asset.sub_class]) {
+      acc[asset.class][asset.sub_class] = 0;
+    }
+    acc[asset.class][asset.sub_class] += value;
+    
+    return acc;
+  }, {} as Record<string, Record<string, number>>);
+
+  // Create pie chart data for each asset class
+  const subClassPieData = Object.entries(subClassBreakdown).reduce((acc, [assetClass, subClasses]) => {
+    const classTotal = Object.values(subClasses).reduce((sum, value) => sum + value, 0);
+    acc[assetClass] = Object.entries(subClasses).map(([subClass, value]) => ({
+      name: subClass,
+      value: value,
+      percentage: classTotal > 0 ? (value / classTotal) * 100 : 0,
+    }));
+    return acc;
+  }, {} as Record<string, Array<{ name: string; value: number; percentage: number }>>);
+
   const COLORS = ['hsl(var(--financial-primary))', 'hsl(var(--financial-success))', 'hsl(var(--financial-warning))'];
+  const SUB_CLASS_COLORS = [
+    'hsl(var(--chart-1))',
+    'hsl(var(--chart-2))',
+    'hsl(var(--chart-3))',
+    'hsl(var(--chart-4))',
+    'hsl(var(--chart-5))',
+  ];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -192,7 +226,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
 
       {/* Asset Allocation Chart & Fixed Income YTW */}
       <div className="space-y-6">
-        {/* Pie Chart */}
+        {/* Overall Asset Allocation Chart */}
         <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
           <CardHeader>
             <CardTitle className="text-xl font-bold text-financial-primary">Asset Allocation</CardTitle>
@@ -222,23 +256,67 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
           </CardContent>
         </Card>
 
-        {/* Fixed Income YTW */}
-        {fixedIncomeAssets.length > 0 && (
-          <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-            <CardHeader>
-              <CardTitle className="text-xl font-bold text-financial-primary">Fixed Income YTW</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">Weighted Average YTW</p>
-                <p className="text-3xl font-bold text-financial-success">
-                  {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
+        {/* Sub-class Breakdown Charts */}
+        {Object.entries(subClassPieData).map(([assetClass, data]) => {
+          const classTotal = holdingsByClass[assetClass]?.value || 0;
+          
+          if (data.length <= 1) return null; // Don't show chart if only one sub-class
+          
+          return (
+            <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  {assetClass} Sub-classes
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(classTotal, viewCurrency)}
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardHeader>
+              <CardContent>
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={data}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
+                        outerRadius={70}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {data.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {/* Fixed Income YTW (separate card) */}
+      {fixedIncomeAssets.length > 0 && (
+        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-financial-primary">Fixed Income YTW</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-2">Weighted Average YTW</p>
+              <p className="text-3xl font-bold text-financial-success">
+                {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
     </div>
   );
 }
