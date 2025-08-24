@@ -3,7 +3,8 @@ import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Download, Calendar } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Download, Calendar, Trash2 } from 'lucide-react';
 import { PortfolioSnapshot } from '@/types/portfolio';
 import { formatCurrency } from '@/lib/portfolio-utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,6 +43,30 @@ export function PortfolioHistory() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+  const deleteSnapshot = async (snapshot: PortfolioSnapshot) => {
+    try {
+      const { error } = await supabase
+        .from('portfolio_snapshots')
+        .delete()
+        .eq('id', snapshot.id);
+
+      if (error) throw error;
+
+      setSnapshots(prev => prev.filter(s => s.id !== snapshot.id));
+      
+      toast({
+        title: "Deleted",
+        description: `Portfolio snapshot "${snapshot.name}" has been deleted`,
+      });
+    } catch (error) {
+      console.error('Error deleting snapshot:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete portfolio snapshot",
+        variant: "destructive",
+      });
     }
   };
 
@@ -139,15 +164,46 @@ export function PortfolioHistory() {
                     {format(new Date(snapshot.created_at), 'PPP')}
                   </p>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => downloadSnapshot(snapshot)}
-                  className="gap-2"
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
+                <div className="flex items-center gap-2">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Portfolio Snapshot</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{snapshot.name}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteSnapshot(snapshot)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => downloadSnapshot(snapshot)}
+                    className="gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </Button>
+                </div>
               </div>
               {snapshot.description && (
                 <p className="text-sm text-muted-foreground mt-2">
