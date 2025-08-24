@@ -72,14 +72,12 @@ export function AssetTable({
     return Object.entries(groups).map(([key, assets]): GroupedAssets => {
       const calculations = assets.map(asset => calculateAssetValue(asset, fxRates, viewCurrency));
       const totalValue = calculations.reduce((sum, calc) => sum + calc.display_value, 0);
-      const totalQuantity = assets.reduce((sum, asset) => sum + asset.quantity, 0);
 
       return {
         key,
         assets,
         aggregates: {
           totalValue,
-          totalQuantity,
           assetCount: assets.length,
         },
       };
@@ -258,7 +256,6 @@ export function AssetTable({
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>Value: {formatCurrency(group.aggregates.totalValue, viewCurrency)}</span>
-                            <span>Quantity: {group.aggregates.totalQuantity.toLocaleString()}</span>
                             <span>Assets: {group.aggregates.assetCount}</span>
                           </div>
                         </div>

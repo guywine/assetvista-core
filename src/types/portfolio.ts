@@ -88,7 +88,6 @@ export interface GroupedAssets {
   assets: Asset[];
   aggregates: {
     totalValue: number;
-    totalQuantity: number;
     assetCount: number;
   };
 }
