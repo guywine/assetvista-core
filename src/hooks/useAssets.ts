@@ -28,21 +28,25 @@ export function useAssets() {
   });
 
   // Convert Asset to database format
-  const convertToDb = (asset: Asset) => ({
-    id: asset.id,
-    name: asset.name,
-    class: asset.class,
-    sub_class: asset.sub_class,
-    isin: asset.ISIN,
-    account_entity: asset.account_entity,
-    account_bank: asset.account_bank,
-    origin_currency: asset.origin_currency,
-    quantity: asset.quantity,
-    price: asset.price,
-    factor: asset.factor,
-    maturity_date: asset.maturity_date,
-    ytw: asset.ytw,
-  });
+  const convertToDb = async (asset: Asset) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    return {
+      id: asset.id,
+      name: asset.name,
+      class: asset.class,
+      sub_class: asset.sub_class,
+      isin: asset.ISIN,
+      account_entity: asset.account_entity,
+      account_bank: asset.account_bank,
+      origin_currency: asset.origin_currency,
+      quantity: asset.quantity,
+      price: asset.price,
+      factor: asset.factor,
+      maturity_date: asset.maturity_date,
+      ytw: asset.ytw,
+      user_id: user?.id,
+    };
+  };
 
   // Load assets from database
   const loadAssets = async () => {
@@ -73,7 +77,7 @@ export function useAssets() {
   // Add new asset
   const addAsset = async (asset: Asset) => {
     try {
-      const dbAsset = convertToDb(asset);
+      const dbAsset = await convertToDb(asset);
 
       const { data, error } = await supabase
         .from('assets')
@@ -107,7 +111,7 @@ export function useAssets() {
   // Update existing asset
   const updateAsset = async (asset: Asset) => {
     try {
-      const dbAsset = convertToDb(asset);
+      const dbAsset = await convertToDb(asset);
 
       const { data, error } = await supabase
         .from('assets')
