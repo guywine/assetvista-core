@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
 import { DEFAULT_FX_RATES, calculateAssetValue } from '@/lib/portfolio-utils';
+import { useAssets } from '@/hooks/useAssets';
 import { PortfolioHeader } from './PortfolioHeader';
 import { AssetTable } from './AssetTable';
 import { AssetForm } from './AssetForm';
@@ -15,7 +16,7 @@ interface PortfolioDashboardProps {
 }
 
 export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardProps) {
-  const [assets, setAssets] = useState<Asset[]>(initialAssets);
+  const { assets, isLoading, addAsset, updateAsset, deleteAsset } = useAssets();
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
   const [fxRates, setFxRates] = useState<FXRates>(DEFAULT_FX_RATES);
   const [filters, setFilters] = useState<FilterCriteria>({});
@@ -77,21 +78,18 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     };
   }, [filteredAssets, fxRates, viewCurrency]);
 
-  const handleSaveAsset = (asset: Asset) => {
-    if (editingAsset) {
-      setAssets(prev => prev.map(a => a.id === asset.id ? asset : a));
-      toast({
-        title: "Asset Updated",
-        description: `${asset.name} has been successfully updated.`,
-      });
-    } else {
-      setAssets(prev => [...prev, asset]);
-      toast({
-        title: "Asset Added",
-        description: `${asset.name} has been successfully added to your portfolio.`,
-      });
+  const handleSaveAsset = async (asset: Asset) => {
+    try {
+      if (editingAsset) {
+        await updateAsset(asset);
+      } else {
+        await addAsset(asset);
+      }
+      setEditingAsset(undefined);
+      setIsAssetFormOpen(false);
+    } catch (error) {
+      // Error handling is done in the hook
     }
-    setEditingAsset(undefined);
   };
 
   const handleEditAsset = (asset: Asset) => {
@@ -104,13 +102,12 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     setIsAssetFormOpen(true);
   };
 
-  const handleDeleteAsset = (asset: Asset) => {
-    setAssets(prev => prev.filter(a => a.id !== asset.id));
-    toast({
-      title: "Asset Deleted",
-      description: `${asset.name} has been successfully removed from your portfolio.`,
-      variant: "destructive",
-    });
+  const handleDeleteAsset = async (asset: Asset) => {
+    try {
+      await deleteAsset(asset);
+    } catch (error) {
+      // Error handling is done in the hook
+    }
   };
 
   const handleManageFX = () => {
@@ -133,7 +130,6 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           totalValue={totalValue}
           assetCount={assetCount}
           classTotals={classTotals}
-          onAddAsset={handleAddAsset}
           onManageFX={handleManageFX}
         />
 

@@ -12,7 +12,6 @@ interface PortfolioHeaderProps {
   totalValue: number;
   assetCount: number;
   classTotals: Array<{ class: AssetClass; value: number; count: number }>;
-  onAddAsset: () => void;
   onManageFX: () => void;
 }
 
@@ -22,7 +21,6 @@ export function PortfolioHeader({
   totalValue,
   assetCount,
   classTotals,
-  onAddAsset,
   onManageFX,
 }: PortfolioHeaderProps) {
   return (
@@ -68,13 +66,6 @@ export function PortfolioHeader({
             Manage FX
           </Button>
 
-          <Button 
-            onClick={onAddAsset}
-            className="bg-gradient-to-r from-financial-success to-financial-success/80 hover:from-financial-success/90 hover:to-financial-success/70 text-white shadow-lg"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Asset
-          </Button>
         </div>
       </div>
 
