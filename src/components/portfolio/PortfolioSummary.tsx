@@ -116,7 +116,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Holdings by Class */}
       <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
         <CardHeader>
@@ -193,129 +193,118 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
           <CardTitle className="text-xl font-bold text-financial-primary">Top 10 Positions</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="font-semibold">Asset</TableHead>
-                <TableHead className="font-semibold">Class</TableHead>
-                <TableHead className="font-semibold text-right">Value</TableHead>
-                <TableHead className="font-semibold text-right">% of Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topPositions.map(({ asset, value }) => (
-                <TableRow key={asset.id}>
-                  <TableCell className="font-medium">{asset.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {asset.class}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono font-semibold text-financial-success">
+          <div className="space-y-2">
+            {topPositions.slice(0, 5).map(({ asset, value }) => (
+              <div key={asset.id} className="flex items-center justify-between py-1">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate text-sm">{asset.name}</p>
+                  <Badge variant="outline" className="text-xs mt-1">
+                    {asset.class}
+                  </Badge>
+                </div>
+                <div className="text-right ml-4">
+                  <p className="font-mono font-semibold text-financial-success text-sm">
                     {formatCurrency(value, viewCurrency)}
-                  </TableCell>
-                  <TableCell className="text-right font-mono">
+                  </p>
+                  <p className="text-xs text-muted-foreground">
                     {formatPercentage(totalValue > 0 ? (value / totalValue) * 100 : 0)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Asset Allocation Chart & Fixed Income YTW */}
-      <div className="space-y-6">
-        {/* Overall Asset Allocation Chart */}
-        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-financial-primary">Asset Allocation</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Overall Asset Allocation Chart */}
+      <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+        <CardHeader>
+          <CardTitle className="text-lg font-bold text-financial-primary">Asset Allocation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
+                  outerRadius={60}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Sub-class Breakdown Charts */}
-        {Object.entries(subClassPieData).map(([assetClass, data]) => {
-          const classTotal = holdingsByClass[assetClass]?.value || 0;
-          
-          if (data.length <= 1) return null; // Don't show chart if only one sub-class
-          
-          return (
-            <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold text-financial-primary">
-                  {assetClass} Sub-classes
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(classTotal, viewCurrency)}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={data}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
-                        outerRadius={70}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {data.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Fixed Income YTW (separate card) */}
+      {/* Fixed Income YTW */}
       {fixedIncomeAssets.length > 0 && (
         <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-financial-primary">Fixed Income YTW</CardTitle>
+            <CardTitle className="text-lg font-bold text-financial-primary">Fixed Income YTW</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-center">
               <p className="text-sm text-muted-foreground mb-2">Weighted Average YTW</p>
-              <p className="text-3xl font-bold text-financial-success">
+              <p className="text-2xl font-bold text-financial-success">
                 {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
               </p>
             </div>
           </CardContent>
         </Card>
       )}
+
+      {/* Sub-class Breakdown Charts */}
+      {Object.entries(subClassPieData).map(([assetClass, data]) => {
+        const classTotal = holdingsByClass[assetClass]?.value || 0;
+        
+        if (data.length <= 1) return null; // Don't show chart if only one sub-class
+        
+        return (
+          <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold text-financial-primary">
+                {assetClass} Sub-classes
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Total: {formatCurrency(classTotal, viewCurrency)}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percentage }) => `${name}: ${percentage.toFixed(1)}%`}
+                      outerRadius={55}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {data.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
 
     </div>
   );
