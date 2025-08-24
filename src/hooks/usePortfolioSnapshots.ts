@@ -11,9 +11,6 @@ export function usePortfolioSnapshots() {
   const saveSnapshot = async (name: string, description: string, assets: Asset[], fxRates: FXRates) => {
     setIsLoading(true);
     try {
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      
       // Calculate class totals in USD
       let privateEquityTotal = 0;
       let publicEquityTotal = 0;
@@ -50,7 +47,6 @@ export function usePortfolioSnapshots() {
           private_equity_value_usd: privateEquityTotal,
           public_equity_value_usd: publicEquityTotal,
           fixed_income_value_usd: fixedIncomeTotal,
-          user_id: user?.id,
         });
 
       if (error) throw error;
