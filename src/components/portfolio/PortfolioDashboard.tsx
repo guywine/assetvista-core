@@ -6,6 +6,7 @@ import { AssetTable } from './AssetTable';
 import { AssetForm } from './AssetForm';
 import { PortfolioSummary } from './PortfolioSummary';
 import { PortfolioFilters } from './PortfolioFilters';
+import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
@@ -18,6 +19,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
   const [fxRates, setFxRates] = useState<FXRates>(DEFAULT_FX_RATES);
   const [filters, setFilters] = useState<FilterCriteria>({});
+  const [groupByFields, setGroupByFields] = useState<GroupByField[]>([]);
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
   
@@ -162,11 +164,16 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               filters={filters}
               onFiltersChange={handleFiltersChange}
             />
+            <PortfolioGrouping
+              groupByFields={groupByFields}
+              onGroupByChange={setGroupByFields}
+            />
             <AssetTable
               assets={assets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
               filters={filters}
+              groupByFields={groupByFields}
               onEditAsset={handleEditAsset}
               onDeleteAsset={handleDeleteAsset}
               onAddAsset={handleAddAsset}

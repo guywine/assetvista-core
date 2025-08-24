@@ -83,6 +83,16 @@ export interface GroupBy {
   fields: (keyof Asset)[];
 }
 
+export interface GroupedAssets {
+  key: string;
+  assets: Asset[];
+  aggregates: {
+    totalValue: number;
+    totalQuantity: number;
+    assetCount: number;
+  };
+}
+
 export interface Summary {
   holdings_by_class: Array<{
     class: AssetClass;
