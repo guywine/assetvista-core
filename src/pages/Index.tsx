@@ -1,3 +1,4 @@
+import { PasswordProtection } from '@/components/auth/PasswordProtection';
 import { PortfolioDashboard } from '@/components/portfolio/PortfolioDashboard';
 import { Asset } from '@/types/portfolio';
 import { generateId } from '@/lib/portfolio-utils';
@@ -51,7 +52,11 @@ const sampleAssets: Asset[] = [
 ];
 
 const Index = () => {
-  return <PortfolioDashboard initialAssets={sampleAssets} />;
+  return (
+    <PasswordProtection>
+      <PortfolioDashboard initialAssets={sampleAssets} />
+    </PasswordProtection>
+  );
 };
 
 export default Index;
