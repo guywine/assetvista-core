@@ -73,7 +73,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
       account_bank: formData.account_bank!,
       origin_currency: formData.origin_currency!,
       quantity: formData.quantity!,
-      price: formData.price!,
+      price: formData.class === 'Cash & other' && formData.sub_class === 'Cash' ? 1 : formData.price!,
       factor: formData.class === 'Private Equity' ? formData.factor : undefined,
       maturity_date: formData.class === 'Fixed Income' ? formData.maturity_date : undefined,
       ytw: formData.class === 'Fixed Income' ? formData.ytw : undefined,
@@ -163,6 +163,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                   <SelectItem value="Public Equity">Public Equity</SelectItem>
                   <SelectItem value="Private Equity">Private Equity</SelectItem>
                   <SelectItem value="Fixed Income">Fixed Income</SelectItem>
+                  <SelectItem value="Cash & other">Cash & other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -250,19 +251,21 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="price" className="font-semibold">Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
-                placeholder="0.00"
-                className="border-border/50 focus:border-financial-primary"
-              />
-            </div>
+            {!(formData.class === 'Cash & other' && formData.sub_class === 'Cash') && (
+              <div className="space-y-2">
+                <Label htmlFor="price" className="font-semibold">Price *</Label>
+                <Input
+                  id="price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.price}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                  placeholder="0.00"
+                  className="border-border/50 focus:border-financial-primary"
+                />
+              </div>
+            )}
           </div>
 
           {formData.class === 'Private Equity' && (

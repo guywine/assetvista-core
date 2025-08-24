@@ -1,10 +1,11 @@
-export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income';
+export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income' | 'Cash & other';
 
 export type PublicEquitySubClass = 'Big Tech' | 'China' | 'other';
 export type PrivateEquitySubClass = 'Initial' | 'Near Future' | 'Growth' | 'none';
 export type FixedIncomeSubClass = 'Money Market' | 'Gov 1-2' | 'Gov long' | 'CPI linked' | 'Corporate' | 'REIT stock' | 'none';
+export type CashOtherSubClass = 'Cash' | 'Crypto' | 'Commodities';
 
-export type SubClass = PublicEquitySubClass | PrivateEquitySubClass | FixedIncomeSubClass;
+export type SubClass = PublicEquitySubClass | PrivateEquitySubClass | FixedIncomeSubClass | CashOtherSubClass;
 
 export type AccountEntity = 'Roy' | 'Roni' | 'Guy' | 'Shimon' | 'Hagit' | 'SW2009' | 'Weintraub' | 'B Joel' | 'Tom';
 
@@ -24,7 +25,7 @@ export interface Asset {
   account_bank: AccountBank;
   origin_currency: Currency;
   quantity: number;
-  price: number;
+  price?: number; // Optional for Cash assets
   factor?: number; // 0-1, Private Equity only
   maturity_date?: string; // Fixed Income only
   ytw?: number; // Fixed Income only, stored as decimal
