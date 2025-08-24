@@ -227,25 +227,27 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             <CardTitle className="text-lg font-bold text-financial-primary">Asset Allocation</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-52 p-2">
+            <div className="h-56 p-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    labelLine={false}
-                    label={({ percentage }) => `${percentage.toFixed(0)}%`}
-                    outerRadius={70}
+                    outerRadius={65}
                     fill="#8884d8"
                     dataKey="value"
-                    fontSize={12}
                   >
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36}
+                    formatter={(value, entry) => `${value}: ${((entry.payload.value / totalValue) * 100).toFixed(1)}%`}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -289,25 +291,27 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-48 p-2">
+                  <div className="h-52 p-1">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={data}
                           cx="50%"
                           cy="50%"
-                          labelLine={false}
-                          label={({ percentage }) => `${percentage.toFixed(0)}%`}
-                          outerRadius={60}
+                          outerRadius={55}
                           fill="#8884d8"
                           dataKey="value"
-                          fontSize={10}
                         >
                           {data.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
                           ))}
                         </Pie>
                         <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36}
+                          formatter={(value, entry) => `${value}: ${((entry.payload.value / classTotal) * 100).toFixed(1)}%`}
+                        />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
