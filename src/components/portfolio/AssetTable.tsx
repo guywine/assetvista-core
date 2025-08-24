@@ -269,9 +269,9 @@ export function AssetTable({
 
                       return (
                         <TableRow key={asset.id} className="hover:bg-muted/50">
-                          <TableCell className="font-medium pl-8">{asset.name}</TableCell>
+                          <TableCell className="font-medium pl-8">{asset.class === 'Cash' ? '' : asset.name}</TableCell>
                           <TableCell>{asset.class}</TableCell>
-                          <TableCell>{asset.sub_class}</TableCell>
+                          <TableCell>{asset.class === 'Cash' ? '' : asset.sub_class}</TableCell>
                           <TableCell>{asset.account_entity}</TableCell>
                           <TableCell>{asset.account_bank}</TableCell>
                           <TableCell>{asset.origin_currency}</TableCell>
@@ -319,9 +319,9 @@ export function AssetTable({
 
                   return (
                     <TableRow key={asset.id} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{asset.name}</TableCell>
+                      <TableCell className="font-medium">{asset.class === 'Cash' ? '' : asset.name}</TableCell>
                       <TableCell>{asset.class}</TableCell>
-                      <TableCell>{asset.sub_class}</TableCell>
+                      <TableCell>{asset.class === 'Cash' ? '' : asset.sub_class}</TableCell>
                       <TableCell>{asset.account_entity}</TableCell>
                       <TableCell>{asset.account_bank}</TableCell>
                       <TableCell>{asset.origin_currency}</TableCell>
