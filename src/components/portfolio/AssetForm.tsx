@@ -302,9 +302,13 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.ytw}
-                  onChange={(e) => setFormData(prev => ({ ...prev, ytw: parseFloat(e.target.value) || 0 }))}
-                  placeholder="0.00"
+                  value={formData.ytw ? (formData.ytw * 100).toFixed(2) : ''}
+                  onChange={(e) => {
+                    const percentValue = parseFloat(e.target.value) || 0;
+                    const decimalValue = percentValue / 100;
+                    setFormData(prev => ({ ...prev, ytw: decimalValue }));
+                  }}
+                  placeholder="4.51"
                   className="border-border/50 focus:border-financial-primary"
                 />
               </div>
