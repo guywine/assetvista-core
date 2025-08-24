@@ -30,6 +30,8 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   
   const { toast } = useToast();
   const { saveSnapshot, isLoading: isSaving } = usePortfolioSnapshots();
+  
+  console.log('saveSnapshot function:', saveSnapshot); // Debug log
 
   // Filter assets based on current filters
   const filteredAssets = useMemo(() => {
@@ -127,6 +129,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   };
 
   const handleSavePortfolio = async (name: string, description: string) => {
+    console.log('handleSavePortfolio called with:', { name, description, saveSnapshot }); // Debug log
     await saveSnapshot(name, description, assets, fxRates);
   };
 
