@@ -5,6 +5,7 @@ import { PortfolioHeader } from './PortfolioHeader';
 import { AssetTable } from './AssetTable';
 import { AssetForm } from './AssetForm';
 import { PortfolioSummary } from './PortfolioSummary';
+import { PortfolioFilters } from './PortfolioFilters';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,15 +23,35 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   
   const { toast } = useToast();
 
-  // Calculate aggregated data
+  // Filter assets based on current filters
+  const filteredAssets = useMemo(() => {
+    return assets.filter(asset => {
+      if (filters.class && !filters.class.includes(asset.class)) return false;
+      if (filters.sub_class && !filters.sub_class.includes(asset.sub_class)) return false;
+      if (filters.account_entity && !filters.account_entity.includes(asset.account_entity)) return false;
+      if (filters.account_bank && !filters.account_bank.includes(asset.account_bank)) return false;
+      if (filters.origin_currency && !filters.origin_currency.includes(asset.origin_currency)) return false;
+      
+      if (filters.maturity_date_from && asset.maturity_date) {
+        if (asset.maturity_date < filters.maturity_date_from) return false;
+      }
+      if (filters.maturity_date_to && asset.maturity_date) {
+        if (asset.maturity_date > filters.maturity_date_to) return false;
+      }
+      
+      return true;
+    });
+  }, [assets, filters]);
+
+  // Calculate aggregated data based on filtered assets
   const { totalValue, assetCount, classTotals } = useMemo(() => {
-    const calculations = assets.map(asset => ({
+    const calculations = filteredAssets.map(asset => ({
       asset,
       calculation: calculateAssetValue(asset, fxRates, viewCurrency),
     }));
 
     const total = calculations.reduce((sum, { calculation }) => sum + calculation.display_value, 0);
-    const count = assets.length;
+    const count = filteredAssets.length;
 
     const classData = calculations.reduce((acc, { asset, calculation }) => {
       if (!acc[asset.class]) {
@@ -52,7 +73,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
       assetCount: count,
       classTotals: classArray,
     };
-  }, [assets, fxRates, viewCurrency]);
+  }, [filteredAssets, fxRates, viewCurrency]);
 
   const handleSaveAsset = (asset: Asset) => {
     if (editingAsset) {
@@ -97,11 +118,8 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     });
   };
 
-  const handleAddFilter = () => {
-    toast({
-      title: "Advanced Filters",
-      description: "Advanced filtering feature coming soon!",
-    });
+  const handleFiltersChange = (newFilters: FilterCriteria) => {
+    setFilters(newFilters);
   };
 
   return (
@@ -115,7 +133,6 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           classTotals={classTotals}
           onAddAsset={handleAddAsset}
           onManageFX={handleManageFX}
-          onAddFilter={handleAddFilter}
         />
 
         <Tabs defaultValue="assets" className="space-y-6">
@@ -141,6 +158,10 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           </TabsList>
 
           <TabsContent value="assets" className="space-y-6">
+            <PortfolioFilters
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
+            />
             <AssetTable
               assets={assets}
               viewCurrency={viewCurrency}

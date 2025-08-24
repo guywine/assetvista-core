@@ -14,7 +14,6 @@ interface PortfolioHeaderProps {
   classTotals: Array<{ class: AssetClass; value: number; count: number }>;
   onAddAsset: () => void;
   onManageFX: () => void;
-  onAddFilter: () => void;
 }
 
 export function PortfolioHeader({
@@ -25,7 +24,6 @@ export function PortfolioHeader({
   classTotals,
   onAddAsset,
   onManageFX,
-  onAddFilter,
 }: PortfolioHeaderProps) {
   return (
     <div className="space-y-6">
@@ -61,13 +59,12 @@ export function PortfolioHeader({
             </ToggleGroupItem>
           </ToggleGroup>
 
-          <Button variant="outline" onClick={onAddFilter} className="hover:bg-muted">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
-
-          <Button variant="outline" onClick={onManageFX} className="hover:bg-muted">
-            <Settings className="h-4 w-4 mr-2" />
+          <Button 
+            variant="outline" 
+            onClick={onManageFX}
+            className="gap-2 border-border/50 hover:bg-muted/50"
+          >
+            <TrendingUp className="h-4 w-4" />
             Manage FX
           </Button>
 
