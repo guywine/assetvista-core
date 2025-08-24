@@ -73,15 +73,7 @@ export function useAssets() {
   // Add new asset
   const addAsset = async (asset: Asset) => {
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) {
-        throw new Error("You must be logged in to add assets");
-      }
-
-      const dbAsset = {
-        ...convertToDb(asset),
-        user_id: userData.user.id,
-      };
+      const dbAsset = convertToDb(asset);
 
       const { data, error } = await supabase
         .from('assets')
