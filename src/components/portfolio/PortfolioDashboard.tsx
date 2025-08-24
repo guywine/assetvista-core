@@ -156,14 +156,6 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           </TabsList>
 
           <TabsContent value="assets" className="space-y-6">
-            <PortfolioFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-            />
-            <PortfolioGrouping
-              groupByFields={groupByFields}
-              onGroupByChange={setGroupByFields}
-            />
             <AssetTable
               assets={assets}
               viewCurrency={viewCurrency}
@@ -173,6 +165,8 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               onEditAsset={handleEditAsset}
               onDeleteAsset={handleDeleteAsset}
               onAddAsset={handleAddAsset}
+              onFiltersChange={handleFiltersChange}
+              onGroupByChange={setGroupByFields}
             />
           </TabsContent>
 
