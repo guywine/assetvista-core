@@ -16,7 +16,9 @@ export const CLASS_SUBCLASS_MAP = {
   'Public Equity': ['Big Tech', 'China', 'other'],
   'Private Equity': ['Initial', 'Near Future', 'Growth', 'none'],
   'Fixed Income': ['Money Market', 'Gov 1-2', 'Gov long', 'CPI linked', 'Corporate', 'REIT stock', 'none'],
-  'Cash & other': ['Cash', 'Crypto', 'Commodities'],
+  'Cash': ['none'],
+  'Commodities & more': ['Cryptocurrency', 'Commodities'],
+  'Real Estate': ['Living', 'Tel-Aviv', 'Abroad'],
 };
 
 export const DEFAULT_FX_RATES: FXRates = {
@@ -34,7 +36,7 @@ export function calculateAssetValue(
   viewCurrency: ViewCurrency
 ): AssetCalculations {
   // For Cash assets, price is optional and defaults to 1
-  const price = asset.price ?? (asset.class === 'Cash & other' && asset.sub_class === 'Cash' ? 1 : 0);
+  const price = asset.price ?? (asset.class === 'Cash' ? 1 : 0);
   const rawBaseValue = asset.quantity * price;
   
   const fxRate = viewCurrency === 'USD' 
@@ -104,7 +106,7 @@ export function validateAsset(asset: Partial<Asset>): string[] {
   const errors: string[] = [];
   
   // Name validation: required for all except Cash assets
-  if (!(asset.class === 'Cash & other' && asset.sub_class === 'Cash')) {
+  if (asset.class !== 'Cash') {
     if (!asset.name?.trim()) errors.push('Name is required');
   }
   if (!asset.class) errors.push('Asset class is required');
@@ -114,7 +116,7 @@ export function validateAsset(asset: Partial<Asset>): string[] {
   if (typeof asset.quantity !== 'number' || asset.quantity < 0) errors.push('Quantity must be non-negative');
   
   // Price validation: required for all except Cash assets
-  if (asset.class === 'Cash & other' && asset.sub_class === 'Cash') {
+  if (asset.class === 'Cash') {
     // Price is optional for Cash assets, defaults to 1
   } else {
     if (typeof asset.price !== 'number' || asset.price < 0) errors.push('Price must be non-negative');

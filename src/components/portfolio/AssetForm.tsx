@@ -65,7 +65,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
 
     const assetToSave: Asset = {
       id: asset?.id || generateId(),
-      name: formData.name || (formData.class === 'Cash & other' && formData.sub_class === 'Cash' ? `${formData.origin_currency} Cash` : formData.name!),
+      name: formData.name || (formData.class === 'Cash' ? `${formData.origin_currency} Cash` : formData.name!),
       class: formData.class!,
       sub_class: formData.sub_class!,
       ISIN: formData.ISIN,
@@ -73,7 +73,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
       account_bank: formData.account_bank!,
       origin_currency: formData.origin_currency!,
       quantity: formData.quantity!,
-      price: formData.class === 'Cash & other' && formData.sub_class === 'Cash' ? 1 : formData.price!,
+      price: formData.class === 'Cash' ? 1 : formData.price!,
       factor: formData.class === 'Private Equity' ? formData.factor : undefined,
       maturity_date: formData.class === 'Fixed Income' ? formData.maturity_date : undefined,
       ytw: formData.class === 'Fixed Income' ? formData.ytw : undefined,
@@ -87,10 +87,14 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
 
   const handleClassChange = (newClass: AssetClass) => {
     const subClassOptions = getSubClassOptions(newClass);
+    // Set default quantity based on asset class
+    const defaultQuantity = (newClass === 'Private Equity' || newClass === 'Real Estate') ? 1 : (formData.quantity || 0);
+    
     setFormData(prev => ({
       ...prev,
       class: newClass,
       sub_class: subClassOptions[subClassOptions.length - 1] as any, // Use default (last option)
+      quantity: defaultQuantity,
     }));
   };
 
@@ -131,13 +135,13 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name" className="font-semibold">
-                Asset Name {!(formData.class === 'Cash & other' && formData.sub_class === 'Cash') && '*'}
+                Asset Name {formData.class !== 'Cash' && '*'}
               </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder={formData.class === 'Cash & other' && formData.sub_class === 'Cash' ? 'Optional for cash' : 'Enter asset name'}
+                placeholder={formData.class === 'Cash' ? 'Optional for cash' : 'Enter asset name'}
                 className="border-border/50 focus:border-financial-primary"
               />
             </div>
@@ -165,7 +169,9 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                   <SelectItem value="Public Equity">Public Equity</SelectItem>
                   <SelectItem value="Private Equity">Private Equity</SelectItem>
                   <SelectItem value="Fixed Income">Fixed Income</SelectItem>
-                  <SelectItem value="Cash & other">Cash & other</SelectItem>
+                  <SelectItem value="Cash">Cash</SelectItem>
+                  <SelectItem value="Commodities & more">Commodities & more</SelectItem>
+                  <SelectItem value="Real Estate">Real Estate</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -253,7 +259,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
               />
             </div>
 
-            {!(formData.class === 'Cash & other' && formData.sub_class === 'Cash') && (
+            {formData.class !== 'Cash' && (
               <div className="space-y-2">
                 <Label htmlFor="price" className="font-semibold">Price *</Label>
                 <Input

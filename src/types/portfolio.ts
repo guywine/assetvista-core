@@ -1,11 +1,13 @@
-export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income' | 'Cash & other';
+export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income' | 'Cash' | 'Commodities & more' | 'Real Estate';
 
 export type PublicEquitySubClass = 'Big Tech' | 'China' | 'other';
 export type PrivateEquitySubClass = 'Initial' | 'Near Future' | 'Growth' | 'none';
 export type FixedIncomeSubClass = 'Money Market' | 'Gov 1-2' | 'Gov long' | 'CPI linked' | 'Corporate' | 'REIT stock' | 'none';
-export type CashOtherSubClass = 'Cash' | 'Crypto' | 'Commodities';
+export type CashSubClass = 'none';
+export type CommoditiesMoreSubClass = 'Cryptocurrency' | 'Commodities';
+export type RealEstateSubClass = 'Living' | 'Tel-Aviv' | 'Abroad';
 
-export type SubClass = PublicEquitySubClass | PrivateEquitySubClass | FixedIncomeSubClass | CashOtherSubClass;
+export type SubClass = PublicEquitySubClass | PrivateEquitySubClass | FixedIncomeSubClass | CashSubClass | CommoditiesMoreSubClass | RealEstateSubClass;
 
 export type AccountEntity = 'Roy' | 'Roni' | 'Guy' | 'Shimon' | 'Hagit' | 'SW2009' | 'Weintraub' | 'B Joel' | 'Tom';
 
