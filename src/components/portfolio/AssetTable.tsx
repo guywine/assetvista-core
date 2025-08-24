@@ -5,7 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Edit2, Plus } from 'lucide-react';
+import { Edit2, Plus, Trash2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface AssetTableProps {
   assets: Asset[];
@@ -13,6 +14,7 @@ interface AssetTableProps {
   fxRates: FXRates;
   filters: FilterCriteria;
   onEditAsset: (asset: Asset) => void;
+  onDeleteAsset: (asset: Asset) => void;
   onAddAsset: () => void;
 }
 
@@ -21,7 +23,8 @@ export function AssetTable({
   viewCurrency, 
   fxRates, 
   filters, 
-  onEditAsset, 
+  onEditAsset,
+  onDeleteAsset,
   onAddAsset 
 }: AssetTableProps) {
   const [sortField, setSortField] = useState<keyof Asset>('name');
@@ -182,7 +185,7 @@ export function AssetTable({
                       {asset.quantity.toLocaleString(undefined, { maximumFractionDigits: 4 })}
                     </TableCell>
                     <TableCell className="text-right font-mono">
-                      {formatCurrency(asset.price, asset.origin_currency as ViewCurrency)}
+                      {asset.price.toFixed(1)} {asset.origin_currency}
                     </TableCell>
                     <TableCell className="text-right font-mono font-semibold text-financial-success">
                       {calc ? formatCurrency(calc.display_value, viewCurrency) : '-'}
@@ -191,14 +194,30 @@ export function AssetTable({
                       {calc ? formatPercentage(calc.percentage_of_scope) : '-'}
                     </TableCell>
                     <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onEditAsset(asset)}
-                        className="h-8 w-8 p-0 hover:bg-muted/50"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0 hover:bg-muted/50"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => onEditAsset(asset)}>
+                            <Edit2 className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => onDeleteAsset(asset)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 );

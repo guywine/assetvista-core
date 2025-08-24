@@ -232,7 +232,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-2">Weighted Average YTW</p>
                 <p className="text-3xl font-bold text-financial-success">
-                  {formatPercentage(fixedIncomeWeightedYTW)}
+                  {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
                 </p>
               </div>
             </CardContent>

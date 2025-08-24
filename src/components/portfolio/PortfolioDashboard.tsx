@@ -81,6 +81,15 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     setIsAssetFormOpen(true);
   };
 
+  const handleDeleteAsset = (asset: Asset) => {
+    setAssets(prev => prev.filter(a => a.id !== asset.id));
+    toast({
+      title: "Asset Deleted",
+      description: `${asset.name} has been successfully removed from your portfolio.`,
+      variant: "destructive",
+    });
+  };
+
   const handleManageFX = () => {
     toast({
       title: "FX Management",
@@ -138,6 +147,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               fxRates={fxRates}
               filters={filters}
               onEditAsset={handleEditAsset}
+              onDeleteAsset={handleDeleteAsset}
               onAddAsset={handleAddAsset}
             />
           </TabsContent>
