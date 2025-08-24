@@ -8,6 +8,7 @@ import { AssetForm } from './AssetForm';
 import { PortfolioSummary } from './PortfolioSummary';
 import { PortfolioFilters } from './PortfolioFilters';
 import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
+import { FXRatesBar } from './FXRatesBar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
@@ -131,6 +132,11 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           assetCount={assetCount}
           classTotals={classTotals}
           onManageFX={handleManageFX}
+        />
+
+        <FXRatesBar 
+          fxRates={fxRates}
+          onRatesChange={setFxRates}
         />
 
         <Tabs defaultValue="assets" className="space-y-6">
