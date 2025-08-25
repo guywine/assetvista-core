@@ -76,7 +76,9 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
       quantity: formData.quantity!,
       price: formData.class === 'Cash' ? 1 : formData.price!,
       factor: formData.class === 'Private Equity' ? formData.factor : undefined,
-      maturity_date: formData.class === 'Fixed Income' ? formData.maturity_date : undefined,
+      maturity_date: formData.class === 'Fixed Income' 
+        ? (formData.sub_class === 'REIT stock' ? 'none' : formData.maturity_date) 
+        : undefined,
       ytw: formData.class === 'Fixed Income' ? formData.ytw : undefined,
       created_at: asset?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -300,16 +302,27 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
 
           {formData.class === 'Fixed Income' && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="maturity" className="font-semibold">Maturity Date</Label>
-                <Input
-                  id="maturity"
-                  type="date"
-                  value={formData.maturity_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maturity_date: e.target.value }))}
-                  className="border-border/50 focus:border-financial-primary"
-                />
-              </div>
+              {formData.sub_class !== 'REIT stock' && (
+                <div className="space-y-2">
+                  <Label htmlFor="maturity" className="font-semibold">Maturity Date</Label>
+                  <Input
+                    id="maturity"
+                    type="date"
+                    value={formData.maturity_date}
+                    onChange={(e) => setFormData(prev => ({ ...prev, maturity_date: e.target.value }))}
+                    className="border-border/50 focus:border-financial-primary"
+                  />
+                </div>
+              )}
+
+              {formData.sub_class === 'REIT stock' && (
+                <div className="space-y-2">
+                  <Label className="font-semibold">Maturity Date</Label>
+                  <div className="px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md">
+                    None (REIT stock has no maturity)
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="ytw" className="font-semibold">YTW (%)</Label>
