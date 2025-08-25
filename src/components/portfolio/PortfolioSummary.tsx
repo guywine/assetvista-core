@@ -106,7 +106,14 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
     return acc;
   }, {} as Record<string, Array<{ name: string; value: number; percentage: number }>>);
 
-  const COLORS = ['hsl(var(--financial-primary))', 'hsl(var(--financial-success))', 'hsl(var(--financial-warning))'];
+  const COLORS = [
+    'hsl(var(--chart-1))', // Public Equity
+    'hsl(var(--chart-2))', // Private Equity  
+    'hsl(var(--chart-3))', // Fixed Income
+    'hsl(var(--chart-4))', // Cash
+    'hsl(var(--chart-5))', // Commodities & more
+    'hsl(var(--financial-primary))', // Real Estate
+  ];
   const SUB_CLASS_COLORS = [
     'hsl(var(--chart-1))',
     'hsl(var(--chart-2))',
