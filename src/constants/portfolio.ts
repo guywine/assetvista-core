@@ -11,6 +11,9 @@ import type {
   Currency
 } from '@/types/portfolio';
 
+// Currencies
+export const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD'];
+
 // Asset Classes
 export const ASSET_CLASSES: AssetClass[] = [
   'Public Equity',
@@ -25,7 +28,7 @@ export const ASSET_CLASSES: AssetClass[] = [
 export const PUBLIC_EQUITY_SUBCLASSES: PublicEquitySubClass[] = ['Big Tech', 'China', 'other'];
 export const PRIVATE_EQUITY_SUBCLASSES: PrivateEquitySubClass[] = ['Initial', 'Near Future', 'Growth', 'none'];
 export const FIXED_INCOME_SUBCLASSES: FixedIncomeSubClass[] = ['Money Market', 'Gov 1-2', 'Gov long', 'CPI linked', 'Corporate', 'REIT stock', 'none'];
-export const CASH_SUBCLASSES: CashSubClass[] = ['none'];
+export const CASH_SUBCLASSES: CashSubClass[] = CURRENCIES;
 export const COMMODITIES_MORE_SUBCLASSES: CommoditiesMoreSubClass[] = ['Cryptocurrency', 'Commodities'];
 export const REAL_ESTATE_SUBCLASSES: RealEstateSubClass[] = ['Living', 'Tel-Aviv', 'Abroad'];
 
@@ -62,8 +65,6 @@ export const ACCOUNT_BANKS: AccountBank[] = [
   'Leumi', 'etoro', 'Tom Trust'
 ];
 
-// Currencies
-export const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD'];
 
 // Default FX Rates
 export const DEFAULT_FX_RATES = {

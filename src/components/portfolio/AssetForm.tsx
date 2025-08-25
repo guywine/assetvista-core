@@ -178,7 +178,14 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
               <Label htmlFor="sub_class" className="font-semibold">Sub Class</Label>
               <Select 
                 value={formData.sub_class} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, sub_class: value as any }))}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    sub_class: value as any,
+                    // Auto-set currency for Cash assets
+                    origin_currency: formData.class === 'Cash' ? value as Currency : prev.origin_currency
+                  }));
+                }}
               >
                 <SelectTrigger className="border-border/50 focus:border-financial-primary">
                   <SelectValue />
