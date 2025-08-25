@@ -70,19 +70,7 @@ export function PortfolioHeader({
         </Card>
 
         {/* Asset Count Card */}
-        <Card className="bg-gradient-to-br from-financial-success/5 to-financial-success/10 border-financial-success/20 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Assets</p>
-                <h3 className="text-3xl font-bold text-financial-success mt-1">{assetCount}</h3>
-              </div>
-              <div className="h-12 w-12 bg-financial-success/10 rounded-full flex items-center justify-center">
-                <TrendingUp className="h-6 w-6 text-financial-success" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
 
         {/* Class Breakdown Cards */}
         {classTotals.slice(0, 2).map(({
