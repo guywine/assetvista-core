@@ -43,11 +43,19 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   // Filter assets based on current filters
   const filteredAssets = useMemo(() => {
     return assets.filter(asset => {
+      // Include filters - asset must match at least one if specified
       if (filters.class && !filters.class.includes(asset.class)) return false;
       if (filters.sub_class && !filters.sub_class.includes(asset.sub_class)) return false;
       if (filters.account_entity && !filters.account_entity.includes(asset.account_entity)) return false;
       if (filters.account_bank && !filters.account_bank.includes(asset.account_bank)) return false;
       if (filters.origin_currency && !filters.origin_currency.includes(asset.origin_currency)) return false;
+      
+      // Exclude filters - asset must NOT match any if specified
+      if (filters.exclude_class && filters.exclude_class.includes(asset.class)) return false;
+      if (filters.exclude_sub_class && filters.exclude_sub_class.includes(asset.sub_class)) return false;
+      if (filters.exclude_account_entity && filters.exclude_account_entity.includes(asset.account_entity)) return false;
+      if (filters.exclude_account_bank && filters.exclude_account_bank.includes(asset.account_bank)) return false;
+      if (filters.exclude_origin_currency && filters.exclude_origin_currency.includes(asset.origin_currency)) return false;
       
       if (filters.maturity_date_from && asset.maturity_date) {
         if (asset.maturity_date < filters.maturity_date_from) return false;
@@ -60,7 +68,42 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
     });
   }, [assets, filters]);
 
-  // Calculate aggregated data based on filtered assets
+  // Calculate aggregated data for unfiltered portfolio (for header)
+  const { totalPortfolioValue, totalAssetCount, totalClassTotals } = useMemo(() => {
+    // Use default rates if FX rates haven't loaded yet
+    const effectiveFxRates = Object.keys(fxRates).length > 0 ? fxRates : DEFAULT_FX_RATES;
+    
+    const calculations = assets.map(asset => ({
+      asset,
+      calculation: calculateAssetValue(asset, effectiveFxRates, viewCurrency),
+    }));
+
+    const total = calculations.reduce((sum, { calculation }) => sum + calculation.display_value, 0);
+    const count = assets.length;
+
+    const classData = calculations.reduce((acc, { asset, calculation }) => {
+      if (!acc[asset.class]) {
+        acc[asset.class] = { value: 0, count: 0 };
+      }
+      acc[asset.class].value += calculation.display_value;
+      acc[asset.class].count++;
+      return acc;
+    }, {} as Record<AssetClass, { value: number; count: number }>);
+
+    const classArray = Object.entries(classData).map(([className, data]) => ({
+      class: className as AssetClass,
+      value: data.value,
+      count: data.count,
+    }));
+
+    return {
+      totalPortfolioValue: total,
+      totalAssetCount: count,
+      totalClassTotals: classArray,
+    };
+  }, [assets, fxRates, viewCurrency]);
+
+  // Calculate aggregated data based on filtered assets (for table and other components)
   const { totalValue, assetCount, classTotals } = useMemo(() => {
     // Use default rates if FX rates haven't loaded yet
     const effectiveFxRates = Object.keys(fxRates).length > 0 ? fxRates : DEFAULT_FX_RATES;
@@ -149,9 +192,9 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
         <PortfolioHeader
           viewCurrency={viewCurrency}
           onViewCurrencyChange={setViewCurrency}
-          totalValue={totalValue}
-          assetCount={assetCount}
-          classTotals={classTotals}
+          totalValue={totalPortfolioValue}
+          assetCount={totalAssetCount}
+          classTotals={totalClassTotals}
           onManageFX={handleManageFX}
         />
 
