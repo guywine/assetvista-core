@@ -302,7 +302,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
               <CardHeader>
                 <CardTitle className="text-base font-bold text-financial-primary">
-                  {assetClass} Sub-classes
+                  {assetClass}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Total: {formatCurrency(classData.value, viewCurrency)}
