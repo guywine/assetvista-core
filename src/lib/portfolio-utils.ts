@@ -39,9 +39,13 @@ export function calculateAssetValue(
   const price = asset.price ?? (asset.class === 'Cash' ? 1 : 0);
   const rawBaseValue = asset.quantity * price;
   
-  const fxRate = viewCurrency === 'USD' 
-    ? fxRates[asset.origin_currency]?.to_USD || 1
-    : fxRates[asset.origin_currency]?.to_ILS || 1;
+  // Get the correct exchange rate based on view currency
+  let fxRate = 1;
+  if (viewCurrency === 'USD') {
+    fxRate = fxRates[asset.origin_currency]?.to_USD || 1;
+  } else { // ILS
+    fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
+  }
     
   const convertedValue = rawBaseValue * fxRate;
   
