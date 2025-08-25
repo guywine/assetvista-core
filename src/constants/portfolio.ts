@@ -27,7 +27,7 @@ export const ASSET_CLASSES: AssetClass[] = [
 // Sub-class mappings
 export const PUBLIC_EQUITY_SUBCLASSES: PublicEquitySubClass[] = ['Big Tech', 'China', 'other'];
 export const PRIVATE_EQUITY_SUBCLASSES: PrivateEquitySubClass[] = ['Initial', 'Near Future', 'Growth', 'none'];
-export const FIXED_INCOME_SUBCLASSES: FixedIncomeSubClass[] = ['Money Market', 'Gov 1-2', 'Gov long', 'CPI linked', 'Corporate', 'REIT stock', 'none'];
+export const FIXED_INCOME_SUBCLASSES: FixedIncomeSubClass[] = ['Money Market', 'Gov 1-2', 'Gov long', 'CPI linked', 'Corporate', 'REIT stock', 'Private Credit', 'none'];
 export const CASH_SUBCLASSES: CashSubClass[] = CURRENCIES;
 export const COMMODITIES_MORE_SUBCLASSES: CommoditiesMoreSubClass[] = ['Cryptocurrency', 'Commodities'];
 export const REAL_ESTATE_SUBCLASSES: RealEstateSubClass[] = ['Living', 'Tel-Aviv', 'Abroad'];

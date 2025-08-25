@@ -77,7 +77,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
       price: formData.class === 'Cash' ? 1 : formData.price!,
       factor: formData.class === 'Private Equity' ? formData.factor : undefined,
       maturity_date: formData.class === 'Fixed Income' 
-        ? (formData.sub_class === 'REIT stock' ? 'none' : formData.maturity_date) 
+        ? (['REIT stock', 'Private Credit'].includes(formData.sub_class!) ? 'none' : formData.maturity_date) 
         : undefined,
       ytw: formData.class === 'Fixed Income' ? formData.ytw : undefined,
       created_at: asset?.created_at || new Date().toISOString(),
@@ -302,7 +302,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
 
           {formData.class === 'Fixed Income' && (
             <div className="grid grid-cols-2 gap-4">
-              {formData.sub_class !== 'REIT stock' && (
+              {!['REIT stock', 'Private Credit'].includes(formData.sub_class!) && (
                 <div className="space-y-2">
                   <Label htmlFor="maturity" className="font-semibold">Maturity Date</Label>
                   <Input
@@ -315,11 +315,11 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                 </div>
               )}
 
-              {formData.sub_class === 'REIT stock' && (
+              {['REIT stock', 'Private Credit'].includes(formData.sub_class!) && (
                 <div className="space-y-2">
                   <Label className="font-semibold">Maturity Date</Label>
                   <div className="px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md">
-                    None (REIT stock has no maturity)
+                    None ({formData.sub_class === 'REIT stock' ? 'REIT stock has no maturity' : 'Private Credit has no fixed maturity'})
                   </div>
                 </div>
               )}
