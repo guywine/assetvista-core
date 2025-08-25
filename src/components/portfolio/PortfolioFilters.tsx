@@ -22,22 +22,27 @@ const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD'];
 
 export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [newFilterType, setNewFilterType] = useState<string>('');
+  const [newFilterCategory, setNewFilterCategory] = useState<string>('');
+  const [newFilterAction, setNewFilterAction] = useState<'include' | 'exclude'>('include');
 
-  const addFilter = (type: keyof FilterCriteria, value: any) => {
+  const addFilter = (category: string, action: 'include' | 'exclude', value: any) => {
     const newFilters = { ...filters };
+    const filterKey = action === 'include' ? category : `exclude_${category}`;
     
-    if (type === 'maturity_date_from' || type === 'maturity_date_to') {
-      newFilters[type] = value;
+    if (category === 'maturity_date_from' || category === 'maturity_date_to') {
+      newFilters[filterKey as keyof FilterCriteria] = value;
     } else {
       // Handle array filters
-      const currentValues = newFilters[type] as any[] || [];
+      const currentValues = newFilters[filterKey as keyof FilterCriteria] as any[] || [];
       if (!currentValues.includes(value)) {
-        newFilters[type] = [...currentValues, value] as any;
+        newFilters[filterKey as keyof FilterCriteria] = [...currentValues, value] as any;
       }
     }
     
     onFiltersChange(newFilters);
+    setNewFilterCategory('');
+    setNewFilterAction('include');
+    setIsOpen(false);
   };
 
   const removeFilter = (type: keyof FilterCriteria, value?: any) => {
@@ -254,189 +259,185 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
         <PopoverContent className="w-80" align="start">
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Filter Type</Label>
-              <Select value={newFilterType} onValueChange={setNewFilterType}>
+              <Label>Filter Category</Label>
+              <Select value={newFilterCategory} onValueChange={setNewFilterCategory}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select filter type" />
+                  <SelectValue placeholder="Select what to filter" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="class">Include Asset Class</SelectItem>
-                  <SelectItem value="exclude_class">Exclude Asset Class</SelectItem>
-                  <SelectItem value="sub_class">Include Sub Class</SelectItem>
-                  <SelectItem value="exclude_sub_class">Exclude Sub Class</SelectItem>
-                  <SelectItem value="account_entity">Include Account Entity</SelectItem>
-                  <SelectItem value="exclude_account_entity">Exclude Account Entity</SelectItem>
-                  <SelectItem value="account_bank">Include Bank Account</SelectItem>
-                  <SelectItem value="exclude_account_bank">Exclude Bank Account</SelectItem>
-                  <SelectItem value="origin_currency">Include Currency</SelectItem>
-                  <SelectItem value="exclude_origin_currency">Exclude Currency</SelectItem>
+                  <SelectItem value="class">Asset Class</SelectItem>
+                  <SelectItem value="sub_class">Sub Class</SelectItem>
+                  <SelectItem value="account_entity">Account Entity</SelectItem>
+                  <SelectItem value="account_bank">Bank Account</SelectItem>
+                  <SelectItem value="origin_currency">Currency</SelectItem>
                   <SelectItem value="maturity_date_from">Maturity Date From</SelectItem>
                   <SelectItem value="maturity_date_to">Maturity Date To</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {(newFilterType === 'class' || newFilterType === 'exclude_class') && (
+            {newFilterCategory && newFilterCategory !== 'maturity_date_from' && newFilterCategory !== 'maturity_date_to' && (
               <div className="space-y-2">
-                <Label>{newFilterType === 'class' ? 'Include' : 'Exclude'} Asset Class</Label>
+                <Label>Filter Action</Label>
+                <Select value={newFilterAction} onValueChange={(value: 'include' | 'exclude') => setNewFilterAction(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="include">Include</SelectItem>
+                    <SelectItem value="exclude">Exclude</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {newFilterCategory === 'class' && (
+              <div className="space-y-2">
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Asset Class</Label>
                 <div className="grid grid-cols-1 gap-2">
-                  {ASSET_CLASSES.map(assetClass => (
-                    <Button
-                      key={assetClass}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        addFilter(newFilterType as keyof FilterCriteria, assetClass);
-                        setIsOpen(false);
-                        setNewFilterType('');
-                      }}
-                      disabled={
-                        newFilterType === 'class' 
-                          ? filters.class?.includes(assetClass)
-                          : filters.exclude_class?.includes(assetClass)
-                      }
-                    >
-                      {assetClass}
-                    </Button>
-                  ))}
+                  {ASSET_CLASSES.map(assetClass => {
+                    const isDisabled = newFilterAction === 'include' 
+                      ? filters.class?.includes(assetClass)
+                      : filters.exclude_class?.includes(assetClass);
+                    
+                    return (
+                      <Button
+                        key={assetClass}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('class', newFilterAction, assetClass)}
+                        disabled={isDisabled}
+                      >
+                        {assetClass}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {(newFilterType === 'sub_class' || newFilterType === 'exclude_sub_class') && (
+            {newFilterCategory === 'sub_class' && (
               <div className="space-y-2">
-                <Label>{newFilterType === 'sub_class' ? 'Include' : 'Exclude'} Sub Class</Label>
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Sub Class</Label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                  {getAllSubClasses().map(subClass => (
-                    <Button
-                      key={subClass}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        addFilter(newFilterType as keyof FilterCriteria, subClass);
-                        setIsOpen(false);
-                        setNewFilterType('');
-                      }}
-                      disabled={
-                        newFilterType === 'sub_class'
-                          ? filters.sub_class?.includes(subClass as SubClass)
-                          : filters.exclude_sub_class?.includes(subClass as SubClass)
-                      }
-                    >
-                      {subClass}
-                    </Button>
-                  ))}
+                  {getAllSubClasses().map(subClass => {
+                    const isDisabled = newFilterAction === 'include'
+                      ? filters.sub_class?.includes(subClass as SubClass)
+                      : filters.exclude_sub_class?.includes(subClass as SubClass);
+                    
+                    return (
+                      <Button
+                        key={subClass}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('sub_class', newFilterAction, subClass)}
+                        disabled={isDisabled}
+                      >
+                        {subClass}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {(newFilterType === 'account_entity' || newFilterType === 'exclude_account_entity') && (
+            {newFilterCategory === 'account_entity' && (
               <div className="space-y-2">
-                <Label>{newFilterType === 'account_entity' ? 'Include' : 'Exclude'} Account Entity</Label>
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Account Entity</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {ACCOUNT_ENTITIES.map(entity => (
-                    <Button
-                      key={entity}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        addFilter(newFilterType as keyof FilterCriteria, entity);
-                        setIsOpen(false);
-                        setNewFilterType('');
-                      }}
-                      disabled={
-                        newFilterType === 'account_entity'
-                          ? filters.account_entity?.includes(entity)
-                          : filters.exclude_account_entity?.includes(entity)
-                      }
-                    >
-                      {entity}
-                    </Button>
-                  ))}
+                  {ACCOUNT_ENTITIES.map(entity => {
+                    const isDisabled = newFilterAction === 'include'
+                      ? filters.account_entity?.includes(entity)
+                      : filters.exclude_account_entity?.includes(entity);
+                    
+                    return (
+                      <Button
+                        key={entity}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('account_entity', newFilterAction, entity)}
+                        disabled={isDisabled}
+                      >
+                        {entity}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {(newFilterType === 'account_bank' || newFilterType === 'exclude_account_bank') && (
+            {newFilterCategory === 'account_bank' && (
               <div className="space-y-2">
-                <Label>{newFilterType === 'account_bank' ? 'Include' : 'Exclude'} Bank Account</Label>
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Bank Account</Label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
-                  {ACCOUNT_BANKS.map(bank => (
-                    <Button
-                      key={bank}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        addFilter(newFilterType as keyof FilterCriteria, bank);
-                        setIsOpen(false);
-                        setNewFilterType('');
-                      }}
-                      disabled={
-                        newFilterType === 'account_bank'
-                          ? filters.account_bank?.includes(bank)
-                          : filters.exclude_account_bank?.includes(bank)
-                      }
-                    >
-                      {bank}
-                    </Button>
-                  ))}
+                  {ACCOUNT_BANKS.map(bank => {
+                    const isDisabled = newFilterAction === 'include'
+                      ? filters.account_bank?.includes(bank)
+                      : filters.exclude_account_bank?.includes(bank);
+                    
+                    return (
+                      <Button
+                        key={bank}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('account_bank', newFilterAction, bank)}
+                        disabled={isDisabled}
+                      >
+                        {bank}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {(newFilterType === 'origin_currency' || newFilterType === 'exclude_origin_currency') && (
+            {newFilterCategory === 'origin_currency' && (
               <div className="space-y-2">
-                <Label>{newFilterType === 'origin_currency' ? 'Include' : 'Exclude'} Currency</Label>
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Currency</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  {CURRENCIES.map(currency => (
-                    <Button
-                      key={currency}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        addFilter(newFilterType as keyof FilterCriteria, currency);
-                        setIsOpen(false);
-                        setNewFilterType('');
-                      }}
-                      disabled={
-                        newFilterType === 'origin_currency'
-                          ? filters.origin_currency?.includes(currency)
-                          : filters.exclude_origin_currency?.includes(currency)
-                      }
-                    >
-                      {currency}
-                    </Button>
-                  ))}
+                  {CURRENCIES.map(currency => {
+                    const isDisabled = newFilterAction === 'include'
+                      ? filters.origin_currency?.includes(currency)
+                      : filters.exclude_origin_currency?.includes(currency);
+                    
+                    return (
+                      <Button
+                        key={currency}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('origin_currency', newFilterAction, currency)}
+                        disabled={isDisabled}
+                      >
+                        {currency}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {newFilterType === 'maturity_date_from' && (
+            {newFilterCategory === 'maturity_date_from' && (
               <div className="space-y-2">
                 <Label>Maturity Date From</Label>
                 <Input
                   type="date"
                   onChange={(e) => {
                     if (e.target.value) {
-                      addFilter('maturity_date_from', e.target.value);
-                      setIsOpen(false);
-                      setNewFilterType('');
+                      addFilter('maturity_date_from', 'include', e.target.value);
                     }
                   }}
                 />
               </div>
             )}
 
-            {newFilterType === 'maturity_date_to' && (
+            {newFilterCategory === 'maturity_date_to' && (
               <div className="space-y-2">
                 <Label>Maturity Date To</Label>
                 <Input
                   type="date"
                   onChange={(e) => {
                     if (e.target.value) {
-                      addFilter('maturity_date_to', e.target.value);
-                      setIsOpen(false);
-                      setNewFilterType('');
+                      addFilter('maturity_date_to', 'include', e.target.value);
                     }
                   }}
                 />
