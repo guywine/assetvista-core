@@ -38,11 +38,19 @@ export function AssetTable({
   // Filter assets based on current filters
   const filteredAssets = useMemo(() => {
     return assets.filter(asset => {
+      // Include filters - asset must match at least one if specified
       if (filters.class && !filters.class.includes(asset.class)) return false;
       if (filters.sub_class && !filters.sub_class.includes(asset.sub_class)) return false;
       if (filters.account_entity && !filters.account_entity.includes(asset.account_entity)) return false;
       if (filters.account_bank && !filters.account_bank.includes(asset.account_bank)) return false;
       if (filters.origin_currency && !filters.origin_currency.includes(asset.origin_currency)) return false;
+      
+      // Exclude filters - asset must NOT match any if specified
+      if (filters.exclude_class && filters.exclude_class.includes(asset.class)) return false;
+      if (filters.exclude_sub_class && filters.exclude_sub_class.includes(asset.sub_class)) return false;
+      if (filters.exclude_account_entity && filters.exclude_account_entity.includes(asset.account_entity)) return false;
+      if (filters.exclude_account_bank && filters.exclude_account_bank.includes(asset.account_bank)) return false;
+      if (filters.exclude_origin_currency && filters.exclude_origin_currency.includes(asset.origin_currency)) return false;
       
       if (filters.maturity_date_from && asset.maturity_date) {
         if (asset.maturity_date < filters.maturity_date_from) return false;

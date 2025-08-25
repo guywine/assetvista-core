@@ -70,11 +70,11 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
   const getFilterChips = () => {
     const chips: JSX.Element[] = [];
 
-    // Asset Class filters
+    // Include filters (green)
     filters.class?.forEach(value => {
       chips.push(
-        <Badge key={`class-${value}`} variant="secondary" className="gap-1">
-          Class: {value}
+        <Badge key={`class-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Class: {value}
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('class', value)}
@@ -83,11 +83,10 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
-    // Sub Class filters
     filters.sub_class?.forEach(value => {
       chips.push(
-        <Badge key={`sub_class-${value}`} variant="secondary" className="gap-1">
-          Sub Class: {value}
+        <Badge key={`sub_class-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Sub Class: {value}
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('sub_class', value)}
@@ -96,11 +95,10 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
-    // Account Entity filters
     filters.account_entity?.forEach(value => {
       chips.push(
-        <Badge key={`entity-${value}`} variant="secondary" className="gap-1">
-          Entity: {value}
+        <Badge key={`entity-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Entity: {value}
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('account_entity', value)}
@@ -109,11 +107,10 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
-    // Account Bank filters
     filters.account_bank?.forEach(value => {
       chips.push(
-        <Badge key={`bank-${value}`} variant="secondary" className="gap-1">
-          Bank: {value}
+        <Badge key={`bank-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Bank: {value}
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('account_bank', value)}
@@ -122,11 +119,10 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
-    // Currency filters
     filters.origin_currency?.forEach(value => {
       chips.push(
-        <Badge key={`currency-${value}`} variant="secondary" className="gap-1">
-          Currency: {value}
+        <Badge key={`currency-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Currency: {value}
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('origin_currency', value)}
@@ -135,7 +131,68 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
-    // Date range filters
+    // Exclude filters (red)
+    filters.exclude_class?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_class-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Class: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_class', value)}
+          />
+        </Badge>
+      );
+    });
+
+    filters.exclude_sub_class?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_sub_class-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Sub Class: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_sub_class', value)}
+          />
+        </Badge>
+      );
+    });
+
+    filters.exclude_account_entity?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_entity-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Entity: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_account_entity', value)}
+          />
+        </Badge>
+      );
+    });
+
+    filters.exclude_account_bank?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_bank-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Bank: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_account_bank', value)}
+          />
+        </Badge>
+      );
+    });
+
+    filters.exclude_origin_currency?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_currency-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Currency: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_origin_currency', value)}
+          />
+        </Badge>
+      );
+    });
+
+    // Date range filters (blue)
     if (filters.maturity_date_from) {
       chips.push(
         <Badge key="date-from" variant="secondary" className="gap-1">
@@ -203,20 +260,25 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                   <SelectValue placeholder="Select filter type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="class">Asset Class</SelectItem>
-                  <SelectItem value="sub_class">Sub Class</SelectItem>
-                  <SelectItem value="account_entity">Account Entity</SelectItem>
-                  <SelectItem value="account_bank">Bank Account</SelectItem>
-                  <SelectItem value="origin_currency">Currency</SelectItem>
+                  <SelectItem value="class">Include Asset Class</SelectItem>
+                  <SelectItem value="exclude_class">Exclude Asset Class</SelectItem>
+                  <SelectItem value="sub_class">Include Sub Class</SelectItem>
+                  <SelectItem value="exclude_sub_class">Exclude Sub Class</SelectItem>
+                  <SelectItem value="account_entity">Include Account Entity</SelectItem>
+                  <SelectItem value="exclude_account_entity">Exclude Account Entity</SelectItem>
+                  <SelectItem value="account_bank">Include Bank Account</SelectItem>
+                  <SelectItem value="exclude_account_bank">Exclude Bank Account</SelectItem>
+                  <SelectItem value="origin_currency">Include Currency</SelectItem>
+                  <SelectItem value="exclude_origin_currency">Exclude Currency</SelectItem>
                   <SelectItem value="maturity_date_from">Maturity Date From</SelectItem>
                   <SelectItem value="maturity_date_to">Maturity Date To</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {newFilterType === 'class' && (
+            {(newFilterType === 'class' || newFilterType === 'exclude_class') && (
               <div className="space-y-2">
-                <Label>Asset Class</Label>
+                <Label>{newFilterType === 'class' ? 'Include' : 'Exclude'} Asset Class</Label>
                 <div className="grid grid-cols-1 gap-2">
                   {ASSET_CLASSES.map(assetClass => (
                     <Button
@@ -224,11 +286,15 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        addFilter('class', assetClass);
+                        addFilter(newFilterType as keyof FilterCriteria, assetClass);
                         setIsOpen(false);
                         setNewFilterType('');
                       }}
-                      disabled={filters.class?.includes(assetClass)}
+                      disabled={
+                        newFilterType === 'class' 
+                          ? filters.class?.includes(assetClass)
+                          : filters.exclude_class?.includes(assetClass)
+                      }
                     >
                       {assetClass}
                     </Button>
@@ -237,9 +303,9 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
               </div>
             )}
 
-            {newFilterType === 'sub_class' && (
+            {(newFilterType === 'sub_class' || newFilterType === 'exclude_sub_class') && (
               <div className="space-y-2">
-                <Label>Sub Class</Label>
+                <Label>{newFilterType === 'sub_class' ? 'Include' : 'Exclude'} Sub Class</Label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
                   {getAllSubClasses().map(subClass => (
                     <Button
@@ -247,11 +313,15 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        addFilter('sub_class', subClass);
+                        addFilter(newFilterType as keyof FilterCriteria, subClass);
                         setIsOpen(false);
                         setNewFilterType('');
                       }}
-                      disabled={filters.sub_class?.includes(subClass as SubClass)}
+                      disabled={
+                        newFilterType === 'sub_class'
+                          ? filters.sub_class?.includes(subClass as SubClass)
+                          : filters.exclude_sub_class?.includes(subClass as SubClass)
+                      }
                     >
                       {subClass}
                     </Button>
@@ -260,9 +330,9 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
               </div>
             )}
 
-            {newFilterType === 'account_entity' && (
+            {(newFilterType === 'account_entity' || newFilterType === 'exclude_account_entity') && (
               <div className="space-y-2">
-                <Label>Account Entity</Label>
+                <Label>{newFilterType === 'account_entity' ? 'Include' : 'Exclude'} Account Entity</Label>
                 <div className="grid grid-cols-2 gap-2">
                   {ACCOUNT_ENTITIES.map(entity => (
                     <Button
@@ -270,11 +340,15 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        addFilter('account_entity', entity);
+                        addFilter(newFilterType as keyof FilterCriteria, entity);
                         setIsOpen(false);
                         setNewFilterType('');
                       }}
-                      disabled={filters.account_entity?.includes(entity)}
+                      disabled={
+                        newFilterType === 'account_entity'
+                          ? filters.account_entity?.includes(entity)
+                          : filters.exclude_account_entity?.includes(entity)
+                      }
                     >
                       {entity}
                     </Button>
@@ -283,9 +357,9 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
               </div>
             )}
 
-            {newFilterType === 'account_bank' && (
+            {(newFilterType === 'account_bank' || newFilterType === 'exclude_account_bank') && (
               <div className="space-y-2">
-                <Label>Bank Account</Label>
+                <Label>{newFilterType === 'account_bank' ? 'Include' : 'Exclude'} Bank Account</Label>
                 <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
                   {ACCOUNT_BANKS.map(bank => (
                     <Button
@@ -293,11 +367,15 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        addFilter('account_bank', bank);
+                        addFilter(newFilterType as keyof FilterCriteria, bank);
                         setIsOpen(false);
                         setNewFilterType('');
                       }}
-                      disabled={filters.account_bank?.includes(bank)}
+                      disabled={
+                        newFilterType === 'account_bank'
+                          ? filters.account_bank?.includes(bank)
+                          : filters.exclude_account_bank?.includes(bank)
+                      }
                     >
                       {bank}
                     </Button>
@@ -306,9 +384,9 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
               </div>
             )}
 
-            {newFilterType === 'origin_currency' && (
+            {(newFilterType === 'origin_currency' || newFilterType === 'exclude_origin_currency') && (
               <div className="space-y-2">
-                <Label>Currency</Label>
+                <Label>{newFilterType === 'origin_currency' ? 'Include' : 'Exclude'} Currency</Label>
                 <div className="grid grid-cols-3 gap-2">
                   {CURRENCIES.map(currency => (
                     <Button
@@ -316,11 +394,15 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        addFilter('origin_currency', currency);
+                        addFilter(newFilterType as keyof FilterCriteria, currency);
                         setIsOpen(false);
                         setNewFilterType('');
                       }}
-                      disabled={filters.origin_currency?.includes(currency)}
+                      disabled={
+                        newFilterType === 'origin_currency'
+                          ? filters.origin_currency?.includes(currency)
+                          : filters.exclude_origin_currency?.includes(currency)
+                      }
                     >
                       {currency}
                     </Button>
