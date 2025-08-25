@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Asset, AssetClass, AccountEntity, Currency } from '@/types/portfolio';
 import { validateAsset, generateId, getSubClassOptions, getBankOptions } from '@/lib/portfolio-utils';
+import { ASSET_CLASSES, ACCOUNT_ENTITIES, CURRENCIES } from '@/constants/portfolio';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -166,12 +167,9 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Public Equity">Public Equity</SelectItem>
-                  <SelectItem value="Private Equity">Private Equity</SelectItem>
-                  <SelectItem value="Fixed Income">Fixed Income</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Commodities & more">Commodities & more</SelectItem>
-                  <SelectItem value="Real Estate">Real Estate</SelectItem>
+                  {ASSET_CLASSES.map(assetClass => (
+                    <SelectItem key={assetClass} value={assetClass}>{assetClass}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -202,7 +200,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {['Roy', 'Roni', 'Guy', 'Shimon', 'Hagit', 'SW2009', 'Weintraub', 'B Joel', 'Tom'].map(entity => (
+                  {ACCOUNT_ENTITIES.map(entity => (
                     <SelectItem key={entity} value={entity}>{entity}</SelectItem>
                   ))}
                 </SelectContent>
@@ -238,7 +236,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {['USD', 'ILS', 'EUR', 'CHF', 'CAD', 'HKD'].map(currency => (
+                  {CURRENCIES.map(currency => (
                     <SelectItem key={currency} value={currency}>{currency}</SelectItem>
                   ))}
                 </SelectContent>

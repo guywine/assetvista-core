@@ -1,34 +1,5 @@
 import { Asset, AssetCalculations, FXRates, ViewCurrency, AssetClass, AccountEntity } from '@/types/portfolio';
-
-export const ACCOUNT_BANK_MAP: Record<string, string[]> = {
-  'Hagit': ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix'],
-  'Guy': ['Poalim', 'Julius Bär'],
-  'Roni': ['Julius Bär'],
-  'Roy': ['Poalim', 'Julius Bär', 'etoro'],
-  'SW2009': ['Poalim', 'Julius Bär'],
-  'Weintraub': ['Poalim', 'Julius Bär'],
-  'Shimon': ['U bank', 'Leumi', 'Julius Bär', 'Poalim', 'Poalim Phoenix'],
-  'B Joel': ['Poalim', 'Julius Bär'],
-  'Tom': ['Tom Trust'],
-};
-
-export const CLASS_SUBCLASS_MAP = {
-  'Public Equity': ['Big Tech', 'China', 'other'],
-  'Private Equity': ['Initial', 'Near Future', 'Growth', 'none'],
-  'Fixed Income': ['Money Market', 'Gov 1-2', 'Gov long', 'CPI linked', 'Corporate', 'REIT stock', 'none'],
-  'Cash': ['none'],
-  'Commodities & more': ['Cryptocurrency', 'Commodities'],
-  'Real Estate': ['Living', 'Tel-Aviv', 'Abroad'],
-};
-
-export const DEFAULT_FX_RATES: FXRates = {
-  'USD': { to_USD: 1.0, to_ILS: 3.65, last_updated: new Date().toISOString() },
-  'ILS': { to_USD: 0.274, to_ILS: 1.0, last_updated: new Date().toISOString() },
-  'EUR': { to_USD: 1.09, to_ILS: 3.98, last_updated: new Date().toISOString() },
-  'CHF': { to_USD: 1.11, to_ILS: 4.05, last_updated: new Date().toISOString() },
-  'CAD': { to_USD: 0.74, to_ILS: 2.70, last_updated: new Date().toISOString() },
-  'HKD': { to_USD: 0.128, to_ILS: 0.467, last_updated: new Date().toISOString() },
-};
+import { ACCOUNT_BANK_MAP, CLASS_SUBCLASS_MAP, DEFAULT_FX_RATES } from '@/constants/portfolio';
 
 export function calculateAssetValue(
   asset: Asset,

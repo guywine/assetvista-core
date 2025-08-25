@@ -8,17 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Filter, X, Plus } from 'lucide-react';
-import { CLASS_SUBCLASS_MAP, ACCOUNT_BANK_MAP } from '@/lib/portfolio-utils';
+import { ASSET_CLASSES, CLASS_SUBCLASS_MAP, ACCOUNT_BANK_MAP, ACCOUNT_ENTITIES, ACCOUNT_BANKS, CURRENCIES } from '@/constants/portfolio';
 
 interface PortfolioFiltersProps {
   filters: FilterCriteria;
   onFiltersChange: (filters: FilterCriteria) => void;
 }
-
-const ASSET_CLASSES: AssetClass[] = ['Public Equity', 'Private Equity', 'Fixed Income', 'Cash', 'Commodities & more', 'Real Estate'];
-const ACCOUNT_ENTITIES: AccountEntity[] = ['Roy', 'Roni', 'Guy', 'Shimon', 'Hagit', 'SW2009', 'Weintraub', 'B Joel', 'Tom'];
-const ACCOUNT_BANKS: AccountBank[] = ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix', 'Leumi', 'etoro', 'Tom Trust'];
-const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD'];
 
 export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);

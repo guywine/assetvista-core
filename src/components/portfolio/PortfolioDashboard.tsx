@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
-import { DEFAULT_FX_RATES, calculateAssetValue } from '@/lib/portfolio-utils';
+import { calculateAssetValue } from '@/lib/portfolio-utils';
+import { DEFAULT_FX_RATES } from '@/constants/portfolio';
 import { useAssets } from '@/hooks/useAssets';
 import { useFXRates } from '@/hooks/useFXRates';
 import { PortfolioHeader } from './PortfolioHeader';

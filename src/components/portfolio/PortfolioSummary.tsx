@@ -95,14 +95,18 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
     return acc;
   }, {} as Record<string, Record<string, number>>);
 
-  // Create pie chart data for each asset class
+  // Create pie chart data for each asset class that has assets
   const subClassPieData = Object.entries(subClassBreakdown).reduce((acc, [assetClass, subClasses]) => {
     const classTotal = Object.values(subClasses).reduce((sum, value) => sum + value, 0);
-    acc[assetClass] = Object.entries(subClasses).map(([subClass, value]) => ({
-      name: subClass,
-      value: value,
-      percentage: classTotal > 0 ? (value / classTotal) * 100 : 0,
-    }));
+    
+    // Only create pie data if there are assets in this class
+    if (classTotal > 0) {
+      acc[assetClass] = Object.entries(subClasses).map(([subClass, value]) => ({
+        name: subClass,
+        value: value,
+        percentage: classTotal > 0 ? (value / classTotal) * 100 : 0,
+      }));
+    }
     return acc;
   }, {} as Record<string, Array<{ name: string; value: number; percentage: number }>>);
 
@@ -285,7 +289,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
           {Object.entries(subClassPieData).map(([assetClass, data]) => {
             const classTotal = holdingsByClass[assetClass]?.value || 0;
             
-            if (data.length <= 1) return null; // Don't show chart if only one sub-class
+            // Show chart if there are multiple sub-classes with data
+            if (data.length <= 1) return null;
             
             return (
               <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
