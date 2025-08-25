@@ -46,6 +46,8 @@ export function calculateAssetValue(
   } else { // ILS
     fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
   }
+  
+  console.log(`Asset: ${asset.name}, Origin: ${asset.origin_currency}, View: ${viewCurrency}, Rate: ${fxRate}, Raw: ${rawBaseValue}`);
     
   const convertedValue = rawBaseValue * fxRate;
   
