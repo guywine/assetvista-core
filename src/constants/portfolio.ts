@@ -48,14 +48,14 @@ export const ACCOUNT_ENTITIES: AccountEntity[] = [
 
 // Account Banks by Entity
 export const ACCOUNT_BANK_MAP: Record<AccountEntity, AccountBank[]> = {
-  'Roy': ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär'],
-  'Roni': ['Poalim', 'Poalim Phoenix'],
-  'Guy': ['Leumi'],
-  'Shimon': ['etoro'],
-  'Hagit': ['Leumi'],
-  'SW2009': ['Leumi'],
-  'Weintraub': ['Leumi'],
-  'B Joel': ['Leumi'],
+  'Hagit': ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix'],
+  'Guy': ['Poalim', 'Julius Bär'],
+  'Roni': ['Julius Bär'],
+  'Roy': ['Poalim', 'Julius Bär', 'etoro'],
+  'SW2009': ['Poalim', 'Julius Bär'],
+  'Weintraub': ['Poalim', 'Julius Bär'],
+  'Shimon': ['U bank', 'Leumi', 'Julius Bär', 'Poalim', 'Poalim Phoenix'],
+  'B Joel': ['Poalim', 'Julius Bär'],
   'Tom': ['Tom Trust'],
 };
 
