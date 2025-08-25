@@ -283,56 +283,61 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
         )}
       </div>
 
-      {/* Third Row - Sub-class Charts */}
-      {Object.keys(subClassPieData).length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Object.entries(subClassPieData).map(([assetClass, data]) => {
-            const classTotal = holdingsByClass[assetClass]?.value || 0;
-            
-            // Show chart if there are multiple sub-classes with data
-            if (data.length <= 1) return null;
-            
-            return (
-              <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold text-financial-primary">
-                    {assetClass} Sub-classes
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Total: {formatCurrency(classTotal, viewCurrency)}
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-52 p-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={data}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={55}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                        <Legend 
-                          verticalAlign="bottom" 
-                          height={36}
-                          formatter={(value, entry) => `${value}: ${((entry.payload.value / classTotal) * 100).toFixed(1)}%`}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+      {/* Third Row - Sub-class Charts for ALL asset classes with assets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Object.entries(holdingsByClass).map(([assetClass, classData]) => {
+          const subClasses = subClassBreakdown[assetClass] || {};
+          const subClassEntries = Object.entries(subClasses);
+          
+          // Show chart for any asset class that has assets, regardless of sub-class count
+          if (classData.value === 0) return null;
+          
+          const pieData = subClassEntries.map(([subClass, value]) => ({
+            name: subClass,
+            value: value,
+            percentage: classData.value > 0 ? (value / classData.value) * 100 : 0,
+          }));
+          
+          return (
+            <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-base font-bold text-financial-primary">
+                  {assetClass} Sub-classes
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(classData.value, viewCurrency)}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-52 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={55}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value, entry) => `${value}: ${((entry.payload.value / classData.value) * 100).toFixed(1)}%`}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
     </div>
   );
 }
