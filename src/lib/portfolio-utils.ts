@@ -42,7 +42,10 @@ export function calculateAssetValue(
   // Get the correct exchange rate based on view currency
   let fxRate = 1;
   if (viewCurrency === 'USD') {
-    fxRate = fxRates[asset.origin_currency]?.to_USD || 1;
+    // For USD view, calculate rate as: (origin_to_ILS) / (USD_to_ILS)
+    const originToILS = fxRates[asset.origin_currency]?.to_ILS || 1;
+    const usdToILS = fxRates['USD']?.to_ILS || 1;
+    fxRate = originToILS / usdToILS;
   } else { // ILS
     fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
   }
