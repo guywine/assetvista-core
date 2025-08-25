@@ -163,7 +163,18 @@ export function AssetTable({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Assets ({filteredAssets.length})</CardTitle>
+          <div>
+            <CardTitle>Assets ({filteredAssets.length})</CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Total Value: {formatCurrency(
+                filteredAssets.reduce((sum, asset) => {
+                  const calculation = calculateAssetValue(asset, fxRates, viewCurrency);
+                  return sum + calculation.display_value;
+                }, 0),
+                viewCurrency
+              )}
+            </p>
+          </div>
           <Button 
             onClick={onAddAsset}
             className="bg-gradient-to-r from-financial-success to-financial-success/80 hover:from-financial-success/90 hover:to-financial-success/70 text-white shadow-lg"
