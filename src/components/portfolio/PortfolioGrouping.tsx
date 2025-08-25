@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Group, X, Plus, ArrowUp, ArrowDown } from 'lucide-react';
 
-export type GroupByField = keyof Pick<Asset, 'class' | 'sub_class' | 'account_entity' | 'account_bank' | 'origin_currency'>;
+export type GroupByField = keyof Pick<Asset, 'name' | 'class' | 'sub_class' | 'account_entity' | 'account_bank' | 'origin_currency'>;
 
 interface PortfolioGroupingProps {
   groupByFields: GroupByField[];
@@ -15,6 +15,7 @@ interface PortfolioGroupingProps {
 }
 
 const GROUP_BY_OPTIONS: { value: GroupByField; label: string }[] = [
+  { value: 'name', label: 'Asset Name' },
   { value: 'class', label: 'Asset Class' },
   { value: 'sub_class', label: 'Sub Class' },
   { value: 'account_entity', label: 'Account Entity' },
