@@ -105,17 +105,21 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     let totalValue = 0;
     let weightedYTW = 0;
 
+    console.log('YTW Calculation Debug:');
     fixedIncomeAssets.forEach(asset => {
       if (asset.ytw) {
         const calc = assetCalculations.get(asset.id);
         if (calc) {
+          console.log(`Asset: ${asset.name}, YTW: ${asset.ytw}, Value: ${calc.display_value}, Contribution: ${asset.ytw * calc.display_value}`);
           totalValue += calc.display_value;
           weightedYTW += asset.ytw * calc.display_value;
         }
       }
     });
-
-    return totalValue > 0 ? (weightedYTW / totalValue) : 0;
+    
+    const result = totalValue > 0 ? (weightedYTW / totalValue) : 0;
+    console.log(`Total Value: ${totalValue}, Weighted YTW Sum: ${weightedYTW}, Result: ${result}`);
+    return result;
   }, [assetsByClass, assetCalculations]);
 
   // Helper functions for toggle management
@@ -219,12 +223,26 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     
     return classAssets.reduce((total, asset) => {
       if (settings[toggleField][asset.id]) {
-        const calc = assetCalculations.get(asset.id);
-        if (calc) {
-          if (includeFactored && asset.factor !== undefined) {
-            return total + (calc.display_value * asset.factor);
+        if (assetClass === 'Private Equity') {
+          // For Private Equity: calc.display_value is already factored, asset.price is full potential
+          const calc = assetCalculations.get(asset.id);
+          if (calc) {
+            if (includeFactored) {
+              return total + calc.display_value; // Already factored
+            } else {
+              // Use asset.price for full potential, converted to view currency
+              const fxRate = fxRates[asset.origin_currency];
+              const conversionRate = viewCurrency === 'USD' ? fxRate?.to_USD || 1 : fxRate?.to_ILS || 1;
+              const priceInViewCurrency = (asset.price || 0) * conversionRate;
+              return total + priceInViewCurrency;
+            }
           }
-          return total + calc.display_value;
+        } else {
+          // For Real Estate: use calc.display_value
+          const calc = assetCalculations.get(asset.id);
+          if (calc) {
+            return total + calc.display_value;
+          }
         }
       }
       return total;
