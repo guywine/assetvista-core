@@ -30,10 +30,10 @@ interface PortfolioPredictionsProps {
 export function PortfolioPredictions({ assets, viewCurrency, fxRates }: PortfolioPredictionsProps) {
   const currentYear = new Date().getFullYear();
   const yearOptions = [
-    currentYear.toString().slice(-2),
-    (currentYear + 1).toString().slice(-2),
-    (currentYear + 2).toString().slice(-2),
-    (currentYear + 3).toString().slice(-2),
+    currentYear.toString(),
+    (currentYear + 1).toString(),
+    (currentYear + 2).toString(),
+    (currentYear + 3).toString(),
     'later'
   ];
 
@@ -373,11 +373,16 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                   {assetsByClass['Real Estate']
                     .filter(asset => asset.sub_class === subClass)
                     .map(asset => (
-                      <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{asset.name}</span>
+                       <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
+                         <div className="flex items-center space-x-2">
+                           <span className="text-muted-foreground">{asset.name}</span>
+                           <span className="text-xs text-muted-foreground">
+                             {formatCurrency(assetCalculations.get(asset.id)?.display_value || 0, viewCurrency)}
+                           </span>
+                         </div>
                         <div className="flex items-center space-x-4">
                           <Select 
-                            value={settings.realEstateLiquidationYears[asset.id] || currentYear.toString().slice(-2)}
+                            value={settings.realEstateLiquidationYears[asset.id] || currentYear.toString()}
                             onValueChange={(value) => setSettings(prev => ({
                               ...prev,
                               realEstateLiquidationYears: { ...prev.realEstateLiquidationYears, [asset.id]: value }
@@ -453,18 +458,21 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                   {assetsByClass['Private Equity']
                     .filter(asset => asset.sub_class === subClass)
                     .map(asset => (
-                      <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-muted-foreground">{asset.name}</span>
-                          {asset.factor !== undefined && (
-                            <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                              {(asset.factor * 100).toFixed(0)}%
-                            </span>
-                          )}
-                        </div>
+                       <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
+                         <div className="flex items-center space-x-2">
+                           <span className="text-muted-foreground">{asset.name}</span>
+                           <span className="text-xs text-muted-foreground">
+                             {formatCurrency(assetCalculations.get(asset.id)?.display_value || 0, viewCurrency)}
+                           </span>
+                           {asset.factor !== undefined && (
+                             <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                               {(asset.factor * 100).toFixed(0)}%
+                             </span>
+                           )}
+                         </div>
                         <div className="flex items-center space-x-4">
                           <Select 
-                            value={settings.privateEquityLiquidationYears[asset.id] || currentYear.toString().slice(-2)}
+                            value={settings.privateEquityLiquidationYears[asset.id] || currentYear.toString()}
                             onValueChange={(value) => setSettings(prev => ({
                               ...prev,
                               privateEquityLiquidationYears: { ...prev.privateEquityLiquidationYears, [asset.id]: value }
