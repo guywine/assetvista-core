@@ -4,20 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-
 interface PortfolioSummaryProps {
   assets: Asset[];
   viewCurrency: ViewCurrency;
   fxRates: FXRates;
 }
-
-export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSummaryProps) {
+export function PortfolioSummary({
+  assets,
+  viewCurrency,
+  fxRates
+}: PortfolioSummaryProps) {
   // Calculate all asset values
   const calculations = new Map<string, AssetCalculations>();
   assets.forEach(asset => {
     calculations.set(asset.id, calculateAssetValue(asset, fxRates, viewCurrency));
   });
-
   const totalValue = assets.reduce((sum, asset) => {
     const calc = calculations.get(asset.id);
     return sum + (calc?.display_value || 0);
@@ -27,43 +28,41 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
   const holdingsByClass = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
-    
     if (!acc[asset.class]) {
-      acc[asset.class] = { count: 0, value: 0 };
+      acc[asset.class] = {
+        count: 0,
+        value: 0
+      };
     }
     acc[asset.class].count++;
     acc[asset.class].value += value;
-    
     return acc;
-  }, {} as Record<string, { count: number; value: number }>);
+  }, {} as Record<string, {
+    count: number;
+    value: number;
+  }>);
 
   // Holdings by Entity
   const holdingsByEntity = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
-    
     if (!acc[asset.account_entity]) {
       acc[asset.account_entity] = 0;
     }
     acc[asset.account_entity] += value;
-    
     return acc;
   }, {} as Record<string, number>);
 
   // Top 10 Positions
-  const topPositions = assets
-    .map(asset => ({
-      asset,
-      value: calculations.get(asset.id)?.display_value || 0,
-    }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 10);
+  const topPositions = assets.map(asset => ({
+    asset,
+    value: calculations.get(asset.id)?.display_value || 0
+  })).sort((a, b) => b.value - a.value).slice(0, 10);
 
   // Sub-class breakdown by asset class
   const subClassBreakdown = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
-    
     if (!acc[asset.class]) {
       acc[asset.class] = {};
     }
@@ -71,7 +70,6 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
       acc[asset.class][asset.sub_class] = 0;
     }
     acc[asset.class][asset.sub_class] += value;
-    
     return acc;
   }, {} as Record<string, Record<string, number>>);
 
@@ -79,36 +77,37 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
   const pieData = Object.entries(holdingsByClass).map(([className, data]) => ({
     name: className,
     value: data.value,
-    percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
+    percentage: totalValue > 0 ? data.value / totalValue * 100 : 0
   }));
 
   // Fixed Income YTW calculations
   const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
-  
-  const fixedIncomeWeightedYTW = fixedIncomeAssets.length > 0 ? 
-    fixedIncomeAssets.reduce((sum, asset) => {
-      const calc = calculations.get(asset.id);
-      const value = calc?.display_value || 0;
-      return sum + (asset.ytw! * value);
-    }, 0) / fixedIncomeAssets.reduce((sum, asset) => {
-      const calc = calculations.get(asset.id);
-      return sum + (calc?.display_value || 0);
-    }, 0) : 0;
+  const fixedIncomeWeightedYTW = fixedIncomeAssets.length > 0 ? fixedIncomeAssets.reduce((sum, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    return sum + asset.ytw! * value;
+  }, 0) / fixedIncomeAssets.reduce((sum, asset) => {
+    const calc = calculations.get(asset.id);
+    return sum + (calc?.display_value || 0);
+  }, 0) : 0;
 
   // Fixed Income sub-class YTW calculations
   const fixedIncomeSubClassYTW = fixedIncomeAssets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
-    
     if (!acc[asset.sub_class]) {
-      acc[asset.sub_class] = { totalValue: 0, weightedYTW: 0 };
+      acc[asset.sub_class] = {
+        totalValue: 0,
+        weightedYTW: 0
+      };
     }
-    
     acc[asset.sub_class].totalValue += value;
-    acc[asset.sub_class].weightedYTW += (asset.ytw! * value);
-    
+    acc[asset.sub_class].weightedYTW += asset.ytw! * value;
     return acc;
-  }, {} as Record<string, { totalValue: number; weightedYTW: number }>);
+  }, {} as Record<string, {
+    totalValue: number;
+    weightedYTW: number;
+  }>);
 
   // Calculate final weighted YTW for each sub-class
   const fixedIncomeSubClassAverageYTW = Object.entries(fixedIncomeSubClassYTW).reduce((acc, [subClass, data]) => {
@@ -121,42 +120,41 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
   const fixedIncomePieData = Object.entries(fixedIncomeSubClasses).map(([subClass, value]) => ({
     name: subClass,
     value: value,
-    percentage: holdingsByClass['Fixed Income']?.value > 0 ? (value / holdingsByClass['Fixed Income'].value) * 100 : 0,
+    percentage: holdingsByClass['Fixed Income']?.value > 0 ? value / holdingsByClass['Fixed Income'].value * 100 : 0
   }));
 
   // Create pie chart data for each asset class that has assets
   const subClassPieData = Object.entries(subClassBreakdown).reduce((acc, [assetClass, subClasses]) => {
     const classTotal = Object.values(subClasses).reduce((sum, value) => sum + value, 0);
-    
+
     // Only create pie data if there are assets in this class
     if (classTotal > 0) {
       acc[assetClass] = Object.entries(subClasses).map(([subClass, value]) => ({
         name: subClass,
         value: value,
-        percentage: classTotal > 0 ? (value / classTotal) * 100 : 0,
+        percentage: classTotal > 0 ? value / classTotal * 100 : 0
       }));
     }
     return acc;
-  }, {} as Record<string, Array<{ name: string; value: number; percentage: number }>>);
-
-  const COLORS = [
-    'hsl(var(--chart-1))', // Public Equity
-    'hsl(var(--chart-2))', // Private Equity  
-    'hsl(var(--chart-3))', // Fixed Income
-    'hsl(var(--chart-4))', // Cash
-    'hsl(var(--chart-5))', // Commodities & more
-    'hsl(var(--financial-primary))', // Real Estate
+  }, {} as Record<string, Array<{
+    name: string;
+    value: number;
+    percentage: number;
+  }>>);
+  const COLORS = ['hsl(var(--chart-1))',
+  // Public Equity
+  'hsl(var(--chart-2))',
+  // Private Equity  
+  'hsl(var(--chart-3))',
+  // Fixed Income
+  'hsl(var(--chart-4))',
+  // Cash
+  'hsl(var(--chart-5))',
+  // Commodities & more
+  'hsl(var(--financial-primary))' // Real Estate
   ];
-  const SUB_CLASS_COLORS = [
-    'hsl(var(--chart-1))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))',
-  ];
-
-  return (
-    <div className="space-y-6">
+  const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+  return <div className="space-y-6">
       {/* First Row - Holdings Tables */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Holdings by Class */}
@@ -175,8 +173,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(holdingsByClass).map(([className, data]) => (
-                  <TableRow key={className}>
+                {Object.entries(holdingsByClass).map(([className, data]) => <TableRow key={className}>
                     <TableCell>
                       <Badge variant="outline" className="text-xs">
                         {className}
@@ -187,10 +184,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       {formatCurrency(data.value, viewCurrency)}
                     </TableCell>
                     <TableCell className="text-right font-mono">
-                      {formatPercentage(totalValue > 0 ? (data.value / totalValue) * 100 : 0)}
+                      {formatPercentage(totalValue > 0 ? data.value / totalValue * 100 : 0)}
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
           </CardContent>
@@ -211,19 +207,15 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(holdingsByEntity)
-                  .sort(([,a], [,b]) => b - a)
-                  .map(([entity, value]) => (
-                  <TableRow key={entity}>
+                {Object.entries(holdingsByEntity).sort(([, a], [, b]) => b - a).map(([entity, value]) => <TableRow key={entity}>
                     <TableCell className="font-medium">{entity}</TableCell>
                     <TableCell className="text-right font-mono font-semibold text-financial-success">
                       {formatCurrency(value, viewCurrency)}
                     </TableCell>
                     <TableCell className="text-right font-mono">
-                      {formatPercentage(totalValue > 0 ? (value / totalValue) * 100 : 0)}
+                      {formatPercentage(totalValue > 0 ? value / totalValue * 100 : 0)}
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
           </CardContent>
@@ -239,8 +231,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topPositions.slice(0, 5).map(({ asset, value }) => (
-                <div key={asset.id} className="flex items-center justify-between">
+              {topPositions.slice(0, 5).map(({
+              asset,
+              value
+            }) => <div key={asset.id} className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate text-sm">{asset.name}</p>
                     <Badge variant="outline" className="text-xs mt-1">
@@ -252,11 +246,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       {formatCurrency(value, viewCurrency)}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {formatPercentage(totalValue > 0 ? (value / totalValue) * 100 : 0)}
+                      {formatPercentage(totalValue > 0 ? value / totalValue * 100 : 0)}
                     </p>
                   </div>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
@@ -270,24 +263,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             <div className="h-56 p-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={65}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
+                    {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36}
-                    formatter={(value, entry) => `${value}: ${((entry.payload.value / totalValue) * 100).toFixed(1)}%`}
-                  />
+                  <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / totalValue * 100).toFixed(1)}%`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -295,26 +275,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
         </Card>
 
         {/* Fixed Income YTW */}
-        {fixedIncomeAssets.length > 0 && (
-          <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold text-financial-primary">Fixed Income YTW</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">Weighted Average YTW</p>
-                <p className="text-2xl font-bold text-financial-success">
-                  {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {fixedIncomeAssets.length > 0}
       </div>
 
       {/* Fixed Income Dedicated Section */}
-      {fixedIncomeAssets.length > 0 && holdingsByClass['Fixed Income']?.value > 0 && (
-        <div className="space-y-4">
+      {fixedIncomeAssets.length > 0 && holdingsByClass['Fixed Income']?.value > 0 && <div className="space-y-4">
           <h2 className="text-2xl font-bold text-financial-primary">Fixed Income</h2>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -332,24 +297,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={fixedIncomePieData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {fixedIncomePieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
+                      <Pie data={fixedIncomePieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                        {fixedIncomePieData.map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36}
-                        formatter={(value, entry) => `${value}: ${((entry.payload.value / holdingsByClass['Fixed Income'].value) * 100).toFixed(1)}%`}
-                      />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Fixed Income'].value * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -375,40 +327,34 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 {/* YTW by Sub-class */}
                 <div className="space-y-3">
                   <p className="text-sm font-semibold text-muted-foreground">YTW by Sub-class:</p>
-                  {Object.entries(fixedIncomeSubClassAverageYTW).map(([subClass, ytw]) => (
-                    <div key={subClass} className="flex justify-between items-center py-2 border-b border-border/30">
+                  {Object.entries(fixedIncomeSubClassAverageYTW).map(([subClass, ytw]) => <div key={subClass} className="flex justify-between items-center py-2 border-b border-border/30">
                       <Badge variant="outline" className="text-xs">
                         {subClass}
                       </Badge>
                       <span className="font-mono font-semibold text-financial-success">
                         {(ytw * 100).toFixed(2)}%
                       </span>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </CardContent>
             </Card>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Fourth Row - Sub-class Charts for ALL asset classes with assets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(holdingsByClass).map(([assetClass, classData]) => {
-          const subClasses = subClassBreakdown[assetClass] || {};
-          const subClassEntries = Object.entries(subClasses);
-          
-          // Show chart for any asset class that has assets, regardless of sub-class count
-          if (classData.value === 0) return null;
-          
-          const pieData = subClassEntries.map(([subClass, value]) => ({
-            name: subClass,
-            value: value,
-            percentage: classData.value > 0 ? (value / classData.value) * 100 : 0,
-          }));
-          
-          return (
-            <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+        const subClasses = subClassBreakdown[assetClass] || {};
+        const subClassEntries = Object.entries(subClasses);
+
+        // Show chart for any asset class that has assets, regardless of sub-class count
+        if (classData.value === 0) return null;
+        const pieData = subClassEntries.map(([subClass, value]) => ({
+          name: subClass,
+          value: value,
+          percentage: classData.value > 0 ? value / classData.value * 100 : 0
+        }));
+        return <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
               <CardHeader>
                 <CardTitle className="text-base font-bold text-financial-primary">
                   {assetClass}
@@ -421,32 +367,17 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <div className="h-52 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={55}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
+                      <Pie data={pieData} cx="50%" cy="50%" outerRadius={55} fill="#8884d8" dataKey="value">
+                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36}
-                        formatter={(value, entry) => `${value}: ${((entry.payload.value / classData.value) * 100).toFixed(1)}%`}
-                      />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / classData.value * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-            </Card>
-          );
-        })}
+            </Card>;
+      })}
       </div>
-    </div>
-  );
+    </div>;
 }
