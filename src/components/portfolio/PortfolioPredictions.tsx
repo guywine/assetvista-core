@@ -271,7 +271,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Weighted Average YTW:</span>
-                <span className="font-medium">{formatPercentage(fixedIncomeYTW)}</span>
+                <span className="font-medium">{(fixedIncomeYTW * 100).toFixed(2)}%</span>
               </div>
             </div>
 
