@@ -207,6 +207,16 @@ export function PortfolioSummary({
                 </PieChart>
               </ResponsiveContainer>
             </div>
+            
+            {/* Asset Class Values Summary */}
+            <div className="mt-4 space-y-2">
+              {Object.entries(holdingsByClass).map(([className, data]) => (
+                <div key={className} className="flex justify-between items-center py-1 text-sm">
+                  <span className="text-muted-foreground">{className}</span>
+                  <span className="font-mono font-semibold">{formatCurrency(data.value, viewCurrency)}</span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
