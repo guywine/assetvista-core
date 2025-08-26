@@ -268,6 +268,119 @@ export function PortfolioSummary({
         {fixedIncomeAssets.length > 0}
       </div>
 
+      {/* Public Equity Dedicated Section */}
+      {holdingsByClass['Public Equity']?.value > 0 && <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-financial-primary">Public Equity</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Public Equity Sub-class Pie Chart */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Public Equity Sub-classes
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(holdingsByClass['Public Equity'].value, viewCurrency)}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie 
+                        data={subClassPieData['Public Equity'] || []} 
+                        cx="50%" 
+                        cy="50%" 
+                        outerRadius={70} 
+                        fill="#8884d8" 
+                        dataKey="value"
+                      >
+                        {(subClassPieData['Public Equity'] || []).map((entry, index) => 
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        )}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36} 
+                        formatter={(value, entry) => 
+                          `${value}: ${(entry.payload.value / holdingsByClass['Public Equity'].value * 100).toFixed(1)}%`
+                        } 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Big Tech Assets Pie Chart */}
+            {(() => {
+              const bigTechAssets = assets.filter(asset => 
+                asset.class === 'Public Equity' && asset.sub_class === 'Big Tech'
+              );
+              
+              // Group Big Tech assets by name and sum their values
+              const bigTechByName = bigTechAssets.reduce((acc, asset) => {
+                const calc = calculations.get(asset.id);
+                const value = calc?.display_value || 0;
+                if (!acc[asset.name]) {
+                  acc[asset.name] = 0;
+                }
+                acc[asset.name] += value;
+                return acc;
+              }, {} as Record<string, number>);
+
+              const bigTechTotal = Object.values(bigTechByName).reduce((sum, value) => sum + value, 0);
+              const bigTechPieData = Object.entries(bigTechByName).map(([name, value]) => ({
+                name: name,
+                value: value,
+                percentage: bigTechTotal > 0 ? value / bigTechTotal * 100 : 0
+              }));
+
+              return bigTechAssets.length > 0 ? (
+                <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+                  <CardHeader>
+                    <CardTitle className="text-lg font-bold text-financial-primary">
+                      Big Tech Holdings
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Total: {formatCurrency(bigTechTotal, viewCurrency)}
+                    </p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-64 p-1">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie 
+                            data={bigTechPieData} 
+                            cx="50%" 
+                            cy="50%" 
+                            outerRadius={70} 
+                            fill="#8884d8" 
+                            dataKey="value"
+                          >
+                            {bigTechPieData.map((entry, index) => 
+                              <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                            )}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                          <Legend 
+                            verticalAlign="bottom" 
+                            height={36} 
+                            formatter={(value, entry) => 
+                              `${value}: ${(entry.payload.value / bigTechTotal * 100).toFixed(1)}%`
+                            } 
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
+          </div>
+        </div>}
+
       {/* Fixed Income Dedicated Section */}
       {fixedIncomeAssets.length > 0 && holdingsByClass['Fixed Income']?.value > 0 && <div className="space-y-4">
           <h2 className="text-2xl font-bold text-financial-primary">Fixed Income</h2>
