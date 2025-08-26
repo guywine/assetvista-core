@@ -59,26 +59,6 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
 
-  // Fixed Income YTW calculations
-  const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
-  
-  const fixedIncomeWeightedYTW = fixedIncomeAssets.length > 0 ? 
-    fixedIncomeAssets.reduce((sum, asset) => {
-      const calc = calculations.get(asset.id);
-      const value = calc?.display_value || 0;
-      return sum + (asset.ytw! * value);
-    }, 0) / fixedIncomeAssets.reduce((sum, asset) => {
-      const calc = calculations.get(asset.id);
-      return sum + (calc?.display_value || 0);
-    }, 0) : 0;
-
-  // Pie chart data for asset allocation
-  const pieData = Object.entries(holdingsByClass).map(([className, data]) => ({
-    name: className,
-    value: data.value,
-    percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
-  }));
-
   // Sub-class breakdown by asset class
   const subClassBreakdown = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
@@ -94,6 +74,55 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
     
     return acc;
   }, {} as Record<string, Record<string, number>>);
+
+  // Pie chart data for asset allocation
+  const pieData = Object.entries(holdingsByClass).map(([className, data]) => ({
+    name: className,
+    value: data.value,
+    percentage: totalValue > 0 ? (data.value / totalValue) * 100 : 0,
+  }));
+
+  // Fixed Income YTW calculations
+  const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
+  
+  const fixedIncomeWeightedYTW = fixedIncomeAssets.length > 0 ? 
+    fixedIncomeAssets.reduce((sum, asset) => {
+      const calc = calculations.get(asset.id);
+      const value = calc?.display_value || 0;
+      return sum + (asset.ytw! * value);
+    }, 0) / fixedIncomeAssets.reduce((sum, asset) => {
+      const calc = calculations.get(asset.id);
+      return sum + (calc?.display_value || 0);
+    }, 0) : 0;
+
+  // Fixed Income sub-class YTW calculations
+  const fixedIncomeSubClassYTW = fixedIncomeAssets.reduce((acc, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    
+    if (!acc[asset.sub_class]) {
+      acc[asset.sub_class] = { totalValue: 0, weightedYTW: 0 };
+    }
+    
+    acc[asset.sub_class].totalValue += value;
+    acc[asset.sub_class].weightedYTW += (asset.ytw! * value);
+    
+    return acc;
+  }, {} as Record<string, { totalValue: number; weightedYTW: number }>);
+
+  // Calculate final weighted YTW for each sub-class
+  const fixedIncomeSubClassAverageYTW = Object.entries(fixedIncomeSubClassYTW).reduce((acc, [subClass, data]) => {
+    acc[subClass] = data.totalValue > 0 ? data.weightedYTW / data.totalValue : 0;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Fixed Income pie chart data
+  const fixedIncomeSubClasses = subClassBreakdown['Fixed Income'] || {};
+  const fixedIncomePieData = Object.entries(fixedIncomeSubClasses).map(([subClass, value]) => ({
+    name: subClass,
+    value: value,
+    percentage: holdingsByClass['Fixed Income']?.value > 0 ? (value / holdingsByClass['Fixed Income'].value) * 100 : 0,
+  }));
 
   // Create pie chart data for each asset class that has assets
   const subClassPieData = Object.entries(subClassBreakdown).reduce((acc, [assetClass, subClasses]) => {
@@ -283,7 +312,87 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
         )}
       </div>
 
-      {/* Third Row - Sub-class Charts for ALL asset classes with assets */}
+      {/* Fixed Income Dedicated Section */}
+      {fixedIncomeAssets.length > 0 && holdingsByClass['Fixed Income']?.value > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-financial-primary">Fixed Income</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Fixed Income Sub-class Pie Chart */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Fixed Income Sub-classes
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(holdingsByClass['Fixed Income'].value, viewCurrency)}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={fixedIncomePieData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {fixedIncomePieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36}
+                        formatter={(value, entry) => `${value}: ${((entry.payload.value / holdingsByClass['Fixed Income'].value) * 100).toFixed(1)}%`}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Fixed Income YTW Summary */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Yield to Worst (YTW)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {/* Overall Fixed Income YTW */}
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">All Fixed Income</p>
+                  <p className="text-2xl font-bold text-financial-success">
+                    {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
+                  </p>
+                </div>
+
+                {/* YTW by Sub-class */}
+                <div className="space-y-3">
+                  <p className="text-sm font-semibold text-muted-foreground">YTW by Sub-class:</p>
+                  {Object.entries(fixedIncomeSubClassAverageYTW).map(([subClass, ytw]) => (
+                    <div key={subClass} className="flex justify-between items-center py-2 border-b border-border/30">
+                      <Badge variant="outline" className="text-xs">
+                        {subClass}
+                      </Badge>
+                      <span className="font-mono font-semibold text-financial-success">
+                        {(ytw * 100).toFixed(2)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* Fourth Row - Sub-class Charts for ALL asset classes with assets */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(holdingsByClass).map(([assetClass, classData]) => {
           const subClasses = subClassBreakdown[assetClass] || {};
