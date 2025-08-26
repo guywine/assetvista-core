@@ -115,7 +115,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
       }
     });
 
-    return totalValue > 0 ? (weightedYTW / totalValue) * 100 : 0;
+    return totalValue > 0 ? (weightedYTW / totalValue) : 0;
   }, [assetsByClass, assetCalculations]);
 
   // Helper functions for toggle management
@@ -232,7 +232,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl">
       <div className="grid gap-6">
         <Card>
           <CardHeader>
@@ -267,7 +267,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Weighted Average YTW:</span>
-                <span className="font-medium">{formatPercentage(fixedIncomeYTW / 100)}</span>
+                <span className="font-medium">{formatPercentage(fixedIncomeYTW)}</span>
               </div>
             </div>
 
@@ -436,7 +436,14 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                     .filter(asset => asset.sub_class === subClass)
                     .map(asset => (
                       <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">{asset.name}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-muted-foreground">{asset.name}</span>
+                          {asset.factor !== undefined && (
+                            <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                              {(asset.factor * 100).toFixed(0)}%
+                            </span>
+                          )}
+                        </div>
                         <div className="flex items-center space-x-4">
                           <Select 
                             value={settings.privateEquityLiquidationYears[asset.id] || currentYear.toString().slice(-2)}
