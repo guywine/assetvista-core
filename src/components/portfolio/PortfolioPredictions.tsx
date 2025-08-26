@@ -224,17 +224,23 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     return classAssets.reduce((total, asset) => {
       if (settings[toggleField][asset.id]) {
         if (assetClass === 'Private Equity') {
-          // For Private Equity: calc.display_value is already factored, asset.price is full potential
+          // For Private Equity: calc.display_value is already factored, need to calculate full potential
           const calc = assetCalculations.get(asset.id);
           if (calc) {
             if (includeFactored) {
               return total + calc.display_value; // Already factored
             } else {
-              // Use asset.price for full potential, converted to view currency
-              const fxRate = fxRates[asset.origin_currency];
-              const conversionRate = viewCurrency === 'USD' ? fxRate?.to_USD || 1 : fxRate?.to_ILS || 1;
-              const priceInViewCurrency = (asset.price || 0) * conversionRate;
-              return total + priceInViewCurrency;
+              // Calculate full potential using the same logic as calculateAssetValue
+              let fxRate = 1;
+              if (viewCurrency === 'USD') {
+                const originToILS = fxRates[asset.origin_currency]?.to_ILS || 1;
+                const usdToILS = fxRates['USD']?.to_ILS || 1;
+                fxRate = originToILS / usdToILS;
+              } else { // ILS
+                fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
+              }
+              const fullPotentialValue = (asset.price || 0) * asset.quantity * fxRate;
+              return total + fullPotentialValue;
             }
           }
         } else {
