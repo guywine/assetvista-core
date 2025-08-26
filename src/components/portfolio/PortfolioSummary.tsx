@@ -156,71 +156,7 @@ export function PortfolioSummary({
   const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
   return <div className="space-y-6">
       {/* First Row - Holdings Tables */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Holdings by Class */}
-        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-financial-primary">Holdings by Class</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-semibold">Class</TableHead>
-                  <TableHead className="font-semibold">Count</TableHead>
-                  <TableHead className="font-semibold text-right">Value</TableHead>
-                  <TableHead className="font-semibold text-right">% of Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Object.entries(holdingsByClass).map(([className, data]) => <TableRow key={className}>
-                    <TableCell>
-                      <Badge variant="outline" className="text-xs">
-                        {className}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-mono">{data.count}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-financial-success">
-                      {formatCurrency(data.value, viewCurrency)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatPercentage(totalValue > 0 ? data.value / totalValue * 100 : 0)}
-                    </TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Holdings by Entity */}
-        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-financial-primary">Holdings by Entity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-semibold">Entity</TableHead>
-                  <TableHead className="font-semibold text-right">Value</TableHead>
-                  <TableHead className="font-semibold text-right">% of Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Object.entries(holdingsByEntity).sort(([, a], [, b]) => b - a).map(([entity, value]) => <TableRow key={entity}>
-                    <TableCell className="font-medium">{entity}</TableCell>
-                    <TableCell className="text-right font-mono font-semibold text-financial-success">
-                      {formatCurrency(value, viewCurrency)}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatPercentage(totalValue > 0 ? value / totalValue * 100 : 0)}
-                    </TableCell>
-                  </TableRow>)}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+      
 
       {/* Second Row - Charts and Top Positions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
