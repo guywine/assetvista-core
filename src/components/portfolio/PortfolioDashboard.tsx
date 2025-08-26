@@ -142,9 +142,14 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
 
   const handleSaveAsset = async (asset: Asset) => {
     try {
-      if (editingAsset) {
+      // Check if this is an existing asset by seeing if the ID exists in our current assets
+      const existingAsset = assets.find(a => a.id === asset.id);
+      
+      if (existingAsset) {
+        // Update existing asset
         await updateAsset(asset);
       } else {
+        // Add new asset (this handles duplicates and truly new assets)
         await addAsset(asset);
       }
       setEditingAsset(undefined);
