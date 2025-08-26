@@ -3,7 +3,9 @@ import { calculateAssetValue, formatCurrency, formatPercentage } from '@/lib/por
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { useState } from 'react';
 interface PortfolioSummaryProps {
   assets: Asset[];
   viewCurrency: ViewCurrency;
@@ -14,6 +16,9 @@ export function PortfolioSummary({
   viewCurrency,
   fxRates
 }: PortfolioSummaryProps) {
+  // State for managing asset class visibility in pie chart
+  const [visibleAssetClasses, setVisibleAssetClasses] = useState<Record<string, boolean>>({});
+
   // Calculate all asset values
   const calculations = new Map<string, AssetCalculations>();
   assets.forEach(asset => {
@@ -73,11 +78,32 @@ export function PortfolioSummary({
     return acc;
   }, {} as Record<string, Record<string, number>>);
 
-  // Pie chart data for asset allocation
-  const pieData = Object.entries(holdingsByClass).map(([className, data]) => ({
+  // Initialize visibility state if empty
+  if (Object.keys(visibleAssetClasses).length === 0) {
+    const initialVisibility: Record<string, boolean> = {};
+    Object.keys(holdingsByClass).forEach(className => {
+      initialVisibility[className] = true;
+    });
+    setVisibleAssetClasses(initialVisibility);
+  }
+
+  // Filter pie chart data based on visible asset classes
+  const filteredHoldingsByClass = Object.entries(holdingsByClass)
+    .filter(([className]) => visibleAssetClasses[className])
+    .reduce((acc, [className, data]) => {
+      acc[className] = data;
+      return acc;
+    }, {} as Record<string, { count: number; value: number }>);
+
+  // Calculate filtered total value for enabled asset classes only
+  const filteredTotalValue = Object.values(filteredHoldingsByClass)
+    .reduce((sum, data) => sum + data.value, 0);
+
+  // Pie chart data for asset allocation (filtered)
+  const pieData = Object.entries(filteredHoldingsByClass).map(([className, data]) => ({
     name: className,
     value: data.value,
-    percentage: totalValue > 0 ? data.value / totalValue * 100 : 0
+    percentage: filteredTotalValue > 0 ? data.value / filteredTotalValue * 100 : 0
   }));
 
   // Fixed Income YTW calculations
@@ -194,6 +220,9 @@ export function PortfolioSummary({
         <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
           <CardHeader>
             <CardTitle className="text-lg font-bold text-financial-primary">Asset Allocation</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Total: {formatCurrency(filteredTotalValue, viewCurrency)} ({Object.values(visibleAssetClasses).filter(Boolean).length} classes selected)
+            </p>
           </CardHeader>
           <CardContent>
             <div className="h-56 p-1">
@@ -202,18 +231,33 @@ export function PortfolioSummary({
                   <Pie data={pieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
                     {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                  <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / totalValue * 100).toFixed(1)}%`} />
+                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                   <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / filteredTotalValue * 100).toFixed(1)}%`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             
-            {/* Asset Class Values Summary */}
+            {/* Asset Class Values Summary with Toggles */}
             <div className="mt-4 space-y-2">
               {Object.entries(holdingsByClass).map(([className, data]) => (
-                <div key={className} className="flex justify-between items-center py-1 text-sm">
-                  <span className="text-muted-foreground">{className}</span>
-                  <span className="font-mono font-semibold">{formatCurrency(data.value, viewCurrency)}</span>
+                <div key={className} className="flex justify-between items-center py-2 text-sm">
+                  <div className="flex items-center gap-3">
+                    <Switch
+                      checked={visibleAssetClasses[className] || false}
+                      onCheckedChange={(checked) => 
+                        setVisibleAssetClasses(prev => ({
+                          ...prev,
+                          [className]: checked
+                        }))
+                      }
+                    />
+                    <span className={`${visibleAssetClasses[className] ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                      {className}
+                    </span>
+                  </div>
+                  <span className={`font-mono font-semibold ${visibleAssetClasses[className] ? 'text-foreground' : 'text-muted-foreground/50'}`}>
+                    {formatCurrency(data.value, viewCurrency)}
+                  </span>
                 </div>
               ))}
             </div>
