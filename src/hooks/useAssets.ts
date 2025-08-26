@@ -104,31 +104,115 @@ export function useAssets() {
     }
   };
 
-  // Update existing asset
+  // Define shared vs account-specific properties
+  const getSharedProperties = (asset: Asset) => ({
+    name: asset.name,
+    class: asset.class,
+    sub_class: asset.sub_class,
+    ISIN: asset.ISIN,
+    origin_currency: asset.origin_currency,
+    price: asset.price,
+    factor: asset.factor,
+    maturity_date: asset.maturity_date,
+    ytw: asset.ytw,
+  });
+
+  const getAccountSpecificProperties = (asset: Asset) => ({
+    account_entity: asset.account_entity,
+    account_bank: asset.account_bank,
+    quantity: asset.quantity,
+  });
+
+  // Update existing asset with synchronization
   const updateAsset = async (asset: Asset) => {
     try {
-      const dbAsset = convertToDb(asset);
+      // Find all assets with the same name
+      const assetsWithSameName = assets.filter(a => a.name === asset.name && a.name.trim() !== '');
+      const willUpdateMultiple = assetsWithSameName.length > 1;
 
-      const { data, error } = await supabase
-        .from('assets')
-        .update(dbAsset)
-        .eq('id', asset.id)
-        .select()
-        .single();
+      if (willUpdateMultiple) {
+        // Prepare shared properties for batch update
+        const sharedProps = getSharedProperties(asset);
+        const sharedDbProps = {
+          name: sharedProps.name,
+          class: sharedProps.class,
+          sub_class: sharedProps.sub_class,
+          isin: sharedProps.ISIN,
+          origin_currency: sharedProps.origin_currency,
+          price: sharedProps.price,
+          factor: sharedProps.factor,
+          maturity_date: sharedProps.maturity_date,
+          ytw: sharedProps.ytw,
+        };
 
-      if (error) {
-        throw error;
+        // Batch update all assets with same name
+        const { data, error } = await supabase
+          .from('assets')
+          .update(sharedDbProps)
+          .eq('name', asset.name)
+          .select();
+
+        if (error) {
+          throw error;
+        }
+
+        // Update specific asset's account properties
+        const accountSpecificProps = getAccountSpecificProperties(asset);
+        const { data: specificData, error: specificError } = await supabase
+          .from('assets')
+          .update({
+            quantity: accountSpecificProps.quantity,
+            account_entity: accountSpecificProps.account_entity,
+            account_bank: accountSpecificProps.account_bank,
+          })
+          .eq('id', asset.id)
+          .select()
+          .single();
+
+        if (specificError) {
+          throw specificError;
+        }
+
+        // Update local state with all affected assets
+        const updatedAssets = (data || []).map(convertFromDb);
+        setAssets(prev => 
+          prev.map(a => {
+            const updated = updatedAssets.find(u => u.id === a.id);
+            return updated || a;
+          })
+        );
+
+        toast({
+          title: "Assets Updated",
+          description: `${asset.name} updated across ${updatedAssets.length} holdings.`,
+        });
+
+        return convertFromDb(specificData);
+      } else {
+        // Single asset update
+        const dbAsset = convertToDb(asset);
+
+        const { data, error } = await supabase
+          .from('assets')
+          .update(dbAsset)
+          .eq('id', asset.id)
+          .select()
+          .single();
+
+        if (error) {
+          throw error;
+        }
+
+        const updatedAsset = convertFromDb(data);
+        setAssets(prev => prev.map(a => a.id === asset.id ? updatedAsset : a));
+        
+        toast({
+          title: "Asset Updated",
+          description: `${asset.name} has been successfully updated.`,
+        });
+
+        return updatedAsset;
       }
-
-      const updatedAsset = convertFromDb(data);
-      setAssets(prev => prev.map(a => a.id === asset.id ? updatedAsset : a));
-      
-      toast({
-        title: "Asset Updated",
-        description: `${asset.name} has been successfully updated.`,
-      });
-
-      return updatedAsset;
     } catch (error: any) {
       toast({
         title: "Error Updating Asset",
@@ -173,6 +257,11 @@ export function useAssets() {
     loadAssets();
   }, []);
 
+  // Get count of assets with same name
+  const getAssetNameCount = (name: string) => {
+    return assets.filter(a => a.name === name && a.name.trim() !== '').length;
+  };
+
   return {
     assets,
     isLoading,
@@ -180,5 +269,6 @@ export function useAssets() {
     updateAsset,
     deleteAsset,
     refreshAssets: loadAssets,
+    getAssetNameCount,
   };
 }

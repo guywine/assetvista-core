@@ -15,9 +15,10 @@ interface AssetFormProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (asset: Asset) => void;
+  getAssetNameCount?: (name: string) => number;
 }
 
-export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
+export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }: AssetFormProps) {
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '',
     class: 'Public Equity',
@@ -34,6 +35,11 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
   });
   
   const [errors, setErrors] = useState<string[]>([]);
+
+  // Check if this asset name will affect multiple holdings
+  const affectedHoldingsCount = asset && getAssetNameCount && formData.name 
+    ? getAssetNameCount(formData.name) - 1 // Exclude current asset
+    : 0;
 
   useEffect(() => {
     if (asset) {
@@ -130,6 +136,23 @@ export function AssetForm({ asset, isOpen, onClose, onSave }: AssetFormProps) {
                       <li key={index}>{error}</li>
                     ))}
                   </ul>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {asset && affectedHoldingsCount > 0 && (
+            <Card className="border-financial-warning bg-financial-warning/5">
+              <CardContent className="pt-4">
+                <div className="text-financial-warning text-sm">
+                  <p className="font-semibold mb-2">⚠️ Shared Asset Update</p>
+                  <p>
+                    Changes to <strong>{formData.name}</strong> will affect <strong>{affectedHoldingsCount + 1} holdings</strong>.
+                    Price and other asset details will be synchronized across all accounts.
+                  </p>
+                  <p className="mt-2 text-xs">
+                    Only quantity and account details remain separate per holding.
+                  </p>
                 </div>
               </CardContent>
             </Card>

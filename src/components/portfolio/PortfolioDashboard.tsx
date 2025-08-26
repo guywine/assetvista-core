@@ -22,7 +22,7 @@ interface PortfolioDashboardProps {
 }
 
 export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardProps) {
-  const { assets, isLoading, addAsset, updateAsset, deleteAsset } = useAssets();
+  const { assets, isLoading, addAsset, updateAsset, deleteAsset, getAssetNameCount } = useAssets();
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
   
   const {
@@ -279,6 +279,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           isOpen={isAssetFormOpen}
           onClose={() => setIsAssetFormOpen(false)}
           onSave={handleSaveAsset}
+          getAssetNameCount={getAssetNameCount}
         />
       </div>
     </div>
