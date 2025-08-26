@@ -13,6 +13,7 @@ import { PortfolioHistory } from './PortfolioHistory';
 import { usePortfolioSnapshots } from '@/hooks/usePortfolioSnapshots';
 import { PortfolioFilters } from './PortfolioFilters';
 import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
+import { PortfolioPredictions } from './PortfolioPredictions';
 import { FXRatesBar } from './FXRatesBar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -221,7 +222,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           />
 
         <Tabs defaultValue="assets" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-4 max-w-lg bg-muted/50 p-1">
             <TabsTrigger 
               value="assets" 
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
@@ -233,6 +234,12 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
             >
               Summary
+            </TabsTrigger>
+            <TabsTrigger 
+              value="predictions" 
+              className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
+            >
+              Predictions
             </TabsTrigger>
             <TabsTrigger 
               value="history" 
@@ -278,6 +285,14 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
 
           <TabsContent value="summary" className="space-y-6">
             <PortfolioSummary
+              assets={assets}
+              viewCurrency={viewCurrency}
+              fxRates={fxRates}
+            />
+          </TabsContent>
+
+          <TabsContent value="predictions" className="space-y-6">
+            <PortfolioPredictions
               assets={assets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
