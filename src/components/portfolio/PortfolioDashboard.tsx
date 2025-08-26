@@ -35,6 +35,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   const [groupByFields, setGroupByFields] = useState<GroupByField[]>([]);
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
+  const [assetFormMode, setAssetFormMode] = useState<'NEW' | 'EXISTING_HOLDING' | 'DUPLICATE' | 'EDIT'>('NEW');
   
   const { toast } = useToast();
   const { saveSnapshot, isLoading: isSaving } = usePortfolioSnapshots();
@@ -155,11 +156,19 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
 
   const handleEditAsset = (asset: Asset) => {
     setEditingAsset(asset);
+    setAssetFormMode('EDIT');
     setIsAssetFormOpen(true);
   };
 
   const handleAddAsset = () => {
     setEditingAsset(undefined);
+    setAssetFormMode('NEW');
+    setIsAssetFormOpen(true);
+  };
+
+  const handleDuplicateAsset = (asset: Asset) => {
+    setEditingAsset(asset);
+    setAssetFormMode('DUPLICATE');
     setIsAssetFormOpen(true);
   };
 
@@ -257,6 +266,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               groupByFields={groupByFields}
               onEditAsset={handleEditAsset}
               onDeleteAsset={handleDeleteAsset}
+              onDuplicateAsset={handleDuplicateAsset}
               onAddAsset={handleAddAsset}
             />
           </TabsContent>
@@ -274,13 +284,15 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
           </TabsContent>
         </Tabs>
 
-        <AssetForm
-          asset={editingAsset}
-          isOpen={isAssetFormOpen}
-          onClose={() => setIsAssetFormOpen(false)}
-          onSave={handleSaveAsset}
-          getAssetNameCount={getAssetNameCount}
-        />
+      <AssetForm
+        asset={editingAsset}
+        isOpen={isAssetFormOpen}
+        onClose={() => setIsAssetFormOpen(false)}
+        onSave={handleSaveAsset}
+        getAssetNameCount={getAssetNameCount}
+        mode={assetFormMode}
+        existingAssets={assets}
+      />
       </div>
     </div>
   );

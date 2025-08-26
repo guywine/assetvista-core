@@ -17,6 +17,7 @@ interface AssetTableProps {
   groupByFields?: GroupByField[];
   onEditAsset: (asset: Asset) => void;
   onDeleteAsset: (asset: Asset) => void;
+  onDuplicateAsset: (asset: Asset) => void;
   onAddAsset: () => void;
 }
 
@@ -28,6 +29,7 @@ export function AssetTable({
   groupByFields = [],
   onEditAsset, 
   onDeleteAsset, 
+  onDuplicateAsset,
   onAddAsset 
 }: AssetTableProps) {
   const [sortField, setSortField] = useState<keyof Asset | 'value' | 'percentage'>('name');
@@ -310,19 +312,22 @@ export function AssetTable({
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => onEditAsset(asset)}>
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => setDeletingAsset(asset)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
+                               <DropdownMenuContent align="end">
+                                 <DropdownMenuItem onClick={() => onEditAsset(asset)}>
+                                   <Edit className="mr-2 h-4 w-4" />
+                                   Edit
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem onClick={() => onDuplicateAsset(asset)}>
+                                   Duplicate Holding
+                                 </DropdownMenuItem>
+                                 <DropdownMenuItem 
+                                   onClick={() => setDeletingAsset(asset)}
+                                   className="text-destructive"
+                                 >
+                                   <Trash2 className="mr-2 h-4 w-4" />
+                                   Delete
+                                 </DropdownMenuItem>
+                               </DropdownMenuContent>
                             </DropdownMenu>
                           </TableCell>
                         </TableRow>
@@ -360,19 +365,22 @@ export function AssetTable({
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => onEditAsset(asset)}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setDeletingAsset(asset)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
+                           <DropdownMenuContent align="end">
+                             <DropdownMenuItem onClick={() => onEditAsset(asset)}>
+                               <Edit className="mr-2 h-4 w-4" />
+                               Edit
+                             </DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => onDuplicateAsset(asset)}>
+                               Duplicate Holding
+                             </DropdownMenuItem>
+                             <DropdownMenuItem 
+                               onClick={() => setDeletingAsset(asset)}
+                               className="text-destructive"
+                             >
+                               <Trash2 className="mr-2 h-4 w-4" />
+                               Delete
+                             </DropdownMenuItem>
+                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>

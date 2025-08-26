@@ -7,8 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
+import { useAssetLookup } from '@/hooks/useAssetLookup';
+
+type FormMode = 'NEW' | 'EXISTING_HOLDING' | 'DUPLICATE' | 'EDIT';
 
 interface AssetFormProps {
   asset?: Asset;
@@ -16,9 +20,19 @@ interface AssetFormProps {
   onClose: () => void;
   onSave: (asset: Asset) => void;
   getAssetNameCount?: (name: string) => number;
+  mode?: FormMode;
+  existingAssets?: Asset[];
 }
 
-export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }: AssetFormProps) {
+export function AssetForm({ 
+  asset, 
+  isOpen, 
+  onClose, 
+  onSave, 
+  getAssetNameCount, 
+  mode = 'NEW',
+  existingAssets = []
+}: AssetFormProps) {
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '',
     class: 'Public Equity',
@@ -35,15 +49,25 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
   });
   
   const [errors, setErrors] = useState<string[]>([]);
-
-  // Check if this asset name will affect multiple holdings
-  const affectedHoldingsCount = asset && getAssetNameCount && formData.name 
-    ? getAssetNameCount(formData.name) - 1 // Exclude current asset
-    : 0;
+  const [currentMode, setCurrentMode] = useState<FormMode>(mode);
+  const [selectedExistingAsset, setSelectedExistingAsset] = useState<Asset | null>(null);
+  
+  const { findAssetsByName, getUniqueAssetNames } = useAssetLookup(existingAssets);
 
   useEffect(() => {
+    setCurrentMode(mode);
     if (asset) {
       setFormData(asset);
+      if (mode === 'DUPLICATE') {
+        // For duplicate mode, clear account-specific fields
+        setFormData(prev => ({
+          ...asset,
+          id: undefined,
+          account_entity: 'Roy' as any,
+          account_bank: 'Poalim' as any,
+          quantity: 0
+        }));
+      }
     } else {
       setFormData({
         name: '',
@@ -61,48 +85,98 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
       });
     }
     setErrors([]);
-  }, [asset, isOpen]);
+    setSelectedExistingAsset(null);
+  }, [asset, isOpen, mode]);
+
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({ ...prev, name }));
+    
+    if (currentMode === 'NEW' && name.trim()) {
+      const existingAssets = findAssetsByName(name.trim());
+      if (existingAssets.length > 0) {
+        // Auto-switch to existing holding mode
+        setCurrentMode('EXISTING_HOLDING');
+        setSelectedExistingAsset(existingAssets[0]);
+        populateFromExistingAsset(existingAssets[0]);
+      }
+    }
+  };
+
+  const populateFromExistingAsset = (existingAsset: Asset) => {
+    setFormData(prev => ({
+      ...prev,
+      // Shared properties
+      name: existingAsset.name,
+      class: existingAsset.class,
+      sub_class: existingAsset.sub_class,
+      ISIN: existingAsset.ISIN,
+      origin_currency: existingAsset.origin_currency,
+      price: existingAsset.price,
+      factor: existingAsset.factor,
+      maturity_date: existingAsset.maturity_date,
+      ytw: existingAsset.ytw,
+      // Keep existing account-specific fields or clear them
+      account_entity: currentMode === 'DUPLICATE' ? prev.account_entity || 'Roy' : 'Roy',
+      account_bank: currentMode === 'DUPLICATE' ? prev.account_bank || 'Poalim' : 'Poalim',
+      quantity: currentMode === 'DUPLICATE' ? prev.quantity || 0 : 0
+    }));
+  };
 
   const handleSave = () => {
-    const validationErrors = validateAsset(formData);
+    if (!formData.name) return;
+    
+    const assetData: Asset = {
+      id: formData.id || crypto.randomUUID(),
+      name: formData.name || "",
+      class: formData.class || "Public Equity",
+      sub_class: formData.sub_class || "other",
+      quantity: formData.quantity || 0,
+      price: formData.price || 0,
+      factor: formData.factor,
+      account_entity: formData.account_entity || "Roy",
+      account_bank: formData.account_bank || "Poalim",
+      origin_currency: formData.origin_currency || "USD",
+      ISIN: formData.ISIN,
+      maturity_date: formData.maturity_date,
+      ytw: formData.ytw,
+      created_at: asset?.created_at || new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const validationErrors = validateAsset(assetData);
+    
+    // Additional validation for duplicate holdings
+    if ((currentMode === 'EXISTING_HOLDING' || currentMode === 'DUPLICATE') && existingAssets) {
+      const duplicateInSameAccount = existingAssets.find(a => 
+        a.name === assetData.name && 
+        a.account_entity === assetData.account_entity && 
+        a.account_bank === assetData.account_bank &&
+        a.id !== assetData.id
+      );
+      
+      if (duplicateInSameAccount) {
+        validationErrors.push('Asset already exists in this account. Consider updating the existing holding instead.');
+      }
+    }
+
     if (validationErrors.length > 0) {
       setErrors(validationErrors);
       return;
     }
 
-    const assetToSave: Asset = {
-      id: asset?.id || generateId(),
-      name: formData.name || (formData.class === 'Cash' ? `${formData.origin_currency} Cash` : formData.name!),
-      class: formData.class!,
-      sub_class: formData.sub_class!,
-      ISIN: formData.ISIN,
-      account_entity: formData.account_entity!,
-      account_bank: formData.account_bank!,
-      origin_currency: formData.origin_currency!,
-      quantity: formData.quantity!,
-      price: formData.class === 'Cash' ? 1 : formData.price!,
-      factor: formData.class === 'Private Equity' ? formData.factor : undefined,
-      maturity_date: formData.class === 'Fixed Income' 
-        ? (['REIT stock', 'Private Credit'].includes(formData.sub_class!) ? 'none' : formData.maturity_date) 
-        : undefined,
-      ytw: formData.class === 'Fixed Income' ? formData.ytw : undefined,
-      created_at: asset?.created_at || new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    onSave(assetToSave);
+    setErrors([]);
+    onSave(assetData);
     onClose();
   };
 
   const handleClassChange = (newClass: AssetClass) => {
     const subClassOptions = getSubClassOptions(newClass);
-    // Set default quantity based on asset class
     const defaultQuantity = (newClass === 'Private Equity' || newClass === 'Real Estate') ? 1 : (formData.quantity || 0);
     
     setFormData(prev => ({
       ...prev,
       class: newClass,
-      sub_class: subClassOptions[subClassOptions.length - 1] as any, // Use default (last option)
+      sub_class: subClassOptions[subClassOptions.length - 1] as any,
       quantity: defaultQuantity,
     }));
   };
@@ -112,8 +186,21 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
     setFormData(prev => ({
       ...prev,
       account_entity: newEntity,
-      account_bank: bankOptions[0] as any, // Use first available bank
+      account_bank: bankOptions[0] as any,
     }));
+  };
+
+  const isEditingSharedAsset = asset && getAssetNameCount && getAssetNameCount(asset.name) > 1;
+  const isSharedFieldsLocked = currentMode === 'EXISTING_HOLDING' || currentMode === 'DUPLICATE';
+  const existingAssetNames = getUniqueAssetNames();
+  
+  const getFormTitle = () => {
+    switch (currentMode) {
+      case 'DUPLICATE': return 'Duplicate Asset Holding';
+      case 'EXISTING_HOLDING': return 'Add Holding of Existing Asset';
+      case 'EDIT': return 'Edit Asset';
+      default: return 'Add New Asset';
+    }
   };
 
   return (
@@ -121,7 +208,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-financial-primary text-xl font-bold">
-            {asset ? 'Edit Asset' : 'Add New Asset'}
+            {getFormTitle()}
           </DialogTitle>
         </DialogHeader>
 
@@ -141,21 +228,72 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
             </Card>
           )}
 
-          {asset && affectedHoldingsCount > 0 && (
-            <Card className="border-financial-warning bg-financial-warning/5">
-              <CardContent className="pt-4">
-                <div className="text-financial-warning text-sm">
-                  <p className="font-semibold mb-2">⚠️ Shared Asset Update</p>
-                  <p>
-                    Changes to <strong>{formData.name}</strong> will affect <strong>{affectedHoldingsCount + 1} holdings</strong>.
-                    Price and other asset details will be synchronized across all accounts.
-                  </p>
-                  <p className="mt-2 text-xs">
-                    Only quantity and account details remain separate per holding.
-                  </p>
+          {/* Mode selector for new assets */}
+          {!asset && (currentMode === 'NEW' || currentMode === 'EXISTING_HOLDING') && (
+            <div className="flex gap-2 mb-4">
+              <Button
+                type="button"
+                variant={currentMode === 'NEW' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentMode('NEW')}
+              >
+                New Asset
+              </Button>
+              <Button
+                type="button"
+                variant={currentMode === 'EXISTING_HOLDING' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setCurrentMode('EXISTING_HOLDING')}
+              >
+                Add Holding
+              </Button>
+            </div>
+          )}
+
+          {/* Existing asset selector */}
+          {currentMode === 'EXISTING_HOLDING' && !selectedExistingAsset && (
+            <div className="mb-4">
+              <Label htmlFor="existing-asset">Select Existing Asset</Label>
+              <Select onValueChange={(value) => {
+                const existing = existingAssets.find(a => a.name === value);
+                if (existing) {
+                  setSelectedExistingAsset(existing);
+                  populateFromExistingAsset(existing);
+                }
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose an existing asset..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {existingAssetNames.map((name) => (
+                    <SelectItem key={name} value={name}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Warnings and info */}
+          {isEditingSharedAsset && (
+            <Alert className="mb-4">
+              <AlertDescription>
+                ⚠️ Warning: This asset exists in {getAssetNameCount!(asset!.name)} accounts. 
+                Changes to shared properties (price, class, etc.) will affect all holdings.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {(currentMode === 'EXISTING_HOLDING' || currentMode === 'DUPLICATE') && (
+            <Alert className="mb-4">
+              <AlertDescription>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">Shared Properties Locked</Badge>
+                  {currentMode === 'DUPLICATE' ? 
+                    'Creating duplicate holding with same asset details.' : 
+                    'Adding new holding of existing asset.'}
                 </div>
-              </CardContent>
-            </Card>
+              </AlertDescription>
+            </Alert>
           )}
 
           <div className="grid grid-cols-2 gap-4">
@@ -165,21 +303,31 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
               </Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                value={formData.name || ""}
+                onChange={(e) => handleNameChange(e.target.value)}
                 placeholder={formData.class === 'Cash' ? 'Optional for cash' : 'Enter asset name'}
                 className="border-border/50 focus:border-financial-primary"
+                disabled={isSharedFieldsLocked}
+                list="asset-names"
               />
+              {currentMode === 'NEW' && (
+                <datalist id="asset-names">
+                  {existingAssetNames.map(name => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="isin" className="font-semibold">ISIN</Label>
+              <Label htmlFor="isin" className="font-semibold">ISIN {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
               <Input
                 id="isin"
-                value={formData.ISIN}
+                value={formData.ISIN || ""}
                 onChange={(e) => setFormData(prev => ({ ...prev, ISIN: e.target.value }))}
                 placeholder="Optional ISIN code"
                 className="border-border/50 focus:border-financial-primary"
+                disabled={isSharedFieldsLocked}
               />
             </div>
           </div>
@@ -187,7 +335,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="class" className="font-semibold">Asset Class *</Label>
-              <Select value={formData.class} onValueChange={handleClassChange}>
+              <Select value={formData.class} onValueChange={handleClassChange} disabled={isSharedFieldsLocked}>
                 <SelectTrigger className="border-border/50 focus:border-financial-primary">
                   <SelectValue />
                 </SelectTrigger>
@@ -207,10 +355,10 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
                   setFormData(prev => ({ 
                     ...prev, 
                     sub_class: value as any,
-                    // Auto-set currency for Cash assets
                     origin_currency: formData.class === 'Cash' ? value as Currency : prev.origin_currency
                   }));
                 }}
+                disabled={isSharedFieldsLocked}
               >
                 <SelectTrigger className="border-border/50 focus:border-financial-primary">
                   <SelectValue />
@@ -259,10 +407,11 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="currency" className="font-semibold">Currency *</Label>
+              <Label htmlFor="currency" className="font-semibold">Currency {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
               <Select 
                 value={formData.origin_currency} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, origin_currency: value as Currency }))}
+                disabled={isSharedFieldsLocked}
               >
                 <SelectTrigger className="border-border/50 focus:border-financial-primary">
                   <SelectValue />
@@ -291,7 +440,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
 
             {formData.class !== 'Cash' && (
               <div className="space-y-2">
-                <Label htmlFor="price" className="font-semibold">Price *</Label>
+                <Label htmlFor="price" className="font-semibold">Price {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -301,6 +450,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
                   onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                   placeholder="0.00"
                   className="border-border/50 focus:border-financial-primary"
+                  disabled={isSharedFieldsLocked}
                 />
               </div>
             )}
@@ -308,7 +458,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
 
           {formData.class === 'Private Equity' && (
             <div className="space-y-2">
-              <Label htmlFor="factor" className="font-semibold">Factor (0-1)</Label>
+              <Label htmlFor="factor" className="font-semibold">Factor (0-1) {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
               <Input
                 id="factor"
                 type="number"
@@ -319,6 +469,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
                 onChange={(e) => setFormData(prev => ({ ...prev, factor: parseFloat(e.target.value) || 1.0 }))}
                 placeholder="1.0"
                 className="border-border/50 focus:border-financial-primary"
+                disabled={isSharedFieldsLocked}
               />
             </div>
           )}
@@ -327,13 +478,14 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
             <div className="grid grid-cols-2 gap-4">
               {!['REIT stock', 'Private Credit'].includes(formData.sub_class!) && (
                 <div className="space-y-2">
-                  <Label htmlFor="maturity" className="font-semibold">Maturity Date</Label>
+                  <Label htmlFor="maturity" className="font-semibold">Maturity Date {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
                   <Input
                     id="maturity"
                     type="date"
                     value={formData.maturity_date}
                     onChange={(e) => setFormData(prev => ({ ...prev, maturity_date: e.target.value }))}
                     className="border-border/50 focus:border-financial-primary"
+                    disabled={isSharedFieldsLocked}
                   />
                 </div>
               )}
@@ -348,7 +500,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="ytw" className="font-semibold">YTW (%)</Label>
+                <Label htmlFor="ytw" className="font-semibold">YTW (%) {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
                 <Input
                   id="ytw"
                   type="number"
@@ -362,6 +514,7 @@ export function AssetForm({ asset, isOpen, onClose, onSave, getAssetNameCount }:
                   }}
                   placeholder="4.51"
                   className="border-border/50 focus:border-financial-primary"
+                  disabled={isSharedFieldsLocked}
                 />
               </div>
             </div>
