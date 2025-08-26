@@ -297,7 +297,7 @@ export function AssetTable({
                           <TableCell>{asset.account_bank}</TableCell>
                           <TableCell>{asset.origin_currency}</TableCell>
                           <TableCell className="text-right">{asset.quantity.toLocaleString()}</TableCell>
-                          <TableCell className="text-right">{asset.price.toFixed(1)}</TableCell>
+                          <TableCell className="text-right">{asset.price}</TableCell>
                           <TableCell className="text-right font-semibold">
                             {formatCurrency(calculation.display_value, viewCurrency)}
                           </TableCell>
@@ -350,7 +350,7 @@ export function AssetTable({
                       <TableCell>{asset.account_bank}</TableCell>
                       <TableCell>{asset.origin_currency}</TableCell>
                       <TableCell className="text-right">{asset.quantity.toLocaleString()}</TableCell>
-                      <TableCell className="text-right">{asset.price.toFixed(1)}</TableCell>
+                      <TableCell className="text-right">{asset.price}</TableCell>
                       <TableCell className="text-right font-semibold">
                         {formatCurrency(calculation.display_value, viewCurrency)}
                       </TableCell>
