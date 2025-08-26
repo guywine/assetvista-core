@@ -82,6 +82,30 @@ export function getBankOptions(entity: AccountEntity): string[] {
   return ACCOUNT_BANK_MAP[entity] || [];
 }
 
+export function calculateWeightedYTW(
+  assets: Asset[],
+  calculations: Map<string, AssetCalculations>
+): number {
+  const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
+  
+  if (fixedIncomeAssets.length === 0) return 0;
+  
+  const totalValue = fixedIncomeAssets.reduce((sum, asset) => {
+    const calc = calculations.get(asset.id);
+    return sum + (calc?.display_value || 0);
+  }, 0);
+  
+  if (totalValue === 0) return 0;
+  
+  const weightedYTW = fixedIncomeAssets.reduce((sum, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    return sum + asset.ytw! * value;
+  }, 0);
+  
+  return weightedYTW / totalValue;
+}
+
 export function validateAsset(asset: Partial<Asset>): string[] {
   const errors: string[] = [];
   

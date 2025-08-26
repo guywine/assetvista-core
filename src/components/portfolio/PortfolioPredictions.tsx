@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, AssetClass, FixedIncomeSubClass } from '@/types/portfolio';
-import { calculateAssetValue, formatCurrency, formatPercentage } from '@/lib/portfolio-utils';
+import { calculateAssetValue, formatCurrency, formatPercentage, calculateWeightedYTW } from '@/lib/portfolio-utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -100,27 +100,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
   }, [assets, assetCalculations]);
 
   // Calculate weighted average YTW for Fixed Income
-  const fixedIncomeYTW = useMemo(() => {
-    const fixedIncomeAssets = assetsByClass['Fixed Income'];
-    let totalValue = 0;
-    let weightedYTW = 0;
-
-    console.log('YTW Calculation Debug:');
-    fixedIncomeAssets.forEach(asset => {
-      if (asset.ytw) {
-        const calc = assetCalculations.get(asset.id);
-        if (calc) {
-          console.log(`Asset: ${asset.name}, YTW: ${asset.ytw}, Value: ${calc.display_value}, Contribution: ${asset.ytw * calc.display_value}`);
-          totalValue += calc.display_value;
-          weightedYTW += asset.ytw * calc.display_value;
-        }
-      }
-    });
-    
-    const result = totalValue > 0 ? (weightedYTW / totalValue) : 0;
-    console.log(`Total Value: ${totalValue}, Weighted YTW Sum: ${weightedYTW}, Result: ${result}`);
-    return result;
-  }, [assetsByClass, assetCalculations]);
+  const fixedIncomeYTW = calculateWeightedYTW(assets, assetCalculations);
 
   // Helper functions for toggle management
   const updateRealEstateToggle = (assetId: string, value: boolean) => {

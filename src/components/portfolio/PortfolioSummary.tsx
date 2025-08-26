@@ -1,5 +1,5 @@
 import { Asset, ViewCurrency, FXRates, AssetCalculations } from '@/types/portfolio';
-import { calculateAssetValue, formatCurrency, formatPercentage } from '@/lib/portfolio-utils';
+import { calculateAssetValue, formatCurrency, formatPercentage, calculateWeightedYTW } from '@/lib/portfolio-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -108,14 +108,7 @@ export function PortfolioSummary({
 
   // Fixed Income YTW calculations
   const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
-  const fixedIncomeWeightedYTW = fixedIncomeAssets.length > 0 ? fixedIncomeAssets.reduce((sum, asset) => {
-    const calc = calculations.get(asset.id);
-    const value = calc?.display_value || 0;
-    return sum + asset.ytw! * value;
-  }, 0) / fixedIncomeAssets.reduce((sum, asset) => {
-    const calc = calculations.get(asset.id);
-    return sum + (calc?.display_value || 0);
-  }, 0) : 0;
+  const fixedIncomeWeightedYTW = calculateWeightedYTW(assets, calculations);
 
   // Fixed Income sub-class YTW calculations
   const fixedIncomeSubClassYTW = fixedIncomeAssets.reduce((acc, asset) => {
