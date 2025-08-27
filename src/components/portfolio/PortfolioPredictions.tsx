@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer } from '@/components/ui/chart';
 
 interface PredictionSettings {
   publicEquityIRR: number;
@@ -19,6 +21,17 @@ interface PredictionSettings {
   privateEquitySubClassToggles: Record<string, boolean>;
   privateEquityClassToggle: boolean;
   privateEquityLiquidationYears: Record<string, string>;
+}
+
+interface ChartDataPoint {
+  year: string;
+  Cash: number;
+  "Fixed Income": number;
+  "Public Equity": number;
+  "Commodities & more": number;
+  "Real Estate": number;
+  "Private Equity Factored": number;
+  "Private Equity Potential": number;
 }
 
 interface PortfolioPredictionsProps {
@@ -101,6 +114,129 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
 
   // Calculate weighted average YTW for Fixed Income
   const fixedIncomeYTW = calculateWeightedYTW(assets, assetCalculations);
+
+  // Helper functions for chart calculations
+  const calculateYearValue = (baseValue: number, growthRate: number, yearsFromCurrent: number): number => {
+    return baseValue * Math.pow(1 + growthRate / 100, yearsFromCurrent);
+  };
+
+  const shouldIncludeAssetInYear = (asset: Asset, year: string, settings: PredictionSettings): boolean => {
+    if (asset.class === 'Real Estate') {
+      const liquidationYear = settings.realEstateLiquidationYears[asset.id] || currentYear.toString();
+      const isToggled = settings.realEstateToggles[asset.id];
+      
+      if (!isToggled) return false;
+      
+      if (year === 'current') return false;
+      if (liquidationYear === 'later') return year === 'later';
+      
+      const liquidationYearNum = parseInt(liquidationYear);
+      if (year === 'later') return true;
+      
+      const yearNum = parseInt(year);
+      return yearNum >= liquidationYearNum;
+    }
+    
+    if (asset.class === 'Private Equity') {
+      const liquidationYear = settings.privateEquityLiquidationYears[asset.id] || currentYear.toString();
+      const isToggled = settings.privateEquityToggles[asset.id];
+      
+      if (!isToggled) return false;
+      
+      if (year === 'current') return false;
+      if (liquidationYear === 'later') return year === 'later';
+      
+      const liquidationYearNum = parseInt(liquidationYear);
+      if (year === 'later') return true;
+      
+      const yearNum = parseInt(year);
+      return yearNum >= liquidationYearNum;
+    }
+    
+    return true; // Other asset classes are always included
+  };
+
+  const getAssetValueForYear = (asset: Asset, year: string, calculations: Map<string, any>): { factored: number; potential: number } => {
+    const calc = calculations.get(asset.id);
+    if (!calc) return { factored: 0, potential: 0 };
+
+    if (asset.class === 'Private Equity') {
+      // For Private Equity, calculate both factored and potential values
+      let fxRate = 1;
+      if (viewCurrency === 'USD') {
+        const originToILS = fxRates[asset.origin_currency]?.to_ILS || 1;
+        const usdToILS = fxRates['USD']?.to_ILS || 1;
+        fxRate = originToILS / usdToILS;
+      } else {
+        fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
+      }
+      
+      const fullValue = (asset.price || 0) * asset.quantity * fxRate;
+      const factoredValue = calc.display_value; // Already factored
+      const potentialDelta = fullValue - factoredValue;
+      
+      return { factored: factoredValue, potential: potentialDelta };
+    } else {
+      // For other assets, just return the display value
+      return { factored: calc.display_value, potential: 0 };
+    }
+  };
+
+  // Calculate chart data
+  const chartData = useMemo((): ChartDataPoint[] => {
+    const years = ['current', (currentYear + 1).toString(), (currentYear + 2).toString(), (currentYear + 3).toString(), 'later'];
+    
+    return years.map(year => {
+      const dataPoint: ChartDataPoint = {
+        year,
+        Cash: 0,
+        "Fixed Income": 0,
+        "Public Equity": 0,
+        "Commodities & more": 0,
+        "Real Estate": 0,
+        "Private Equity Factored": 0,
+        "Private Equity Potential": 0,
+      };
+
+      const yearsFromCurrent = year === 'current' ? 0 : 
+                              year === 'later' ? 4 : 
+                              parseInt(year) - currentYear;
+
+      assets.forEach(asset => {
+        const calc = assetCalculations.get(asset.id);
+        if (!calc) return;
+
+        const shouldInclude = shouldIncludeAssetInYear(asset, year, settings);
+        if (!shouldInclude) return;
+
+        const assetValues = getAssetValueForYear(asset, year, assetCalculations);
+
+        switch (asset.class) {
+          case 'Cash':
+            dataPoint.Cash += calc.display_value; // Cash stays constant
+            break;
+          case 'Fixed Income':
+            dataPoint["Fixed Income"] += calculateYearValue(calc.display_value, fixedIncomeYTW * 100, yearsFromCurrent);
+            break;
+          case 'Public Equity':
+            dataPoint["Public Equity"] += calculateYearValue(calc.display_value, settings.publicEquityIRR, yearsFromCurrent);
+            break;
+          case 'Commodities & more':
+            dataPoint["Commodities & more"] += calculateYearValue(calc.display_value, settings.commoditiesMoreIRR, yearsFromCurrent);
+            break;
+          case 'Real Estate':
+            dataPoint["Real Estate"] += assetValues.factored; // Current value at liquidation
+            break;
+          case 'Private Equity':
+            dataPoint["Private Equity Factored"] += assetValues.factored;
+            dataPoint["Private Equity Potential"] += assetValues.potential;
+            break;
+        }
+      });
+
+      return dataPoint;
+    });
+  }, [assets, assetCalculations, settings, currentYear, fixedIncomeYTW, fxRates, viewCurrency]);
 
   // Helper functions for toggle management
   const updateRealEstateToggle = (assetId: string, value: boolean) => {
@@ -235,9 +371,36 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     }, 0);
   };
 
+  const chartConfig = {
+    Cash: { color: 'hsl(var(--chart-1))' },
+    "Fixed Income": { color: 'hsl(var(--chart-2))' },
+    "Public Equity": { color: 'hsl(var(--chart-3))' },
+    "Commodities & more": { color: 'hsl(var(--chart-4))' },
+    "Real Estate": { color: 'hsl(var(--chart-5))' },
+    "Private Equity Factored": { color: 'hsl(var(--primary))' },
+    "Private Equity Potential": { color: 'hsl(var(--primary) / 0.6)' },
+  };
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
+          <p className="font-medium mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
+              {entry.dataKey}: {formatCurrency(entry.value, viewCurrency)}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="space-y-6 max-w-2xl">
-      <div className="grid gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Left Column - Settings */}
+      <div className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Prediction Model Settings</CardTitle>
@@ -488,6 +651,49 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
               ))}
             </div>
 
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column - Chart */}
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Liquid Portfolio Projection</CardTitle>
+            <CardDescription>
+              Evolution of your liquid portfolio over time based on prediction settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={chartConfig} className="h-[500px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="year" 
+                    className="text-muted-foreground"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis 
+                    className="text-muted-foreground"
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend 
+                    wrapperStyle={{ fontSize: '12px' }}
+                    iconType="rect"
+                  />
+                  <Bar dataKey="Cash" stackId="a" fill={chartConfig.Cash.color} />
+                  <Bar dataKey="Fixed Income" stackId="a" fill={chartConfig["Fixed Income"].color} />
+                  <Bar dataKey="Public Equity" stackId="a" fill={chartConfig["Public Equity"].color} />
+                  <Bar dataKey="Commodities & more" stackId="a" fill={chartConfig["Commodities & more"].color} />
+                  <Bar dataKey="Real Estate" stackId="a" fill={chartConfig["Real Estate"].color} />
+                  <Bar dataKey="Private Equity Factored" stackId="a" fill={chartConfig["Private Equity Factored"].color} />
+                  <Bar dataKey="Private Equity Potential" stackId="a" fill={chartConfig["Private Equity Potential"].color} />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartContainer>
           </CardContent>
         </Card>
       </div>
