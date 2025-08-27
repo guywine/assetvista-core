@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
+import { useAssetLiquidationSettings } from '@/hooks/useAssetLiquidationSettings';
 
 interface PredictionSettings {
   publicEquityIRR: number;
@@ -41,6 +42,8 @@ interface PortfolioPredictionsProps {
 }
 
 export function PortfolioPredictions({ assets, viewCurrency, fxRates }: PortfolioPredictionsProps) {
+  const { getLiquidationYear, saveLiquidationYear, isLoading: liquidationLoading } = useAssetLiquidationSettings();
+  
   const currentYear = new Date().getFullYear();
   const yearOptions = [
     currentYear.toString(),
@@ -122,7 +125,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
 
   const shouldIncludeAssetInYear = (asset: Asset, year: string, settings: PredictionSettings): boolean => {
     if (asset.class === 'Real Estate') {
-      const liquidationYear = settings.realEstateLiquidationYears[asset.id] || currentYear.toString();
+      const liquidationYear = getLiquidationYear(asset);
       const isToggled = settings.realEstateToggles[asset.id];
       
       if (!isToggled) return false;
@@ -138,7 +141,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     }
     
     if (asset.class === 'Private Equity') {
-      const liquidationYear = settings.privateEquityLiquidationYears[asset.id] || currentYear.toString();
+      const liquidationYear = getLiquidationYear(asset);
       const isToggled = settings.privateEquityToggles[asset.id];
       
       if (!isToggled) return false;
@@ -547,14 +550,11 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                              {formatCurrency(assetCalculations.get(asset.id)?.display_value || 0, viewCurrency)}
                            </span>
                          </div>
-                        <div className="flex items-center space-x-4">
-                          <Select 
-                            value={settings.realEstateLiquidationYears[asset.id] || currentYear.toString()}
-                            onValueChange={(value) => setSettings(prev => ({
-                              ...prev,
-                              realEstateLiquidationYears: { ...prev.realEstateLiquidationYears, [asset.id]: value }
-                            }))}
-                          >
+                         <div className="flex items-center space-x-4">
+                           <Select 
+                             value={getLiquidationYear(asset)}
+                             onValueChange={(value) => saveLiquidationYear(asset.id, value)}
+                           >
                             <SelectTrigger className="w-20">
                               <SelectValue />
                             </SelectTrigger>
@@ -637,14 +637,11 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                              </span>
                            )}
                          </div>
-                        <div className="flex items-center space-x-4">
-                          <Select 
-                            value={settings.privateEquityLiquidationYears[asset.id] || currentYear.toString()}
-                            onValueChange={(value) => setSettings(prev => ({
-                              ...prev,
-                              privateEquityLiquidationYears: { ...prev.privateEquityLiquidationYears, [asset.id]: value }
-                            }))}
-                          >
+                         <div className="flex items-center space-x-4">
+                           <Select 
+                             value={getLiquidationYear(asset)}
+                             onValueChange={(value) => saveLiquidationYear(asset.id, value)}
+                           >
                             <SelectTrigger className="w-20">
                               <SelectValue />
                             </SelectTrigger>

@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_liquidation_settings: {
+        Row: {
+          asset_id: string
+          created_at: string
+          id: string
+          liquidation_year: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          asset_id: string
+          created_at?: string
+          id?: string
+          liquidation_year: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          asset_id?: string
+          created_at?: string
+          id?: string
+          liquidation_year?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asset_liquidation_settings_asset_id_fkey"
+            columns: ["asset_id"]
+            isOneToOne: true
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assets: {
         Row: {
           account_bank: string
