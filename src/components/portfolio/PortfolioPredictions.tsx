@@ -397,6 +397,32 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     return null;
   };
 
+  const formatMillions = (value: number): string => {
+    const millions = value / 1000000;
+    return millions.toFixed(1);
+  };
+
+  const CustomBarLabel = ({ payload, x, y, width }: any) => {
+    if (!payload) return null;
+    
+    const total = Object.keys(payload)
+      .filter(key => key !== 'year')
+      .reduce((sum, key) => sum + (payload[key] || 0), 0);
+    
+    if (total === 0) return null;
+    
+    return (
+      <text 
+        x={x + width / 2} 
+        y={y - 5} 
+        textAnchor="middle" 
+        className="fill-muted-foreground text-xs font-medium"
+      >
+        {formatMillions(total)}M
+      </text>
+    );
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left Column - Settings */}
@@ -667,7 +693,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[500px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <BarChart data={chartData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis 
                     dataKey="year" 
@@ -684,7 +710,9 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                     wrapperStyle={{ fontSize: '12px' }}
                     iconType="rect"
                   />
-                  <Bar dataKey="Cash" stackId="a" fill={chartConfig.Cash.color} />
+                  <Bar dataKey="Cash" stackId="a" fill={chartConfig.Cash.color}>
+                    <CustomBarLabel />
+                  </Bar>
                   <Bar dataKey="Fixed Income" stackId="a" fill={chartConfig["Fixed Income"].color} />
                   <Bar dataKey="Public Equity" stackId="a" fill={chartConfig["Public Equity"].color} />
                   <Bar dataKey="Commodities & more" stackId="a" fill={chartConfig["Commodities & more"].color} />
