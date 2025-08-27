@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 
 interface PredictionSettings {
@@ -402,25 +402,17 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     return millions.toFixed(1);
   };
 
-  const CustomBarLabel = ({ payload, x, y, width }: any) => {
-    if (!payload) return null;
+  const renderCustomLabel = (entry: any) => {
+    if (!entry) return null;
     
-    const total = Object.keys(payload)
+    // Calculate total for this bar
+    const total = Object.keys(entry)
       .filter(key => key !== 'year')
-      .reduce((sum, key) => sum + (payload[key] || 0), 0);
+      .reduce((sum, key) => sum + (entry[key] || 0), 0);
     
     if (total === 0) return null;
     
-    return (
-      <text 
-        x={x + width / 2} 
-        y={y - 5} 
-        textAnchor="middle" 
-        className="fill-muted-foreground text-xs font-medium"
-      >
-        {formatMillions(total)}M
-      </text>
-    );
+    return `${formatMillions(total)}M`;
   };
 
   return (
@@ -710,15 +702,42 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                     wrapperStyle={{ fontSize: '12px' }}
                     iconType="rect"
                   />
-                  <Bar dataKey="Cash" stackId="a" fill={chartConfig.Cash.color}>
-                    <CustomBarLabel />
-                  </Bar>
+                  <Bar dataKey="Cash" stackId="a" fill={chartConfig.Cash.color} />
                   <Bar dataKey="Fixed Income" stackId="a" fill={chartConfig["Fixed Income"].color} />
                   <Bar dataKey="Public Equity" stackId="a" fill={chartConfig["Public Equity"].color} />
                   <Bar dataKey="Commodities & more" stackId="a" fill={chartConfig["Commodities & more"].color} />
                   <Bar dataKey="Real Estate" stackId="a" fill={chartConfig["Real Estate"].color} />
                   <Bar dataKey="Private Equity Factored" stackId="a" fill={chartConfig["Private Equity Factored"].color} />
-                  <Bar dataKey="Private Equity Potential" stackId="a" fill={chartConfig["Private Equity Potential"].color} />
+                  <Bar dataKey="Private Equity Potential" stackId="a" fill={chartConfig["Private Equity Potential"].color}>
+                    <LabelList 
+                      content={(props: any) => {
+                        const { payload, x, y, width } = props;
+                        if (!payload) return null;
+                        
+                        const total = Object.keys(payload)
+                          .filter(key => key !== 'year')
+                          .reduce((sum, key) => {
+                            const value = payload[key];
+                            return sum + (typeof value === 'number' ? value : 0);
+                          }, 0);
+                        
+                        if (total === 0) return null;
+                        
+                        return (
+                          <text 
+                            x={(x || 0) + (width || 0) / 2} 
+                            y={(y || 0) - 10} 
+                            textAnchor="middle" 
+                            fontSize="12"
+                            fill="currentColor"
+                            className="fill-foreground font-medium"
+                          >
+                            {formatMillions(total)}M
+                          </text>
+                        );
+                      }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
