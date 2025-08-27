@@ -708,38 +708,38 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                   <Bar dataKey="Commodities & more" stackId="a" fill={chartConfig["Commodities & more"].color} />
                   <Bar dataKey="Real Estate" stackId="a" fill={chartConfig["Real Estate"].color} />
                   <Bar dataKey="Private Equity Factored" stackId="a" fill={chartConfig["Private Equity Factored"].color} />
-                  <Bar dataKey="Private Equity Potential" stackId="a" fill={chartConfig["Private Equity Potential"].color} />
-                  <LabelList 
-                    dataKey={() => {}}
-                    position="top"
-                    content={(props: any) => {
-                      const { payload, x, y, width, height } = props;
-                      if (!payload) return null;
-                      
-                      // Calculate total value for this bar by summing all asset classes
-                      const total = Object.keys(payload)
-                        .filter(key => key !== 'year')
-                        .reduce((sum, key) => {
-                          const value = payload[key];
-                          return sum + (typeof value === 'number' ? value : 0);
-                        }, 0);
-                      
-                      if (total === 0) return null;
-                      
-                      return (
-                        <text 
-                          x={(x || 0) + (width || 0) / 2} 
-                          y={(y || 0) - 10} 
-                          textAnchor="middle" 
-                          fontSize="12"
-                          fill="currentColor"
-                          className="fill-foreground font-medium"
-                        >
-                          {formatMillions(total)}M
-                        </text>
-                      );
-                    }}
-                  />
+                  <Bar dataKey="Private Equity Potential" stackId="a" fill={chartConfig["Private Equity Potential"].color}>
+                    <LabelList 
+                      content={(props: any) => {
+                        const { payload, x, y, width } = props;
+                        if (!payload || !payload.payload) return null;
+                        
+                        const data = payload.payload;
+                        // Calculate total value for this bar by summing all asset classes
+                        const total = Object.keys(data)
+                          .filter(key => key !== 'year')
+                          .reduce((sum, key) => {
+                            const value = data[key];
+                            return sum + (typeof value === 'number' ? value : 0);
+                          }, 0);
+                        
+                        if (total === 0) return null;
+                        
+                        return (
+                          <text 
+                            x={(x || 0) + (width || 0) / 2} 
+                            y={(y || 0) - 10} 
+                            textAnchor="middle" 
+                            fontSize="12"
+                            fill="currentColor"
+                            className="fill-foreground font-medium"
+                          >
+                            {formatMillions(total)}M
+                          </text>
+                        );
+                      }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartContainer>
