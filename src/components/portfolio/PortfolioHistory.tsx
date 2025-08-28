@@ -9,7 +9,7 @@ import { PortfolioSnapshot } from '@/types/portfolio';
 import { formatCurrency } from '@/lib/portfolio-utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 
 export function PortfolioHistory() {
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
@@ -73,6 +73,45 @@ export function PortfolioHistory() {
   const downloadSnapshot = (snapshot: PortfolioSnapshot) => {
     const workbook = XLSX.utils.book_new();
 
+    // Define styling constants
+    const headerStyle = {
+      font: { name: 'Arial', sz: 12, bold: true, color: { rgb: 'FFFFFF' } },
+      fill: { fgColor: { rgb: '4472C4' } },
+      alignment: { horizontal: 'center', vertical: 'center' },
+      border: {
+        top: { style: 'thin', color: { rgb: '000000' } },
+        bottom: { style: 'thin', color: { rgb: '000000' } },
+        left: { style: 'thin', color: { rgb: '000000' } },
+        right: { style: 'thin', color: { rgb: '000000' } }
+      }
+    };
+
+    const dataStyle = {
+      font: { name: 'Arial', sz: 10 },
+      alignment: { horizontal: 'left', vertical: 'center' },
+      border: {
+        top: { style: 'thin', color: { rgb: 'CCCCCC' } },
+        bottom: { style: 'thin', color: { rgb: 'CCCCCC' } },
+        left: { style: 'thin', color: { rgb: 'CCCCCC' } },
+        right: { style: 'thin', color: { rgb: 'CCCCCC' } }
+      }
+    };
+
+    const alternateRowStyle = {
+      ...dataStyle,
+      fill: { fgColor: { rgb: 'F8F9FA' } }
+    };
+
+    const currencyStyle = {
+      ...dataStyle,
+      numFmt: '$#,##0.00'
+    };
+
+    const numberStyle = {
+      ...dataStyle,
+      numFmt: '#,##0.0000'
+    };
+
     // Assets sheet
     const assetsData = snapshot.assets.map(asset => ({
       Name: asset.name,
@@ -90,6 +129,48 @@ export function PortfolioHistory() {
     }));
 
     const assetsSheet = XLSX.utils.json_to_sheet(assetsData);
+    
+    // Apply styling to Assets sheet
+    const assetsRange = XLSX.utils.decode_range(assetsSheet['!ref'] || 'A1');
+    
+    // Set column widths
+    assetsSheet['!cols'] = [
+      { wch: 25 }, // Name
+      { wch: 15 }, // Class
+      { wch: 18 }, // Sub Class
+      { wch: 15 }, // ISIN
+      { wch: 15 }, // Account Entity
+      { wch: 15 }, // Account Bank
+      { wch: 12 }, // Quantity
+      { wch: 12 }, // Price
+      { wch: 10 }, // Factor
+      { wch: 15 }, // Origin Currency
+      { wch: 15 }, // Maturity Date
+      { wch: 10 }  // YTW
+    ];
+
+    // Style headers and data
+    for (let C = assetsRange.s.c; C <= assetsRange.e.c; ++C) {
+      const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (assetsSheet[headerAddr]) {
+        assetsSheet[headerAddr].s = headerStyle;
+      }
+    }
+
+    for (let R = 1; R <= assetsRange.e.r; ++R) {
+      for (let C = assetsRange.s.c; C <= assetsRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (assetsSheet[cellAddr]) {
+          const isAlternateRow = R % 2 === 0;
+          if (C === 7) { // Price column
+            assetsSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), ...currencyStyle };
+          } else {
+            assetsSheet[cellAddr].s = isAlternateRow ? alternateRowStyle : dataStyle;
+          }
+        }
+      }
+    }
+
     XLSX.utils.book_append_sheet(workbook, assetsSheet, 'Assets');
 
     // FX Rates sheet
@@ -101,6 +182,40 @@ export function PortfolioHistory() {
     }));
 
     const fxSheet = XLSX.utils.json_to_sheet(fxData);
+    
+    // Apply styling to FX Rates sheet
+    const fxRange = XLSX.utils.decode_range(fxSheet['!ref'] || 'A1');
+    
+    fxSheet['!cols'] = [
+      { wch: 12 }, // Currency
+      { wch: 15 }, // To USD
+      { wch: 15 }, // To ILS
+      { wch: 20 }  // Last Updated
+    ];
+
+    // Style headers
+    for (let C = fxRange.s.c; C <= fxRange.e.c; ++C) {
+      const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (fxSheet[headerAddr]) {
+        fxSheet[headerAddr].s = headerStyle;
+      }
+    }
+
+    // Style data rows
+    for (let R = 1; R <= fxRange.e.r; ++R) {
+      for (let C = fxRange.s.c; C <= fxRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (fxSheet[cellAddr]) {
+          const isAlternateRow = R % 2 === 0;
+          if (C === 1 || C === 2) { // To USD and To ILS columns
+            fxSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), ...numberStyle };
+          } else {
+            fxSheet[cellAddr].s = isAlternateRow ? alternateRowStyle : dataStyle;
+          }
+        }
+      }
+    }
+
     XLSX.utils.book_append_sheet(workbook, fxSheet, 'FX Rates');
 
     // Summary sheet
@@ -114,6 +229,57 @@ export function PortfolioHistory() {
     ];
 
     const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    
+    // Apply styling to Summary sheet
+    const summaryRange = XLSX.utils.decode_range(summarySheet['!ref'] || 'A1');
+    
+    summarySheet['!cols'] = [
+      { wch: 25 }, // Metric
+      { wch: 20 }  // Value
+    ];
+
+    const summaryHeaderStyle = {
+      ...headerStyle,
+      font: { name: 'Arial', sz: 14, bold: true, color: { rgb: 'FFFFFF' } }
+    };
+
+    const totalRowStyle = {
+      ...dataStyle,
+      font: { name: 'Arial', sz: 12, bold: true },
+      fill: { fgColor: { rgb: 'E7F3FF' } }
+    };
+
+    // Style headers
+    for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
+      const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (summarySheet[headerAddr]) {
+        summarySheet[headerAddr].s = summaryHeaderStyle;
+      }
+    }
+
+    // Style data rows
+    for (let R = 1; R <= summaryRange.e.r; ++R) {
+      for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (summarySheet[cellAddr]) {
+          const isTotalRow = R === 1; // Total Value row
+          const isAlternateRow = R % 2 === 0;
+          
+          if (isTotalRow) {
+            if (C === 1) { // Value column for Total Value
+              summarySheet[cellAddr].s = { ...totalRowStyle, ...currencyStyle };
+            } else {
+              summarySheet[cellAddr].s = totalRowStyle;
+            }
+          } else if (C === 1 && (R === 2 || R === 3 || R === 4)) { // Currency value columns
+            summarySheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), ...currencyStyle };
+          } else {
+            summarySheet[cellAddr].s = isAlternateRow ? alternateRowStyle : dataStyle;
+          }
+        }
+      }
+    }
+
     XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
 
     // Download
