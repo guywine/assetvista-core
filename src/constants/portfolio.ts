@@ -8,7 +8,8 @@ import type {
   RealEstateSubClass,
   AccountEntity,
   AccountBank,
-  Currency
+  Currency,
+  Beneficiary
 } from '@/types/portfolio';
 
 // Currencies
@@ -45,6 +46,22 @@ export const CLASS_SUBCLASS_MAP: Record<AssetClass, string[]> = {
 export const ACCOUNT_ENTITIES: AccountEntity[] = [
   'Roy', 'Roni', 'Guy', 'Shimon', 'Hagit', 'SW2009', 'Weintraub', 'B Joel', 'Tom'
 ];
+
+// Beneficiaries
+export const BENEFICIARIES: Beneficiary[] = ['Shimon', 'Hagit', 'Kids', 'Tom'];
+
+// Entity to Beneficiary mapping
+export const ENTITY_BENEFICIARY_MAP: Record<AccountEntity, Beneficiary> = {
+  'Shimon': 'Shimon',
+  'B Joel': 'Shimon',
+  'Hagit': 'Hagit',
+  'Guy': 'Kids',
+  'Roy': 'Kids',
+  'Roni': 'Kids',
+  'SW2009': 'Kids',
+  'Weintraub': 'Kids',
+  'Tom': 'Tom'
+};
 
 // Account Banks by Entity
 export const ACCOUNT_BANK_MAP: Record<AccountEntity, AccountBank[]> = {

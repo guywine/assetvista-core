@@ -53,6 +53,7 @@ export type Database = {
         Row: {
           account_bank: string
           account_entity: string
+          beneficiary: string
           class: string
           created_at: string
           factor: number | null
@@ -71,6 +72,7 @@ export type Database = {
         Insert: {
           account_bank: string
           account_entity: string
+          beneficiary?: string
           class: string
           created_at?: string
           factor?: number | null
@@ -89,6 +91,7 @@ export type Database = {
         Update: {
           account_bank?: string
           account_entity?: string
+          beneficiary?: string
           class?: string
           created_at?: string
           factor?: number | null

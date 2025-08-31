@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Asset, AssetClass, AccountEntity, Currency } from '@/types/portfolio';
 import { validateAsset, generateId, getSubClassOptions, getBankOptions } from '@/lib/portfolio-utils';
 import { ASSET_CLASSES, ACCOUNT_ENTITIES, CURRENCIES } from '@/constants/portfolio';
+import { getBeneficiaryFromEntity } from '@/lib/beneficiary-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,7 @@ export function AssetForm({
     ISIN: '',
     account_entity: 'Roy',
     account_bank: 'Poalim',
+    beneficiary: 'Kids',
     origin_currency: 'USD',
     quantity: 0,
     price: 0,
@@ -65,6 +67,7 @@ export function AssetForm({
           id: undefined,
           account_entity: 'Roy' as any,
           account_bank: 'Poalim' as any,
+          beneficiary: 'Kids' as any,
           quantity: 0
         }));
       }
@@ -76,6 +79,7 @@ export function AssetForm({
         ISIN: '',
         account_entity: 'Roy',
         account_bank: 'Poalim',
+        beneficiary: 'Kids',
         origin_currency: 'USD',
         quantity: 0,
         price: 0,
@@ -118,6 +122,7 @@ export function AssetForm({
       // Keep existing account-specific fields or clear them
       account_entity: currentMode === 'DUPLICATE' ? prev.account_entity || 'Roy' : 'Roy',
       account_bank: currentMode === 'DUPLICATE' ? prev.account_bank || 'Poalim' : 'Poalim',
+      beneficiary: currentMode === 'DUPLICATE' ? getBeneficiaryFromEntity(prev.account_entity || 'Roy') : 'Kids',
       quantity: currentMode === 'DUPLICATE' ? prev.quantity || 0 : 0
     }));
   };
@@ -135,6 +140,7 @@ export function AssetForm({
       factor: formData.factor,
       account_entity: formData.account_entity || "Roy",
       account_bank: formData.account_bank || "Poalim",
+      beneficiary: getBeneficiaryFromEntity(formData.account_entity || "Roy"),
       origin_currency: formData.origin_currency || "USD",
       ISIN: formData.ISIN,
       maturity_date: formData.maturity_date,
@@ -187,6 +193,7 @@ export function AssetForm({
       ...prev,
       account_entity: newEntity,
       account_bank: bankOptions[0] as any,
+      beneficiary: getBeneficiaryFromEntity(newEntity),
     }));
   };
 
@@ -402,6 +409,19 @@ export function AssetForm({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          {/* Beneficiary Display */}
+          <div className="space-y-2">
+            <Label className="font-semibold">Beneficiary</Label>
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="text-sm">
+                {formData.beneficiary || getBeneficiaryFromEntity(formData.account_entity || 'Roy')}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                (Auto-assigned based on account entity)
+              </span>
             </div>
           </div>
 

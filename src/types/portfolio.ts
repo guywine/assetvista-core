@@ -17,6 +17,8 @@ export type AccountBank =
 
 export type Currency = 'ILS' | 'USD' | 'CHF' | 'EUR' | 'CAD' | 'HKD';
 
+export type Beneficiary = 'Shimon' | 'Hagit' | 'Kids' | 'Tom';
+
 export interface Asset {
   id: string;
   name: string;
@@ -25,6 +27,7 @@ export interface Asset {
   ISIN?: string;
   account_entity: AccountEntity;
   account_bank: AccountBank;
+  beneficiary: Beneficiary;
   origin_currency: Currency;
   quantity: number;
   price?: number; // Optional for Cash assets

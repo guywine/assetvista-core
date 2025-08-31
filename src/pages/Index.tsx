@@ -2,6 +2,7 @@ import { PasswordProtection } from '@/components/auth/PasswordProtection';
 import { PortfolioDashboard } from '@/components/portfolio/PortfolioDashboard';
 import { Asset } from '@/types/portfolio';
 import { generateId } from '@/lib/portfolio-utils';
+import { getBeneficiaryFromEntity } from '@/lib/beneficiary-utils';
 
 // Sample data for demonstration
 const sampleAssets: Asset[] = [
@@ -13,6 +14,7 @@ const sampleAssets: Asset[] = [
     ISIN: 'US0378331005',
     account_entity: 'Roy',
     account_bank: 'Julius Bär',
+    beneficiary: getBeneficiaryFromEntity('Roy'),
     origin_currency: 'USD',
     quantity: 100,
     price: 175.50,
@@ -27,6 +29,7 @@ const sampleAssets: Asset[] = [
     ISIN: 'US912828XG48',
     account_entity: 'Hagit',
     account_bank: 'Julius Bär',
+    beneficiary: getBeneficiaryFromEntity('Hagit'),
     origin_currency: 'USD',
     quantity: 10000,
     price: 98.75,
@@ -42,6 +45,7 @@ const sampleAssets: Asset[] = [
     sub_class: 'Growth',
     account_entity: 'SW2009',
     account_bank: 'Poalim',
+    beneficiary: getBeneficiaryFromEntity('SW2009'),
     origin_currency: 'USD',
     quantity: 1,
     price: 500000,
