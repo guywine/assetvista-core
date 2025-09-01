@@ -18,6 +18,9 @@ export function PortfolioSummary({
 }: PortfolioSummaryProps) {
   // State for managing asset class visibility in pie chart
   const [visibleAssetClasses, setVisibleAssetClasses] = useState<Record<string, boolean>>({});
+  
+  // State for managing Real Estate inclusion in beneficiaries chart
+  const [includeRealEstate, setIncludeRealEstate] = useState<boolean>(true);
 
   // Calculate all asset values
   const calculations = new Map<string, AssetCalculations>();
@@ -104,6 +107,42 @@ export function PortfolioSummary({
     name: className,
     value: data.value,
     percentage: filteredTotalValue > 0 ? data.value / filteredTotalValue * 100 : 0
+  }));
+
+  // Beneficiaries calculations (exclude Private Equity, exclude Tom, optionally exclude Real Estate)
+  const beneficiariesAssets = assets.filter(asset => {
+    if (asset.class === 'Private Equity') return false;
+    if (asset.beneficiary === 'Tom') return false;
+    if (!includeRealEstate && asset.class === 'Real Estate') return false;
+    return true;
+  });
+
+  const holdingsByBeneficiary = beneficiariesAssets.reduce((acc, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    if (!acc[asset.beneficiary]) {
+      acc[asset.beneficiary] = 0;
+    }
+    acc[asset.beneficiary] += value;
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Filter to only include Shimon, Hagit, Kids
+  const targetBeneficiaries = ['Shimon', 'Hagit', 'Kids'];
+  const filteredBeneficiaries = Object.entries(holdingsByBeneficiary)
+    .filter(([beneficiary]) => targetBeneficiaries.includes(beneficiary))
+    .reduce((acc, [beneficiary, value]) => {
+      acc[beneficiary] = value;
+      return acc;
+    }, {} as Record<string, number>);
+
+  const beneficiariesTotalValue = Object.values(filteredBeneficiaries).reduce((sum, value) => sum + value, 0);
+
+  // Beneficiaries pie chart data
+  const beneficiariesPieData = Object.entries(filteredBeneficiaries).map(([beneficiary, value]) => ({
+    name: beneficiary,
+    value: value,
+    percentage: beneficiariesTotalValue > 0 ? value / beneficiariesTotalValue * 100 : 0
   }));
 
   // Fixed Income YTW calculations
@@ -257,9 +296,72 @@ export function PortfolioSummary({
           </CardContent>
         </Card>
 
-        {/* Fixed Income YTW */}
-        {fixedIncomeAssets.length > 0}
+        {/* Value by Beneficiaries Chart */}
+        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-financial-primary">Value by Beneficiaries</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Total asset value, excluding Private Equity{!includeRealEstate ? ' and Real Estate' : ''}
+            </p>
+            <div className="flex items-center space-x-2 mt-2">
+              <Switch
+                checked={includeRealEstate}
+                onCheckedChange={setIncludeRealEstate}
+              />
+              <span className="text-sm text-muted-foreground">Include Real Estate</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56 p-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie 
+                    data={beneficiariesPieData} 
+                    cx="50%" 
+                    cy="50%" 
+                    outerRadius={65} 
+                    fill="#8884d8" 
+                    dataKey="value"
+                  >
+                    {beneficiariesPieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    height={36} 
+                    formatter={(value, entry) => 
+                      `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / beneficiariesTotalValue * 100).toFixed(1)}%)`
+                    } 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Beneficiaries Summary */}
+            <div className="mt-4 space-y-2">
+              {Object.entries(filteredBeneficiaries).map(([beneficiary, value]) => (
+                <div key={beneficiary} className="flex justify-between items-center py-1 text-sm">
+                  <span className="text-foreground">{beneficiary}</span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {formatCurrency(value, viewCurrency)}
+                  </span>
+                </div>
+              ))}
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between items-center py-1 text-sm font-bold">
+                  <span className="text-foreground">Total</span>
+                  <span className="font-mono font-semibold text-financial-success">
+                    {formatCurrency(beneficiariesTotalValue, viewCurrency)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
 
       {/* Public Equity Dedicated Section */}
       {holdingsByClass['Public Equity']?.value > 0 && <div className="space-y-4">
