@@ -629,14 +629,146 @@ export function PortfolioSummary({
         </div>
       )}
 
+      {/* Private Equity Section */}
+      {holdingsByClass['Private Equity']?.value > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-financial-primary">Private Equity</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Private Equity Sub-class Pie Chart */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Private Equity Sub-classes
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(holdingsByClass['Private Equity'].value, viewCurrency)}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie 
+                        data={subClassPieData['Private Equity'] || []} 
+                        cx="50%" 
+                        cy="50%" 
+                        outerRadius={70} 
+                        fill="#8884d8" 
+                        dataKey="value"
+                      >
+                        {(subClassPieData['Private Equity'] || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                      <Legend 
+                        verticalAlign="bottom" 
+                        height={36} 
+                        formatter={(value, entry) => 
+                          `${value}: ${(entry.payload.value / holdingsByClass['Private Equity'].value * 100).toFixed(1)}%`
+                        } 
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Top 10 Private Equity Assets Bar Chart */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Top 10 Private Equity Assets
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Factored vs Full Price comparison
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={(() => {
+                        // Get Private Equity assets
+                        const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
+                        
+                        // Calculate factored and full price for each asset
+                        const assetData = privateEquityAssets.map(asset => {
+                          const calc = calculations.get(asset.id);
+                          const factored_value = calc?.display_value || 0;
+                          const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
+                          
+                          return {
+                            name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
+                            fullName: asset.name,
+                            factored_value: factored_value,
+                            full_price: full_price
+                          };
+                        });
+                        
+                        // Sort by factored value and take top 10
+                        return assetData
+                          .sort((a, b) => b.factored_value - a.factored_value)
+                          .slice(0, 10);
+                      })()}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                        interval={0}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis 
+                        tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        formatter={(value: number, name: string) => [
+                          formatCurrency(value, viewCurrency), 
+                          name === 'factored_value' ? 'Factored Value' : 'Full Price'
+                        ]}
+                        labelFormatter={(label) => {
+                          const asset = (() => {
+                            const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
+                            const assetData = privateEquityAssets.map(asset => ({
+                              name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
+                              fullName: asset.name
+                            }));
+                            return assetData.find(a => a.name === label);
+                          })();
+                          return asset?.fullName || label;
+                        }}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="full_price" fill="hsl(var(--chart-3))" name="Full Price" />
+                      <Bar dataKey="factored_value" fill="hsl(var(--chart-2))" name="Factored Value" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
       {/* General Asset Class Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(holdingsByClass).map(([assetClass, classData]) => {
           const subClasses = subClassBreakdown[assetClass] || {};
           const subClassEntries = Object.entries(subClasses);
 
-          // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, and Real Estate
-          if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate'].includes(assetClass)) return null;
+          // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, Real Estate, and Private Equity
+          if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate', 'Private Equity'].includes(assetClass)) return null;
 
           // Show chart for any asset class that has assets
           if (classData.value === 0) return null;
