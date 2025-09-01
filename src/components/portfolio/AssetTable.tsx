@@ -91,6 +91,8 @@ export function AssetTable({
       const calculations = assets.map(asset => calculateAssetValue(asset, fxRates, viewCurrency));
       const totalValue = calculations.reduce((sum, calc) => sum + calc.display_value, 0);
       const percentageOfTotal = totalFilteredValue > 0 ? (totalValue / totalFilteredValue) * 100 : 0;
+      
+      console.log('Group:', key, 'totalValue:', totalValue, 'totalFilteredValue:', totalFilteredValue, 'percentage:', percentageOfTotal);
 
       return {
         key,
