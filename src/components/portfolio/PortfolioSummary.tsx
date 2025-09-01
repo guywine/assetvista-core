@@ -61,11 +61,6 @@ export function PortfolioSummary({
     return acc;
   }, {} as Record<string, number>);
 
-  // Top 10 Positions
-  const topPositions = assets.map(asset => ({
-    asset,
-    value: calculations.get(asset.id)?.display_value || 0
-  })).sort((a, b) => b.value - a.value).slice(0, 10);
 
   // Sub-class breakdown by asset class
   const subClassBreakdown = assets.reduce((acc, asset) => {
@@ -216,37 +211,8 @@ export function PortfolioSummary({
       {/* First Row - Holdings Tables */}
       
 
-      {/* Second Row - Charts and Top Positions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Top Positions */}
-        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-          <CardHeader>
-            <CardTitle className="text-lg font-bold text-financial-primary">Top 5 Positions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {topPositions.slice(0, 5).map(({
-              asset,
-              value
-            }) => <div key={asset.id} className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate text-sm">{asset.name}</p>
-                    <Badge variant="outline" className="text-xs mt-1">
-                      {asset.class}
-                    </Badge>
-                  </div>
-                  <div className="text-right ml-4">
-                    <p className="font-mono font-semibold text-financial-success text-sm">
-                      {formatCurrency(value, viewCurrency)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatPercentage(totalValue > 0 ? value / totalValue * 100 : 0)}
-                    </p>
-                  </div>
-                </div>)}
-            </div>
-          </CardContent>
-        </Card>
+      {/* Second Row - Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Overall Asset Allocation Chart */}
         <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
