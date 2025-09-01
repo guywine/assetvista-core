@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FilterCriteria, AssetClass, AccountEntity, AccountBank, Currency, SubClass } from '@/types/portfolio';
+import { FilterCriteria, AssetClass, AccountEntity, AccountBank, Currency, SubClass, Beneficiary } from '@/types/portfolio';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Filter, X, Plus } from 'lucide-react';
-import { ASSET_CLASSES, CLASS_SUBCLASS_MAP, ACCOUNT_BANK_MAP, ACCOUNT_ENTITIES, ACCOUNT_BANKS, CURRENCIES } from '@/constants/portfolio';
+import { ASSET_CLASSES, CLASS_SUBCLASS_MAP, ACCOUNT_BANK_MAP, ACCOUNT_ENTITIES, ACCOUNT_BANKS, CURRENCIES, BENEFICIARIES } from '@/constants/portfolio';
 
 interface PortfolioFiltersProps {
   filters: FilterCriteria;
@@ -131,6 +131,18 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
+    filters.beneficiary?.forEach(value => {
+      chips.push(
+        <Badge key={`beneficiary-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Beneficiary: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('beneficiary', value)}
+          />
+        </Badge>
+      );
+    });
+
     // Exclude filters (red)
     filters.exclude_class?.forEach(value => {
       chips.push(
@@ -187,6 +199,18 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('exclude_origin_currency', value)}
+          />
+        </Badge>
+      );
+    });
+
+    filters.exclude_beneficiary?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_beneficiary-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Beneficiary: {value}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_beneficiary', value)}
           />
         </Badge>
       );
@@ -264,6 +288,7 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                   <SelectItem value="sub_class">Sub Class</SelectItem>
                   <SelectItem value="account_entity">Account Entity</SelectItem>
                   <SelectItem value="account_bank">Bank Account</SelectItem>
+                  <SelectItem value="beneficiary">Beneficiary</SelectItem>
                   <SelectItem value="origin_currency">Currency</SelectItem>
                   <SelectItem value="maturity_date_from">Maturity Date From</SelectItem>
                   <SelectItem value="maturity_date_to">Maturity Date To</SelectItem>
@@ -404,6 +429,31 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                         disabled={isDisabled}
                       >
                         {currency}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {newFilterCategory === 'beneficiary' && (
+              <div className="space-y-2">
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Beneficiary</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {BENEFICIARIES.map(beneficiary => {
+                    const isDisabled = newFilterAction === 'include'
+                      ? filters.beneficiary?.includes(beneficiary)
+                      : filters.exclude_beneficiary?.includes(beneficiary);
+                    
+                    return (
+                      <Button
+                        key={beneficiary}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('beneficiary', newFilterAction, beneficiary)}
+                        disabled={isDisabled}
+                      >
+                        {beneficiary}
                       </Button>
                     );
                   })}

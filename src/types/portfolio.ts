@@ -94,6 +94,7 @@ export interface FilterCriteria {
   sub_class?: SubClass[];
   account_entity?: AccountEntity[];
   account_bank?: AccountBank[];
+  beneficiary?: Beneficiary[];
   origin_currency?: Currency[];
   maturity_date_from?: string;
   maturity_date_to?: string;
@@ -101,6 +102,7 @@ export interface FilterCriteria {
   exclude_sub_class?: SubClass[];
   exclude_account_entity?: AccountEntity[];
   exclude_account_bank?: AccountBank[];
+  exclude_beneficiary?: Beneficiary[];
   exclude_origin_currency?: Currency[];
 }
 
