@@ -202,8 +202,7 @@ export function PortfolioSummary({
   'hsl(var(--financial-primary))' // Real Estate
   ];
   const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
-  return (
-    <div className="space-y-8">{/* Increased spacing between major sections */}
+  return <div className="space-y-8">{/* Increased spacing between major sections */}
       {/* First Row - Holdings Tables */}
       
 
@@ -340,7 +339,7 @@ export function PortfolioSummary({
 
         // Get top 10 positions
         const top10Positions = Object.values(positionsByName).sort((a, b) => b.totalValue - a.totalValue).slice(0, 10);
-        
+
         // Format data for bar chart
         const chartData = top10Positions.map(position => ({
           name: position.name.length > 15 ? position.name.substring(0, 15) + '...' : position.name,
@@ -349,7 +348,6 @@ export function PortfolioSummary({
           percentage: classesTotal > 0 ? position.totalValue / classesTotal * 100 : 0,
           class: position.class
         }));
-
         return chartData.length > 0 ? <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-financial-primary">
@@ -362,43 +360,34 @@ export function PortfolioSummary({
                 <CardContent>
                   <div className="h-80 p-1">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                      <BarChart data={chartData} margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 80
+                }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
-                        <XAxis 
-                          dataKey="name" 
-                          tick={{ fontSize: 12, fill: '#6B7280' }}
-                          angle={-45}
-                          textAnchor="end"
-                          height={80}
-                        />
-                        <YAxis 
-                          tick={{ fontSize: 12, fill: '#6B7280' }}
-                          tickFormatter={(value) => formatCurrency(value, viewCurrency)}
-                        />
-                        <Tooltip 
-                          formatter={(value: number, name, props) => [
-                            formatCurrency(value, viewCurrency),
-                            'Value'
-                          ]}
-                          labelFormatter={(label, payload) => {
-                            if (payload && payload[0]) {
-                              const data = payload[0].payload;
-                              return `${data.fullName} (${data.class})`;
-                            }
-                            return label;
-                          }}
-                          contentStyle={{
-                            backgroundColor: '#1F2937',
-                            border: '1px solid #374151',
-                            borderRadius: '8px',
-                            fontSize: '14px'
-                          }}
-                        />
-                        <Bar 
-                          dataKey="value" 
-                          fill="hsl(var(--financial-primary))"
-                          radius={[4, 4, 0, 0]}
-                        />
+                        <XAxis dataKey="name" tick={{
+                    fontSize: 12,
+                    fill: '#6B7280'
+                  }} angle={-45} textAnchor="end" height={80} />
+                        <YAxis tick={{
+                    fontSize: 12,
+                    fill: '#6B7280'
+                  }} tickFormatter={value => formatCurrency(value, viewCurrency)} />
+                        <Tooltip formatter={(value: number, name, props) => [formatCurrency(value, viewCurrency), 'Value']} labelFormatter={(label, payload) => {
+                    if (payload && payload[0]) {
+                      const data = payload[0].payload;
+                      return `${data.fullName} (${data.class})`;
+                    }
+                    return label;
+                  }} contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }} />
+                        <Bar dataKey="value" fill="hsl(var(--financial-primary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -574,8 +563,7 @@ export function PortfolioSummary({
         </div>}
 
       {/* Real Estate Section */}
-      {holdingsByClass['Real Estate']?.value > 0 && (
-        <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
+      {holdingsByClass['Real Estate']?.value > 0 && <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
           <div className="flex items-center gap-4 mb-6">
             <div className="h-0.5 flex-1 bg-muted-foreground/20 rounded-full"></div>
             <h2 className="text-3xl font-bold text-muted-foreground">
@@ -599,26 +587,11 @@ export function PortfolioSummary({
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={subClassPieData['Real Estate'] || []}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {(subClassPieData['Real Estate'] || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
+                      <Pie data={subClassPieData['Real Estate'] || []} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                        {(subClassPieData['Real Estate'] || []).map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={36}
-                        formatter={(value, entry) => 
-                          `${value}: ${(entry.payload.value / holdingsByClass['Real Estate'].value * 100).toFixed(1)}%`
-                        }
-                      />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Real Estate'].value * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -638,39 +611,29 @@ export function PortfolioSummary({
               <CardContent>
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={assets
-                        .filter(asset => asset.class === 'Real Estate')
-                        .map(asset => ({
-                          name: asset.name,
-                          value: calculations.get(asset.id)?.display_value || 0
-                        }))
-                        .sort((a, b) => b.value - a.value)
-                      }
-                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                    >
+                    <BarChart data={assets.filter(asset => asset.class === 'Real Estate').map(asset => ({
+                  name: asset.name,
+                  value: calculations.get(asset.id)?.display_value || 0
+                })).sort((a, b) => b.value - a.value)} margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 60
+                }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="name" 
-                        angle={-45}
-                        textAnchor="end"
-                        height={60}
-                        interval={0}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => formatCurrency(value, viewCurrency)}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip 
-                        formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']}
-                        labelStyle={{ color: 'hsl(var(--foreground))' }}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} interval={0} tick={{
+                    fontSize: 12
+                  }} />
+                      <YAxis tickFormatter={value => formatCurrency(value, viewCurrency)} tick={{
+                    fontSize: 12
+                  }} />
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} labelStyle={{
+                    color: 'hsl(var(--foreground))'
+                  }} contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }} />
                       <Bar dataKey="value" fill="hsl(var(--chart-1))" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -678,12 +641,10 @@ export function PortfolioSummary({
               </CardContent>
             </Card>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Private Equity Section */}
-      {holdingsByClass['Private Equity']?.value > 0 && (
-        <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
+      {holdingsByClass['Private Equity']?.value > 0 && <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
           <div className="flex items-center gap-4 mb-6">
             <div className="h-0.5 flex-1 bg-muted-foreground/20 rounded-full"></div>
             <h2 className="text-3xl font-bold text-muted-foreground">
@@ -707,26 +668,11 @@ export function PortfolioSummary({
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie 
-                        data={subClassPieData['Private Equity'] || []} 
-                        cx="50%" 
-                        cy="50%" 
-                        outerRadius={70} 
-                        fill="#8884d8" 
-                        dataKey="value"
-                      >
-                        {(subClassPieData['Private Equity'] || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
+                      <Pie data={subClassPieData['Private Equity'] || []} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                        {(subClassPieData['Private Equity'] || []).map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36} 
-                        formatter={(value, entry) => 
-                          `${value}: ${(entry.payload.value / holdingsByClass['Private Equity'].value * 100).toFixed(1)}%`
-                        } 
-                      />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Private Equity'].value * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -736,9 +682,7 @@ export function PortfolioSummary({
             {/* Top 10 Private Equity Assets Bar Chart */}
             <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-financial-primary">
-                  Top 10 Private Equity Assets
-                </CardTitle>
+                <CardTitle className="text-lg font-bold text-financial-primary">Top 10 Private Equity Positions</CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Factored vs Full Price comparison
                 </p>
@@ -746,68 +690,55 @@ export function PortfolioSummary({
               <CardContent>
                 <div className="h-80 p-1">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={(() => {
-                        // Get Private Equity assets
-                        const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
-                        
-                        // Calculate factored and full price for each asset
-                        const assetData = privateEquityAssets.map(asset => {
-                          const calc = calculations.get(asset.id);
-                          const factored_value = calc?.display_value || 0;
-                          const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
-                          
-                          return {
-                            name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
-                            fullName: asset.name,
-                            factored_value: factored_value,
-                            full_price: full_price
-                          };
-                        });
-                        
-                        // Sort by factored value and take top 10
-                        return assetData
-                          .sort((a, b) => b.factored_value - a.factored_value)
-                          .slice(0, 10);
-                      })()}
-                      margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
-                    >
+                    <BarChart data={(() => {
+                  // Get Private Equity assets
+                  const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
+
+                  // Calculate factored and full price for each asset
+                  const assetData = privateEquityAssets.map(asset => {
+                    const calc = calculations.get(asset.id);
+                    const factored_value = calc?.display_value || 0;
+                    const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
+                    return {
+                      name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
+                      fullName: asset.name,
+                      factored_value: factored_value,
+                      full_price: full_price
+                    };
+                  });
+
+                  // Sort by factored value and take top 10
+                  return assetData.sort((a, b) => b.factored_value - a.factored_value).slice(0, 10);
+                })()} margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 80
+                }}>
                       <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis 
-                        dataKey="name" 
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                        interval={0}
-                        tick={{ fontSize: 11 }}
-                      />
-                      <YAxis 
-                        tickFormatter={(value) => formatCurrency(value, viewCurrency)}
-                        tick={{ fontSize: 12 }}
-                      />
-                      <Tooltip 
-                        formatter={(value: number, name: string) => [
-                          formatCurrency(value, viewCurrency), 
-                          name
-                        ]}
-                        labelFormatter={(label) => {
-                          const asset = (() => {
-                            const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
-                            const assetData = privateEquityAssets.map(asset => ({
-                              name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
-                              fullName: asset.name
-                            }));
-                            return assetData.find(a => a.name === label);
-                          })();
-                          return asset?.fullName || label;
-                        }}
-                        labelStyle={{ color: 'hsl(var(--foreground))' }}
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--background))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                      />
+                      <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} interval={0} tick={{
+                    fontSize: 11
+                  }} />
+                      <YAxis tickFormatter={value => formatCurrency(value, viewCurrency)} tick={{
+                    fontSize: 12
+                  }} />
+                      <Tooltip formatter={(value: number, name: string) => [formatCurrency(value, viewCurrency), name]} labelFormatter={label => {
+                    const asset = (() => {
+                      const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
+                      const assetData = privateEquityAssets.map(asset => ({
+                        name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
+                        fullName: asset.name
+                      }));
+                      return assetData.find(a => a.name === label);
+                    })();
+                    return asset?.fullName || label;
+                  }} labelStyle={{
+                    color: 'hsl(var(--foreground))'
+                  }} contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }} />
                       <Bar dataKey="full_price" fill="hsl(var(--chart-3))" name="Full Potential" />
                       <Bar dataKey="factored_value" fill="hsl(var(--chart-2))" name="Factored Value" />
                     </BarChart>
@@ -816,29 +747,25 @@ export function PortfolioSummary({
               </CardContent>
             </Card>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* General Asset Class Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(holdingsByClass).map(([assetClass, classData]) => {
-          const subClasses = subClassBreakdown[assetClass] || {};
-          const subClassEntries = Object.entries(subClasses);
+        const subClasses = subClassBreakdown[assetClass] || {};
+        const subClassEntries = Object.entries(subClasses);
 
-          // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, Real Estate, and Private Equity
-          if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate', 'Private Equity'].includes(assetClass)) return null;
+        // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, Real Estate, and Private Equity
+        if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate', 'Private Equity'].includes(assetClass)) return null;
 
-          // Show chart for any asset class that has assets
-          if (classData.value === 0) return null;
-          
-          const pieData = subClassEntries.map(([subClass, value]) => ({
-            name: subClass,
-            value: value,
-            percentage: classData.value > 0 ? value / classData.value * 100 : 0
-          }));
-
-          return (
-            <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+        // Show chart for any asset class that has assets
+        if (classData.value === 0) return null;
+        const pieData = subClassEntries.map(([subClass, value]) => ({
+          name: subClass,
+          value: value,
+          percentage: classData.value > 0 ? value / classData.value * 100 : 0
+        }));
+        return <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-financial-primary">
                   {assetClass}
@@ -851,34 +778,17 @@ export function PortfolioSummary({
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
+                      <Pie data={pieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={36}
-                        formatter={(value, entry) => 
-                          `${value}: ${(entry.payload.value / classData.value * 100).toFixed(1)}%`
-                        }
-                      />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / classData.value * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-            </Card>
-          );
-        })}
+            </Card>;
+      })}
       </div>
-    </div>
-  );
+    </div>;
 }
