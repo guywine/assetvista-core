@@ -65,7 +65,18 @@ export function useFXRates() {
   // Update manual rate
   const updateManualRate = async (currency: string, toILS: number) => {
     try {
-      const toUSD = currency === 'ILS' ? 1 / toILS : toILS / (fxRates.ILS?.to_ILS || 3.60);
+      // Calculate to_usd_rate correctly for each currency
+      let toUSD: number;
+      if (currency === 'USD') {
+        toUSD = 1.0; // USD to USD is always 1
+      } else if (currency === 'ILS') {
+        toUSD = 1 / toILS; // If 1 USD = 3.33 ILS, then 1 ILS = 0.3 USD
+      } else {
+        // For other currencies, calculate based on their relationship to USD
+        // If we know the ILS rate and we know USD to ILS rate, we can calculate the USD rate
+        const usdToILS = fxRates.USD?.to_ILS || 3.33; // Current USD to ILS rate
+        toUSD = toILS / usdToILS; // Convert via ILS
+      }
 
       const { error } = await supabase
         .from('fx_rates')
