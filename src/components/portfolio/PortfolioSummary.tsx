@@ -391,6 +391,46 @@ export function PortfolioSummary({
               </CardContent>
             </Card>
 
+            {/* Commodities & more Sub-class Pie Chart */}
+            {holdingsByClass['Commodities & more']?.value > 0 && (
+              <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold text-financial-primary">
+                    Commodities & more Sub-classes
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Total: {formatCurrency(holdingsByClass['Commodities & more'].value, viewCurrency)}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 p-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={subClassPieData['Commodities & more'] || []}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {(subClassPieData['Commodities & more'] || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                        <Legend 
+                          verticalAlign="bottom" 
+                          height={36} 
+                          formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Commodities & more'].value * 100).toFixed(1)}%`} 
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Big Tech Assets Pie Chart */}
             {(() => {
           const bigTechAssets = assets.filter(asset => asset.class === 'Public Equity' && asset.sub_class === 'Big Tech');
@@ -507,6 +547,9 @@ export function PortfolioSummary({
         const subClasses = subClassBreakdown[assetClass] || {};
         const subClassEntries = Object.entries(subClasses);
 
+        // Skip Public Equity and Commodities & more as they have their own dedicated section
+        if (assetClass === 'Public Equity' || assetClass === 'Commodities & more') return null;
+        
         // Show chart for any asset class that has assets, regardless of sub-class count
         if (classData.value === 0) return null;
         const pieData = subClassEntries.map(([subClass, value]) => ({
