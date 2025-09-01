@@ -308,7 +308,7 @@ export function PortfolioSummary({
             <div className="h-0.5 flex-1 bg-muted-foreground/20 rounded-full"></div>
           </div>
           
-          {/* Top 5 Positions for Public Equity and Commodities & more */}
+          {/* Top 10 Positions Bar Chart for Public Equity and Commodities & more */}
           {(() => {
         // Filter assets for Public Equity and Commodities & more
         const targetClasses = ['Public Equity', 'Commodities & more'];
@@ -338,35 +338,69 @@ export function PortfolioSummary({
         // Calculate total value for percentage calculations
         const classesTotal = (holdingsByClass['Public Equity']?.value || 0) + (holdingsByClass['Commodities & more']?.value || 0);
 
-        // Get top 5 positions
-        const top5Positions = Object.values(positionsByName).sort((a, b) => b.totalValue - a.totalValue).slice(0, 5);
-        return top5Positions.length > 0 ? <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
+        // Get top 10 positions
+        const top10Positions = Object.values(positionsByName).sort((a, b) => b.totalValue - a.totalValue).slice(0, 10);
+        
+        // Format data for bar chart
+        const chartData = top10Positions.map(position => ({
+          name: position.name.length > 15 ? position.name.substring(0, 15) + '...' : position.name,
+          fullName: position.name,
+          value: position.totalValue,
+          percentage: classesTotal > 0 ? position.totalValue / classesTotal * 100 : 0,
+          class: position.class
+        }));
+
+        return chartData.length > 0 ? <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-financial-primary">
-                    Top 5 Positions
+                    Top 10 Positions
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Public Equity & Commodities combined by asset name
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    {top5Positions.map((position, index) => <div key={position.name} className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate text-sm">{position.name}</p>
-                          <Badge variant="outline" className="text-xs mt-1">
-                            {position.class}
-                          </Badge>
-                        </div>
-                        <div className="text-right ml-4">
-                          <p className="font-mono font-semibold text-financial-success text-sm">
-                            {formatCurrency(position.totalValue, viewCurrency)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatPercentage(classesTotal > 0 ? position.totalValue / classesTotal * 100 : 0)}
-                          </p>
-                        </div>
-                      </div>)}
+                  <div className="h-80 p-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
+                        <XAxis 
+                          dataKey="name" 
+                          tick={{ fontSize: 12, fill: '#6B7280' }}
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                        />
+                        <YAxis 
+                          tick={{ fontSize: 12, fill: '#6B7280' }}
+                          tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                        />
+                        <Tooltip 
+                          formatter={(value: number, name, props) => [
+                            formatCurrency(value, viewCurrency),
+                            'Value'
+                          ]}
+                          labelFormatter={(label, payload) => {
+                            if (payload && payload[0]) {
+                              const data = payload[0].payload;
+                              return `${data.fullName} (${data.class})`;
+                            }
+                            return label;
+                          }}
+                          contentStyle={{
+                            backgroundColor: '#1F2937',
+                            border: '1px solid #374151',
+                            borderRadius: '8px',
+                            fontSize: '14px'
+                          }}
+                        />
+                        <Bar 
+                          dataKey="value" 
+                          fill="hsl(var(--financial-primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
                 </CardContent>
               </Card> : null;
