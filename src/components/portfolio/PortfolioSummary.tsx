@@ -750,7 +750,7 @@ export function PortfolioSummary({
                           borderRadius: '8px'
                         }}
                       />
-                      <Bar dataKey="full_price" fill="hsl(var(--chart-3))" name="Full Price" />
+                      <Bar dataKey="full_price" fill="hsl(var(--chart-3))" name="Full Potential" />
                       <Bar dataKey="factored_value" fill="hsl(var(--chart-2))" name="Factored Value" />
                     </BarChart>
                   </ResponsiveContainer>
