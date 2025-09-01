@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useState } from 'react';
 interface PortfolioSummaryProps {
   assets: Asset[];
@@ -526,24 +526,168 @@ export function PortfolioSummary({
           </div>
         </div>}
 
-      {/* Fourth Row - Sub-class Charts for ALL asset classes with assets */}
+      {/* Real Estate Section */}
+      {holdingsByClass['Real Estate']?.value > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold text-financial-primary">Real Estate</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Real Estate Sub-class Pie Chart */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Real Estate Sub-classes
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(holdingsByClass['Real Estate'].value, viewCurrency)}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={subClassPieData['Real Estate'] || []}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {(subClassPieData['Real Estate'] || []).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        formatter={(value, entry) => 
+                          `${value}: ${(entry.payload.value / holdingsByClass['Real Estate'].value * 100).toFixed(1)}%`
+                        }
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Real Estate Assets Bar Chart */}
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Real Estate Assets
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Individual asset values
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={assets
+                        .filter(asset => asset.class === 'Real Estate')
+                        .map(asset => ({
+                          name: asset.name,
+                          value: calculations.get(asset.id)?.display_value || 0
+                        }))
+                        .sort((a, b) => b.value - a.value)
+                      }
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        dataKey="name" 
+                        angle={-45}
+                        textAnchor="end"
+                        height={60}
+                        interval={0}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <YAxis 
+                        tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                        tick={{ fontSize: 12 }}
+                      />
+                      <Tooltip 
+                        formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']}
+                        labelStyle={{ color: 'hsl(var(--foreground))' }}
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--background))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="value" fill="hsl(var(--chart-1))" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
+
+      {/* General Asset Class Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Object.entries(holdingsByClass).map(([assetClass, classData]) => {
-        const subClasses = subClassBreakdown[assetClass] || {};
-        const subClassEntries = Object.entries(subClasses);
+          const subClasses = subClassBreakdown[assetClass] || {};
+          const subClassEntries = Object.entries(subClasses);
 
-        // Skip Public Equity and Commodities & more as they have their own dedicated section
-        if (assetClass === 'Public Equity' || assetClass === 'Commodities & more') return null;
+          // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, and Real Estate
+          if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate'].includes(assetClass)) return null;
 
-        // Show chart for any asset class that has assets, regardless of sub-class count
-        if (classData.value === 0) return null;
-        const pieData = subClassEntries.map(([subClass, value]) => ({
-          name: subClass,
-          value: value,
-          percentage: classData.value > 0 ? value / classData.value * 100 : 0
-        }));
-        return;
-      })}
+          // Show chart for any asset class that has assets
+          if (classData.value === 0) return null;
+          
+          const pieData = subClassEntries.map(([subClass, value]) => ({
+            name: subClass,
+            value: value,
+            percentage: classData.value > 0 ? value / classData.value * 100 : 0
+          }));
+
+          return (
+            <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  {assetClass}
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Total: {formatCurrency(classData.value, viewCurrency)}
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={70}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                      <Legend
+                        verticalAlign="bottom"
+                        height={36}
+                        formatter={(value, entry) => 
+                          `${value}: ${(entry.payload.value / classData.value * 100).toFixed(1)}%`
+                        }
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
-    </div>;
+    </div>
+  );
 }
