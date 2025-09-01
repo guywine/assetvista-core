@@ -65,7 +65,7 @@ export function useFXRates() {
   // Update manual rate
   const updateManualRate = async (currency: string, toILS: number) => {
     try {
-      // Calculate to_usd_rate correctly for each currency
+      // Calculate to_usd_rate correctly for the updated currency
       let toUSD: number;
       if (currency === 'USD') {
         toUSD = 1.0; // USD to USD is always 1
@@ -78,7 +78,8 @@ export function useFXRates() {
         toUSD = toILS / usdToILS; // Convert via ILS
       }
 
-      const { error } = await supabase
+      // Update the specific currency
+      const { error: updateError } = await supabase
         .from('fx_rates')
         .upsert({
           currency,
@@ -91,14 +92,65 @@ export function useFXRates() {
           onConflict: 'currency'
         });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Get all current rates
+      const { data: allRates, error: fetchError } = await supabase
+        .from('fx_rates')
+        .select('*');
+
+      if (fetchError) throw fetchError;
+
+      // Find the updated USD to ILS rate (either the one we just updated or existing)
+      let newUsdToIls: number;
+      if (currency === 'USD') {
+        newUsdToIls = toILS;
+      } else {
+        const usdRate = allRates?.find(rate => rate.currency === 'USD');
+        newUsdToIls = usdRate?.to_ils_rate || 3.33;
+      }
+
+      // Recalculate USD rates for all other currencies
+      const updatedRates = allRates?.map(rate => {
+        if (rate.currency === currency) {
+          // Already updated above
+          return rate;
+        }
+        
+        if (rate.currency === 'USD') {
+          // USD rate might have been updated, keep current values
+          return rate;
+        }
+
+        // Recalculate to_usd_rate for all other currencies
+        const newToUsd = rate.to_ils_rate / newUsdToIls;
+        
+        return {
+          ...rate,
+          to_usd_rate: newToUsd,
+          last_updated: new Date().toISOString()
+        };
+      }) || [];
+
+      // Update all currencies with new USD rates (except the one we already updated)
+      const ratesToUpdate = updatedRates.filter(rate => rate.currency !== currency);
+      
+      if (ratesToUpdate.length > 0) {
+        const { error: batchUpdateError } = await supabase
+          .from('fx_rates')
+          .upsert(ratesToUpdate, {
+            onConflict: 'currency'
+          });
+
+        if (batchUpdateError) throw batchUpdateError;
+      }
 
       // Reload rates
       await loadFXRates();
       
       toast({
-        title: "Rate updated",
-        description: `${currency} rate updated manually`,
+        title: "Rates updated",
+        description: `${currency} rate updated and all USD rates recalculated`,
       });
     } catch (error) {
       console.error('Error updating manual rate:', error);
