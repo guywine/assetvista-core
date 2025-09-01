@@ -353,7 +353,7 @@ export function PortfolioSummary({
         return chartData.length > 0 ? <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-financial-primary">
-                    Top 10 Positions
+                    Top 10 Public Equity Positions
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">
                     Public Equity & Commodities combined by asset name
