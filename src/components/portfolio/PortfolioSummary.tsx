@@ -547,8 +547,8 @@ export function PortfolioSummary({
         const subClasses = subClassBreakdown[assetClass] || {};
         const subClassEntries = Object.entries(subClasses);
 
-        // Skip Public Equity and Commodities & more as they have their own dedicated section
-        if (assetClass === 'Public Equity' || assetClass === 'Commodities & more') return null;
+        // Skip Public Equity, Commodities & more, and Fixed Income as they have their own dedicated sections
+        if (assetClass === 'Public Equity' || assetClass === 'Commodities & more' || assetClass === 'Fixed Income') return null;
         
         // Show chart for any asset class that has assets, regardless of sub-class count
         if (classData.value === 0) return null;
