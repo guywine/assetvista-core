@@ -5,13 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Group, X, Plus, ArrowUp, ArrowDown } from 'lucide-react';
+import { Group, X, Plus, ArrowUp, ArrowDown, ArrowDownUp } from 'lucide-react';
 
 export type GroupByField = keyof Pick<Asset, 'name' | 'class' | 'sub_class' | 'account_entity' | 'account_bank' | 'beneficiary' | 'origin_currency'>;
 
 interface PortfolioGroupingProps {
   groupByFields: GroupByField[];
   onGroupByChange: (fields: GroupByField[]) => void;
+  groupSortBy: 'value' | 'alphabetical';
+  onGroupSortChange: (sortBy: 'value' | 'alphabetical') => void;
 }
 
 const GROUP_BY_OPTIONS: { value: GroupByField; label: string }[] = [
@@ -24,7 +26,7 @@ const GROUP_BY_OPTIONS: { value: GroupByField; label: string }[] = [
   { value: 'origin_currency', label: 'Currency' },
 ];
 
-export function PortfolioGrouping({ groupByFields, onGroupByChange }: PortfolioGroupingProps) {
+export function PortfolioGrouping({ groupByFields, onGroupByChange, groupSortBy, onGroupSortChange }: PortfolioGroupingProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [newGroupField, setNewGroupField] = useState<GroupByField | ''>('');
 
@@ -108,6 +110,23 @@ export function PortfolioGrouping({ groupByFields, onGroupByChange }: PortfolioG
           >
             Clear all
           </Button>
+        </div>
+      )}
+
+      {/* Group sorting control */}
+      {groupByFields.length > 0 && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Sort groups by:</span>
+          <Select value={groupSortBy} onValueChange={(value) => onGroupSortChange(value as 'value' | 'alphabetical')}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="value">Value</SelectItem>
+              <SelectItem value="alphabetical">Alphabetical</SelectItem>
+            </SelectContent>
+          </Select>
+          <ArrowDownUp className="h-4 w-4 text-muted-foreground" />
         </div>
       )}
 

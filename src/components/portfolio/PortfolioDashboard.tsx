@@ -34,6 +34,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
   } = useFXRates();
   const [filters, setFilters] = useState<FilterCriteria>({});
   const [groupByFields, setGroupByFields] = useState<GroupByField[]>([]);
+  const [groupSortBy, setGroupSortBy] = useState<'value' | 'alphabetical'>('value');
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
   const [assetFormMode, setAssetFormMode] = useState<'NEW' | 'EXISTING_HOLDING' | 'DUPLICATE' | 'EDIT'>('NEW');
@@ -261,6 +262,8 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
                 <PortfolioGrouping
                   groupByFields={groupByFields}
                   onGroupByChange={setGroupByFields}
+                  groupSortBy={groupSortBy}
+                  onGroupSortChange={setGroupSortBy}
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -278,6 +281,7 @@ export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardPro
               fxRates={fxRates}
               filters={filters}
               groupByFields={groupByFields}
+              groupSortBy={groupSortBy}
               onEditAsset={handleEditAsset}
               onDeleteAsset={handleDeleteAsset}
               onDuplicateAsset={handleDuplicateAsset}

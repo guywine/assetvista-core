@@ -15,6 +15,7 @@ interface AssetTableProps {
   fxRates: FXRates;
   filters: FilterCriteria;
   groupByFields?: GroupByField[];
+  groupSortBy?: 'value' | 'alphabetical';
   onEditAsset: (asset: Asset) => void;
   onDeleteAsset: (asset: Asset) => void;
   onDuplicateAsset: (asset: Asset) => void;
@@ -27,6 +28,7 @@ export function AssetTable({
   fxRates, 
   filters, 
   groupByFields = [],
+  groupSortBy = 'value',
   onEditAsset, 
   onDeleteAsset, 
   onDuplicateAsset,
@@ -87,24 +89,38 @@ export function AssetTable({
       return sum + calc.display_value;
     }, 0);
 
-    return Object.entries(groups).map(([key, assets]): GroupedAssets => {
-      const calculations = assets.map(asset => calculateAssetValue(asset, fxRates, viewCurrency));
+    const groupedData = Object.entries(groups).map(([key, assets]): GroupedAssets => {
+      // Sort assets within group by value (descending)
+      const sortedAssets = assets.sort((a, b) => {
+        const aCalc = calculateAssetValue(a, fxRates, viewCurrency);
+        const bCalc = calculateAssetValue(b, fxRates, viewCurrency);
+        return bCalc.display_value - aCalc.display_value;
+      });
+
+      const calculations = sortedAssets.map(asset => calculateAssetValue(asset, fxRates, viewCurrency));
       const totalValue = calculations.reduce((sum, calc) => sum + calc.display_value, 0);
       const percentageOfTotal = totalFilteredValue > 0 ? (totalValue / totalFilteredValue) * 100 : 0;
-      
-      console.log('Group:', key, 'totalValue:', totalValue, 'totalFilteredValue:', totalFilteredValue, 'percentage:', percentageOfTotal);
 
       return {
         key,
-        assets,
+        assets: sortedAssets,
         aggregates: {
           totalValue,
-          assetCount: assets.length,
+          assetCount: sortedAssets.length,
           percentageOfTotal,
         },
       };
-    }).sort((a, b) => a.key.localeCompare(b.key));
-  }, [filteredAssets, groupByFields, fxRates, viewCurrency]);
+    });
+
+    // Sort groups based on user preference
+    return groupedData.sort((a, b) => {
+      if (groupSortBy === 'value') {
+        return b.aggregates.totalValue - a.aggregates.totalValue;
+      } else {
+        return a.key.localeCompare(b.key);
+      }
+    });
+  }, [filteredAssets, groupByFields, fxRates, viewCurrency, groupSortBy]);
 
   // Calculate aggregated data based on filtered assets
   const { calculations, sortedAssets } = useMemo(() => {
