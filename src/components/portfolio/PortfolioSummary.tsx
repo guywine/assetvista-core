@@ -18,7 +18,7 @@ export function PortfolioSummary({
 }: PortfolioSummaryProps) {
   // State for managing asset class visibility in pie chart
   const [visibleAssetClasses, setVisibleAssetClasses] = useState<Record<string, boolean>>({});
-  
+
   // State for managing Real Estate inclusion in beneficiaries chart
   const [includeRealEstate, setIncludeRealEstate] = useState<boolean>(true);
 
@@ -61,7 +61,6 @@ export function PortfolioSummary({
     return acc;
   }, {} as Record<string, number>);
 
-
   // Sub-class breakdown by asset class
   const subClassBreakdown = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
@@ -86,16 +85,16 @@ export function PortfolioSummary({
   }
 
   // Filter pie chart data based on visible asset classes
-  const filteredHoldingsByClass = Object.entries(holdingsByClass)
-    .filter(([className]) => visibleAssetClasses[className])
-    .reduce((acc, [className, data]) => {
-      acc[className] = data;
-      return acc;
-    }, {} as Record<string, { count: number; value: number }>);
+  const filteredHoldingsByClass = Object.entries(holdingsByClass).filter(([className]) => visibleAssetClasses[className]).reduce((acc, [className, data]) => {
+    acc[className] = data;
+    return acc;
+  }, {} as Record<string, {
+    count: number;
+    value: number;
+  }>);
 
   // Calculate filtered total value for enabled asset classes only
-  const filteredTotalValue = Object.values(filteredHoldingsByClass)
-    .reduce((sum, data) => sum + data.value, 0);
+  const filteredTotalValue = Object.values(filteredHoldingsByClass).reduce((sum, data) => sum + data.value, 0);
 
   // Pie chart data for asset allocation (filtered)
   const pieData = Object.entries(filteredHoldingsByClass).map(([className, data]) => ({
@@ -111,7 +110,6 @@ export function PortfolioSummary({
     if (!includeRealEstate && asset.class === 'Real Estate') return false;
     return true;
   });
-
   const holdingsByBeneficiary = beneficiariesAssets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
@@ -124,13 +122,10 @@ export function PortfolioSummary({
 
   // Filter to only include Shimon, Hagit, Kids
   const targetBeneficiaries = ['Shimon', 'Hagit', 'Kids'];
-  const filteredBeneficiaries = Object.entries(holdingsByBeneficiary)
-    .filter(([beneficiary]) => targetBeneficiaries.includes(beneficiary))
-    .reduce((acc, [beneficiary, value]) => {
-      acc[beneficiary] = value;
-      return acc;
-    }, {} as Record<string, number>);
-
+  const filteredBeneficiaries = Object.entries(holdingsByBeneficiary).filter(([beneficiary]) => targetBeneficiaries.includes(beneficiary)).reduce((acc, [beneficiary, value]) => {
+    acc[beneficiary] = value;
+    return acc;
+  }, {} as Record<string, number>);
   const beneficiariesTotalValue = Object.values(filteredBeneficiaries).reduce((sum, value) => sum + value, 0);
 
   // Beneficiaries pie chart data
@@ -237,18 +232,12 @@ export function PortfolioSummary({
             
             {/* Asset Class Values Summary with Toggles */}
             <div className="mt-4 space-y-2">
-              {Object.entries(holdingsByClass).map(([className, data]) => (
-                <div key={className} className="flex justify-between items-center py-2 text-sm">
+              {Object.entries(holdingsByClass).map(([className, data]) => <div key={className} className="flex justify-between items-center py-2 text-sm">
                   <div className="flex items-center gap-3">
-                    <Switch
-                      checked={visibleAssetClasses[className] || false}
-                      onCheckedChange={(checked) => 
-                        setVisibleAssetClasses(prev => ({
-                          ...prev,
-                          [className]: checked
-                        }))
-                      }
-                    />
+                    <Switch checked={visibleAssetClasses[className] || false} onCheckedChange={checked => setVisibleAssetClasses(prev => ({
+                  ...prev,
+                  [className]: checked
+                }))} />
                     <span className={`${visibleAssetClasses[className] ? 'text-foreground' : 'text-muted-foreground/50'}`}>
                       {className}
                     </span>
@@ -256,8 +245,7 @@ export function PortfolioSummary({
                   <span className={`font-mono font-semibold ${visibleAssetClasses[className] ? 'text-foreground' : 'text-muted-foreground/50'}`}>
                     {formatCurrency(data.value, viewCurrency)}
                   </span>
-                </div>
-              ))}
+                </div>)}
             </div>
           </CardContent>
         </Card>
@@ -270,10 +258,7 @@ export function PortfolioSummary({
               Total asset value, excluding Private Equity{!includeRealEstate ? ' and Real Estate' : ''}
             </p>
             <div className="flex items-center space-x-2 mt-2">
-              <Switch
-                checked={includeRealEstate}
-                onCheckedChange={setIncludeRealEstate}
-              />
+              <Switch checked={includeRealEstate} onCheckedChange={setIncludeRealEstate} />
               <span className="text-sm text-muted-foreground">Include Real Estate</span>
             </div>
           </CardHeader>
@@ -281,40 +266,23 @@ export function PortfolioSummary({
             <div className="h-56 p-1">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie 
-                    data={beneficiariesPieData} 
-                    cx="50%" 
-                    cy="50%" 
-                    outerRadius={65} 
-                    fill="#8884d8" 
-                    dataKey="value"
-                  >
-                    {beneficiariesPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
+                  <Pie data={beneficiariesPieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
+                    {beneficiariesPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    height={36} 
-                    formatter={(value, entry) => 
-                      `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / beneficiariesTotalValue * 100).toFixed(1)}%)`
-                    } 
-                  />
+                  <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / beneficiariesTotalValue * 100).toFixed(1)}%)`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             
             {/* Beneficiaries Summary */}
             <div className="mt-4 space-y-2">
-              {Object.entries(filteredBeneficiaries).map(([beneficiary, value]) => (
-                <div key={beneficiary} className="flex justify-between items-center py-1 text-sm">
+              {Object.entries(filteredBeneficiaries).map(([beneficiary, value]) => <div key={beneficiary} className="flex justify-between items-center py-1 text-sm">
                   <span className="text-foreground">{beneficiary}</span>
                   <span className="font-mono font-semibold text-foreground">
                     {formatCurrency(value, viewCurrency)}
                   </span>
-                </div>
-              ))}
+                </div>)}
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between items-center py-1 text-sm font-bold">
                   <span className="text-foreground">Total</span>
@@ -331,40 +299,41 @@ export function PortfolioSummary({
 
       {/* Public Equity Dedicated Section */}
       {holdingsByClass['Public Equity']?.value > 0 && <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-financial-primary">Public Equity</h2>
+          <h2 className="text-2xl font-bold text-financial-primary">Public Equity, Commodities &amp; more</h2>
           
           {/* Top 5 Positions for Public Equity and Commodities & more */}
           {(() => {
-            // Filter assets for Public Equity and Commodities & more
-            const targetClasses = ['Public Equity', 'Commodities & more'];
-            const filteredAssets = assets.filter(asset => targetClasses.includes(asset.class));
-            
-            // Group by asset name and sum their values
-            const positionsByName = filteredAssets.reduce((acc, asset) => {
-              const calc = calculations.get(asset.id);
-              const value = calc?.display_value || 0;
-              if (!acc[asset.name]) {
-                acc[asset.name] = {
-                  name: asset.name,
-                  class: asset.class,
-                  sub_class: asset.sub_class,
-                  totalValue: 0
-                };
-              }
-              acc[asset.name].totalValue += value;
-              return acc;
-            }, {} as Record<string, { name: string; class: string; sub_class: string; totalValue: number }>);
+        // Filter assets for Public Equity and Commodities & more
+        const targetClasses = ['Public Equity', 'Commodities & more'];
+        const filteredAssets = assets.filter(asset => targetClasses.includes(asset.class));
 
-            // Calculate total value for percentage calculations
-            const classesTotal = (holdingsByClass['Public Equity']?.value || 0) + (holdingsByClass['Commodities & more']?.value || 0);
-            
-            // Get top 5 positions
-            const top5Positions = Object.values(positionsByName)
-              .sort((a, b) => b.totalValue - a.totalValue)
-              .slice(0, 5);
+        // Group by asset name and sum their values
+        const positionsByName = filteredAssets.reduce((acc, asset) => {
+          const calc = calculations.get(asset.id);
+          const value = calc?.display_value || 0;
+          if (!acc[asset.name]) {
+            acc[asset.name] = {
+              name: asset.name,
+              class: asset.class,
+              sub_class: asset.sub_class,
+              totalValue: 0
+            };
+          }
+          acc[asset.name].totalValue += value;
+          return acc;
+        }, {} as Record<string, {
+          name: string;
+          class: string;
+          sub_class: string;
+          totalValue: number;
+        }>);
 
-            return top5Positions.length > 0 ? (
-              <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
+        // Calculate total value for percentage calculations
+        const classesTotal = (holdingsByClass['Public Equity']?.value || 0) + (holdingsByClass['Commodities & more']?.value || 0);
+
+        // Get top 5 positions
+        const top5Positions = Object.values(positionsByName).sort((a, b) => b.totalValue - a.totalValue).slice(0, 5);
+        return top5Positions.length > 0 ? <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-financial-primary">
                     Top 5 Positions
@@ -375,8 +344,7 @@ export function PortfolioSummary({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {top5Positions.map((position, index) => (
-                      <div key={position.name} className="flex items-center justify-between">
+                    {top5Positions.map((position, index) => <div key={position.name} className="flex items-center justify-between">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate text-sm">{position.name}</p>
                           <Badge variant="outline" className="text-xs mt-1">
@@ -391,13 +359,11 @@ export function PortfolioSummary({
                             {formatPercentage(classesTotal > 0 ? position.totalValue / classesTotal * 100 : 0)}
                           </p>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </CardContent>
-              </Card>
-            ) : null;
-          })()}
+              </Card> : null;
+      })()}
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Public Equity Sub-class Pie Chart */}
@@ -414,26 +380,11 @@ export function PortfolioSummary({
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie 
-                        data={subClassPieData['Public Equity'] || []} 
-                        cx="50%" 
-                        cy="50%" 
-                        outerRadius={70} 
-                        fill="#8884d8" 
-                        dataKey="value"
-                      >
-                        {(subClassPieData['Public Equity'] || []).map((entry, index) => 
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        )}
+                      <Pie data={subClassPieData['Public Equity'] || []} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                        {(subClassPieData['Public Equity'] || []).map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36} 
-                        formatter={(value, entry) => 
-                          `${value}: ${(entry.payload.value / holdingsByClass['Public Equity'].value * 100).toFixed(1)}%`
-                        } 
-                      />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Public Equity'].value * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
@@ -442,30 +393,25 @@ export function PortfolioSummary({
 
             {/* Big Tech Assets Pie Chart */}
             {(() => {
-              const bigTechAssets = assets.filter(asset => 
-                asset.class === 'Public Equity' && asset.sub_class === 'Big Tech'
-              );
-              
-              // Group Big Tech assets by name and sum their values
-              const bigTechByName = bigTechAssets.reduce((acc, asset) => {
-                const calc = calculations.get(asset.id);
-                const value = calc?.display_value || 0;
-                if (!acc[asset.name]) {
-                  acc[asset.name] = 0;
-                }
-                acc[asset.name] += value;
-                return acc;
-              }, {} as Record<string, number>);
+          const bigTechAssets = assets.filter(asset => asset.class === 'Public Equity' && asset.sub_class === 'Big Tech');
 
-              const bigTechTotal = Object.values(bigTechByName).reduce((sum, value) => sum + value, 0);
-              const bigTechPieData = Object.entries(bigTechByName).map(([name, value]) => ({
-                name: name,
-                value: value,
-                percentage: bigTechTotal > 0 ? value / bigTechTotal * 100 : 0
-              }));
-
-              return bigTechAssets.length > 0 ? (
-                <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+          // Group Big Tech assets by name and sum their values
+          const bigTechByName = bigTechAssets.reduce((acc, asset) => {
+            const calc = calculations.get(asset.id);
+            const value = calc?.display_value || 0;
+            if (!acc[asset.name]) {
+              acc[asset.name] = 0;
+            }
+            acc[asset.name] += value;
+            return acc;
+          }, {} as Record<string, number>);
+          const bigTechTotal = Object.values(bigTechByName).reduce((sum, value) => sum + value, 0);
+          const bigTechPieData = Object.entries(bigTechByName).map(([name, value]) => ({
+            name: name,
+            value: value,
+            percentage: bigTechTotal > 0 ? value / bigTechTotal * 100 : 0
+          }));
+          return bigTechAssets.length > 0 ? <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
                   <CardHeader>
                     <CardTitle className="text-lg font-bold text-financial-primary">
                       Big Tech Holdings
@@ -478,33 +424,17 @@ export function PortfolioSummary({
                     <div className="h-64 p-1">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie 
-                            data={bigTechPieData} 
-                            cx="50%" 
-                            cy="50%" 
-                            outerRadius={70} 
-                            fill="#8884d8" 
-                            dataKey="value"
-                          >
-                            {bigTechPieData.map((entry, index) => 
-                              <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                            )}
+                          <Pie data={bigTechPieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                            {bigTechPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                           </Pie>
                           <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                          <Legend 
-                            verticalAlign="bottom" 
-                            height={36} 
-                            formatter={(value, entry) => 
-                              `${value}: ${(entry.payload.value / bigTechTotal * 100).toFixed(1)}%`
-                            } 
-                          />
+                          <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / bigTechTotal * 100).toFixed(1)}%`} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
                   </CardContent>
-                </Card>
-              ) : null;
-            })()}
+                </Card> : null;
+        })()}
           </div>
         </div>}
 
