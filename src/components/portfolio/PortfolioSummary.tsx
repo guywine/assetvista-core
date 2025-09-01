@@ -730,7 +730,7 @@ export function PortfolioSummary({
                       <Tooltip 
                         formatter={(value: number, name: string) => [
                           formatCurrency(value, viewCurrency), 
-                          name === 'factored_value' ? 'Factored Value' : 'Full Price'
+                          name === 'factored_value' ? 'Factored Value' : 'Full Potential'
                         ]}
                         labelFormatter={(label) => {
                           const asset = (() => {
