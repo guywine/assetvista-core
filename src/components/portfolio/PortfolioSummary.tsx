@@ -202,7 +202,8 @@ export function PortfolioSummary({
   'hsl(var(--financial-primary))' // Real Estate
   ];
   const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
-  return <div className="space-y-6">
+  return (
+    <div className="space-y-6">
       {/* First Row - Holdings Tables */}
       
 
