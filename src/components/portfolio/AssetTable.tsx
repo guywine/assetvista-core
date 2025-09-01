@@ -81,9 +81,16 @@ export function AssetTable({
       groups[groupKey].push(asset);
     });
 
+    // Calculate total value of all filtered assets for percentage calculation
+    const totalFilteredValue = filteredAssets.reduce((sum, asset) => {
+      const calc = calculateAssetValue(asset, fxRates, viewCurrency);
+      return sum + calc.display_value;
+    }, 0);
+
     return Object.entries(groups).map(([key, assets]): GroupedAssets => {
       const calculations = assets.map(asset => calculateAssetValue(asset, fxRates, viewCurrency));
       const totalValue = calculations.reduce((sum, calc) => sum + calc.display_value, 0);
+      const percentageOfTotal = totalFilteredValue > 0 ? (totalValue / totalFilteredValue) * 100 : 0;
 
       return {
         key,
@@ -91,6 +98,7 @@ export function AssetTable({
         aggregates: {
           totalValue,
           assetCount: assets.length,
+          percentageOfTotal,
         },
       };
     }).sort((a, b) => a.key.localeCompare(b.key));
@@ -278,7 +286,7 @@ export function AssetTable({
                             <span>{group.key}</span>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                            <span>Value: {formatCurrency(group.aggregates.totalValue, viewCurrency)}</span>
+                            <span>Value: {formatCurrency(group.aggregates.totalValue, viewCurrency)} ({formatPercentage(group.aggregates.percentageOfTotal)} of total)</span>
                             <span>Assets: {group.aggregates.assetCount}</span>
                           </div>
                         </div>

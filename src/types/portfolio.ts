@@ -116,6 +116,7 @@ export interface GroupedAssets {
   aggregates: {
     totalValue: number;
     assetCount: number;
+    percentageOfTotal: number;
   };
 }
 
