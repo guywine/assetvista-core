@@ -203,7 +203,7 @@ export function PortfolioSummary({
   ];
   const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">{/* Increased spacing between major sections */}
       {/* First Row - Holdings Tables */}
       
 
@@ -299,8 +299,14 @@ export function PortfolioSummary({
 
 
       {/* Public Equity Dedicated Section */}
-      {holdingsByClass['Public Equity']?.value > 0 && <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-financial-primary">Public Equity, Commodities &amp; more</h2>
+      {holdingsByClass['Public Equity']?.value > 0 && <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-1 flex-1 bg-gradient-to-r from-financial-primary/30 to-transparent rounded-full"></div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-financial-primary to-financial-secondary bg-clip-text text-transparent">
+              Public Equity, Commodities &amp; more
+            </h2>
+            <div className="h-1 flex-1 bg-gradient-to-l from-financial-primary/30 to-transparent rounded-full"></div>
+          </div>
           
           {/* Top 5 Positions for Public Equity and Commodities & more */}
           {(() => {
@@ -465,8 +471,14 @@ export function PortfolioSummary({
         </div>}
 
       {/* Fixed Income Dedicated Section */}
-      {fixedIncomeAssets.length > 0 && holdingsByClass['Fixed Income']?.value > 0 && <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-financial-primary">Fixed Income</h2>
+      {fixedIncomeAssets.length > 0 && holdingsByClass['Fixed Income']?.value > 0 && <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-1 flex-1 bg-gradient-to-r from-financial-primary/30 to-transparent rounded-full"></div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-financial-primary to-financial-secondary bg-clip-text text-transparent">
+              Fixed Income
+            </h2>
+            <div className="h-1 flex-1 bg-gradient-to-l from-financial-primary/30 to-transparent rounded-full"></div>
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Fixed Income Sub-class Pie Chart */}
@@ -529,8 +541,14 @@ export function PortfolioSummary({
 
       {/* Real Estate Section */}
       {holdingsByClass['Real Estate']?.value > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-financial-primary">Real Estate</h2>
+        <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-1 flex-1 bg-gradient-to-r from-financial-primary/30 to-transparent rounded-full"></div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-financial-primary to-financial-secondary bg-clip-text text-transparent">
+              Real Estate
+            </h2>
+            <div className="h-1 flex-1 bg-gradient-to-l from-financial-primary/30 to-transparent rounded-full"></div>
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Real Estate Sub-class Pie Chart */}
@@ -631,8 +649,14 @@ export function PortfolioSummary({
 
       {/* Private Equity Section */}
       {holdingsByClass['Private Equity']?.value > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-financial-primary">Private Equity</h2>
+        <div className="space-y-4 pt-8 border-t border-financial-primary/20">{/* Added elegant top border */}
+          <div className="flex items-center gap-4 mb-6">
+            <div className="h-1 flex-1 bg-gradient-to-r from-financial-primary/30 to-transparent rounded-full"></div>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-financial-primary to-financial-secondary bg-clip-text text-transparent">
+              Private Equity
+            </h2>
+            <div className="h-1 flex-1 bg-gradient-to-l from-financial-primary/30 to-transparent rounded-full"></div>
+          </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Private Equity Sub-class Pie Chart */}
