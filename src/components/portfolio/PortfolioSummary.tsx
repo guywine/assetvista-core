@@ -392,8 +392,7 @@ export function PortfolioSummary({
             </Card>
 
             {/* Commodities & more Sub-class Pie Chart */}
-            {holdingsByClass['Commodities & more']?.value > 0 && (
-              <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+            {holdingsByClass['Commodities & more']?.value > 0 && <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold text-financial-primary">
                     Commodities & more Sub-classes
@@ -406,30 +405,16 @@ export function PortfolioSummary({
                   <div className="h-64 p-1">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie
-                          data={subClassPieData['Commodities & more'] || []}
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={70}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {(subClassPieData['Commodities & more'] || []).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                          ))}
+                        <Pie data={subClassPieData['Commodities & more'] || []} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                          {(subClassPieData['Commodities & more'] || []).map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                         </Pie>
                         <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                        <Legend 
-                          verticalAlign="bottom" 
-                          height={36} 
-                          formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Commodities & more'].value * 100).toFixed(1)}%`} 
-                        />
+                        <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Commodities & more'].value * 100).toFixed(1)}%`} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Big Tech Assets Pie Chart */}
             {(() => {
@@ -547,9 +532,9 @@ export function PortfolioSummary({
         const subClasses = subClassBreakdown[assetClass] || {};
         const subClassEntries = Object.entries(subClasses);
 
-        // Skip Public Equity, Commodities & more, and Fixed Income as they have their own dedicated sections
-        if (assetClass === 'Public Equity' || assetClass === 'Commodities & more' || assetClass === 'Fixed Income') return null;
-        
+        // Skip Public Equity and Commodities & more as they have their own dedicated section
+        if (assetClass === 'Public Equity' || assetClass === 'Commodities & more') return null;
+
         // Show chart for any asset class that has assets, regardless of sub-class count
         if (classData.value === 0) return null;
         const pieData = subClassEntries.map(([subClass, value]) => ({
@@ -557,29 +542,7 @@ export function PortfolioSummary({
           value: value,
           percentage: classData.value > 0 ? value / classData.value * 100 : 0
         }));
-        return <Card key={assetClass} className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-              <CardHeader>
-                <CardTitle className="text-base font-bold text-financial-primary">
-                  {assetClass}
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(classData.value, viewCurrency)}
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="h-52 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" outerRadius={55} fill="#8884d8" dataKey="value">
-                        {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / classData.value * 100).toFixed(1)}%`} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>;
+        return;
       })}
       </div>
     </div>;
