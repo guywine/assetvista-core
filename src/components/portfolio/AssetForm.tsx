@@ -152,6 +152,15 @@ export function AssetForm({
     return formData.price || 0;
   };
 
+  // Auto-update price when PE calculation values change
+  useEffect(() => {
+    if (formData.class === 'Private Equity' && usePECalculation && 
+        formData.pe_company_value && formData.pe_holding_percentage && formData.quantity) {
+      const calculatedPrice = (formData.pe_company_value * (formData.pe_holding_percentage / 100)) / formData.quantity;
+      setFormData(prev => ({ ...prev, price: calculatedPrice }));
+    }
+  }, [formData.pe_company_value, formData.pe_holding_percentage, formData.quantity, usePECalculation, formData.class]);
+
   const handleSave = () => {
     if (!formData.name) return;
     
