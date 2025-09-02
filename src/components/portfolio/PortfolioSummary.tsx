@@ -454,11 +454,13 @@ export function PortfolioSummary({
                       return `${data.fullName} (${data.class})`;
                     }
                     return label;
+                  }} labelStyle={{
+                    color: 'hsl(var(--foreground))'
                   }} contentStyle={{
-                    backgroundColor: '#1F2937',
-                    border: '1px solid #374151',
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
-                    fontSize: '14px'
+                    color: 'hsl(var(--foreground))'
                   }} />
                         <Bar dataKey="value" fill="hsl(var(--financial-primary))" radius={[4, 4, 0, 0]} />
                       </BarChart>
