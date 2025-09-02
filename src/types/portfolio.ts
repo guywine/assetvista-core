@@ -34,6 +34,8 @@ export interface Asset {
   factor?: number; // 0-1, Private Equity only
   maturity_date?: string; // Fixed Income only
   ytw?: number; // Fixed Income only, stored as decimal
+  pe_company_value?: number; // Private Equity only - company market value
+  pe_holding_percentage?: number; // Private Equity only - percentage of holding
   created_at: string;
   updated_at: string;
 }

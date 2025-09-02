@@ -24,6 +24,8 @@ export function useAssets() {
     factor: row.factor ? parseFloat(row.factor) : undefined,
     maturity_date: row.maturity_date,
     ytw: row.ytw ? parseFloat(row.ytw) : undefined,
+    pe_company_value: row.pe_company_value ? parseFloat(row.pe_company_value) : undefined,
+    pe_holding_percentage: row.pe_holding_percentage ? parseFloat(row.pe_holding_percentage) : undefined,
     created_at: row.created_at,
     updated_at: row.updated_at,
   });
@@ -44,6 +46,8 @@ export function useAssets() {
     factor: asset.factor,
     maturity_date: asset.maturity_date,
     ytw: asset.ytw,
+    pe_company_value: asset.pe_company_value,
+    pe_holding_percentage: asset.pe_holding_percentage,
   });
 
   // Load assets from database
@@ -117,6 +121,8 @@ export function useAssets() {
     factor: asset.factor,
     maturity_date: asset.maturity_date,
     ytw: asset.ytw,
+    pe_company_value: asset.pe_company_value,
+    pe_holding_percentage: asset.pe_holding_percentage,
   });
 
   const getAccountSpecificProperties = (asset: Asset) => ({
@@ -145,6 +151,8 @@ export function useAssets() {
           factor: sharedProps.factor,
           maturity_date: sharedProps.maturity_date,
           ytw: sharedProps.ytw,
+          pe_company_value: sharedProps.pe_company_value,
+          pe_holding_percentage: sharedProps.pe_holding_percentage,
         };
 
         // Batch update all assets with same name

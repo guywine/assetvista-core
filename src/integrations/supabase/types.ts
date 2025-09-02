@@ -62,6 +62,8 @@ export type Database = {
           maturity_date: string | null
           name: string
           origin_currency: string
+          pe_company_value: number | null
+          pe_holding_percentage: number | null
           price: number
           quantity: number
           sub_class: string
@@ -81,6 +83,8 @@ export type Database = {
           maturity_date?: string | null
           name: string
           origin_currency: string
+          pe_company_value?: number | null
+          pe_holding_percentage?: number | null
           price: number
           quantity: number
           sub_class: string
@@ -100,6 +104,8 @@ export type Database = {
           maturity_date?: string | null
           name?: string
           origin_currency?: string
+          pe_company_value?: number | null
+          pe_holding_percentage?: number | null
           price?: number
           quantity?: number
           sub_class?: string
