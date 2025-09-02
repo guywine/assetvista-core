@@ -22,6 +22,9 @@ export function PortfolioSummary({
   // State for managing Real Estate inclusion in beneficiaries chart
   const [includeRealEstate, setIncludeRealEstate] = useState<boolean>(true);
 
+  // State for managing Real Estate inclusion in currency chart
+  const [includeRealEstateInCurrency, setIncludeRealEstateInCurrency] = useState<boolean>(true);
+
   // Calculate all asset values
   const calculations = new Map<string, AssetCalculations>();
   assets.forEach(asset => {
@@ -135,6 +138,31 @@ export function PortfolioSummary({
     percentage: beneficiariesTotalValue > 0 ? value / beneficiariesTotalValue * 100 : 0
   }));
 
+  // Currency calculations (exclude Private Equity, optionally exclude Real Estate)
+  const currencyAssets = assets.filter(asset => {
+    if (asset.class === 'Private Equity') return false;
+    if (!includeRealEstateInCurrency && asset.class === 'Real Estate') return false;
+    return true;
+  });
+  const holdingsByCurrency = currencyAssets.reduce((acc, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    if (!acc[asset.origin_currency]) {
+      acc[asset.origin_currency] = 0;
+    }
+    acc[asset.origin_currency] += value;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const currencyTotalValue = Object.values(holdingsByCurrency).reduce((sum, value) => sum + value, 0);
+
+  // Currency pie chart data
+  const currencyPieData = Object.entries(holdingsByCurrency).map(([currency, value]) => ({
+    name: currency,
+    value: value,
+    percentage: currencyTotalValue > 0 ? value / currencyTotalValue * 100 : 0
+  }));
+
   // Fixed Income YTW calculations
   const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
   const fixedIncomeWeightedYTW = calculateWeightedYTW(assets, calculations);
@@ -207,7 +235,7 @@ export function PortfolioSummary({
       
 
       {/* Second Row - Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Overall Asset Allocation Chart */}
         <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
@@ -288,6 +316,51 @@ export function PortfolioSummary({
                   <span className="text-foreground">Total</span>
                   <span className="font-mono font-semibold text-financial-success">
                     {formatCurrency(beneficiariesTotalValue, viewCurrency)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Value by Currency Chart */}
+        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-financial-primary">Value by Currency</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Total asset value, excluding Private Equity{!includeRealEstateInCurrency ? ' and Real Estate' : ''}
+            </p>
+            <div className="flex items-center space-x-2 mt-2">
+              <Switch checked={includeRealEstateInCurrency} onCheckedChange={setIncludeRealEstateInCurrency} />
+              <span className="text-sm text-muted-foreground">Include Real Estate</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-56 p-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={currencyPieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
+                    {currencyPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
+                  <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / currencyTotalValue * 100).toFixed(1)}%)`} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            
+            {/* Currency Summary */}
+            <div className="mt-4 space-y-2">
+              {Object.entries(holdingsByCurrency).map(([currency, value]) => <div key={currency} className="flex justify-between items-center py-1 text-sm">
+                  <span className="text-foreground">{currency}</span>
+                  <span className="font-mono font-semibold text-foreground">
+                    {formatCurrency(value, viewCurrency)}
+                  </span>
+                </div>)}
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between items-center py-1 text-sm font-bold">
+                  <span className="text-foreground">Total</span>
+                  <span className="font-mono font-semibold text-financial-success">
+                    {formatCurrency(currencyTotalValue, viewCurrency)}
                   </span>
                 </div>
               </div>
