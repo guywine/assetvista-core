@@ -167,9 +167,10 @@ export function AssetForm({
     const calculatedPrice = calculatePEPrice();
     
     // Calculate factor for PE assets when using calculation mode
+    // For PE assets, factor should be the holding percentage as a decimal (0-1)
     const calculatedFactor = (formData.class === 'Private Equity' && usePECalculation && 
-                             formData.pe_company_value && formData.pe_holding_percentage) 
-      ? formData.pe_company_value * (formData.pe_holding_percentage / 100)
+                             formData.pe_holding_percentage) 
+      ? formData.pe_holding_percentage / 100  // Convert percentage to decimal
       : formData.factor;
     
     const assetData: Asset = {
