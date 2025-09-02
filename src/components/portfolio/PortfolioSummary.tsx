@@ -249,11 +249,11 @@ export function PortfolioSummary({
             <div className="h-72 p-2">{/* Increased height from h-56 to h-72 and padding */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
+                  <Pie data={pieData} cx="50%" cy="40%" outerRadius={65} fill="#8884d8" dataKey="value">
                     {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                    <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                   <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / filteredTotalValue * 100).toFixed(1)}%`} />
+                   <Legend verticalAlign="bottom" height={50} formatter={(value, entry) => `${value}: ${(entry.payload.value / filteredTotalValue * 100).toFixed(1)}%`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -294,11 +294,11 @@ export function PortfolioSummary({
             <div className="h-72 p-2">{/* Increased height and padding for consistency */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={beneficiariesPieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
+                  <Pie data={beneficiariesPieData} cx="50%" cy="40%" outerRadius={65} fill="#8884d8" dataKey="value">
                     {beneficiariesPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                  <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / beneficiariesTotalValue * 100).toFixed(1)}%)`} />
+                  <Legend verticalAlign="bottom" height={50} formatter={(value, entry) => `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / beneficiariesTotalValue * 100).toFixed(1)}%)`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -339,11 +339,11 @@ export function PortfolioSummary({
             <div className="h-72 p-2">{/* Increased height and padding for consistency */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={currencyPieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
+                  <Pie data={currencyPieData} cx="50%" cy="40%" outerRadius={65} fill="#8884d8" dataKey="value">
                     {currencyPieData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                   </Pie>
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                  <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / currencyTotalValue * 100).toFixed(1)}%)`} />
+                  <Legend verticalAlign="bottom" height={50} formatter={(value, entry) => `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${(entry.payload.value / currencyTotalValue * 100).toFixed(1)}%)`} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
