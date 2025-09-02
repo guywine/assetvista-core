@@ -110,26 +110,50 @@ export function useAssets() {
     }
   };
 
-  // Define shared vs account-specific properties
-  const getSharedProperties = (asset: Asset) => ({
-    name: asset.name,
-    class: asset.class,
-    sub_class: asset.sub_class,
-    ISIN: asset.ISIN,
-    origin_currency: asset.origin_currency,
-    price: asset.price,
-    factor: asset.factor,
-    maturity_date: asset.maturity_date,
-    ytw: asset.ytw,
-    pe_company_value: asset.pe_company_value,
-    pe_holding_percentage: asset.pe_holding_percentage,
-  });
+  // Define shared vs account-specific properties (class-aware)
+  const getSharedProperties = (asset: Asset) => {
+    const baseShared = {
+      name: asset.name,
+      class: asset.class,
+      sub_class: asset.sub_class,
+      ISIN: asset.ISIN,
+      origin_currency: asset.origin_currency,
+      factor: asset.factor,
+      maturity_date: asset.maturity_date,
+      ytw: asset.ytw,
+      pe_company_value: asset.pe_company_value,
+    };
 
-  const getAccountSpecificProperties = (asset: Asset) => ({
-    account_entity: asset.account_entity,
-    account_bank: asset.account_bank,
-    quantity: asset.quantity,
-  });
+    // For Private Equity, price and pe_holding_percentage are account-specific
+    if (asset.class === 'Private Equity') {
+      return baseShared;
+    }
+
+    // For other asset classes, price is shared
+    return {
+      ...baseShared,
+      price: asset.price,
+    };
+  };
+
+  const getAccountSpecificProperties = (asset: Asset) => {
+    const baseAccountSpecific = {
+      account_entity: asset.account_entity,
+      account_bank: asset.account_bank,
+      quantity: asset.quantity,
+    };
+
+    // For Private Equity, price and pe_holding_percentage are account-specific
+    if (asset.class === 'Private Equity') {
+      return {
+        ...baseAccountSpecific,
+        price: asset.price,
+        pe_holding_percentage: asset.pe_holding_percentage,
+      };
+    }
+
+    return baseAccountSpecific;
+  };
 
   // Update existing asset with synchronization
   const updateAsset = async (asset: Asset) => {
@@ -141,19 +165,22 @@ export function useAssets() {
       if (willUpdateMultiple) {
         // Prepare shared properties for batch update
         const sharedProps = getSharedProperties(asset);
-        const sharedDbProps = {
+        const sharedDbProps: any = {
           name: sharedProps.name,
           class: sharedProps.class,
           sub_class: sharedProps.sub_class,
           isin: sharedProps.ISIN,
           origin_currency: sharedProps.origin_currency,
-          price: sharedProps.price,
           factor: sharedProps.factor,
           maturity_date: sharedProps.maturity_date,
           ytw: sharedProps.ytw,
           pe_company_value: sharedProps.pe_company_value,
-          pe_holding_percentage: sharedProps.pe_holding_percentage,
         };
+
+        // Only include price in shared props if it's not Private Equity
+        if (asset.class !== 'Private Equity' && 'price' in sharedProps) {
+          sharedDbProps.price = (sharedProps as any).price;
+        }
 
         // Batch update all assets with same name
         const { data, error } = await supabase
@@ -168,13 +195,22 @@ export function useAssets() {
 
         // Update specific asset's account properties
         const accountSpecificProps = getAccountSpecificProperties(asset);
+        const accountSpecificDbProps: any = {
+          quantity: accountSpecificProps.quantity,
+          account_entity: accountSpecificProps.account_entity,
+          account_bank: accountSpecificProps.account_bank,
+        };
+
+        // For Private Equity, also update price and pe_holding_percentage
+        if (asset.class === 'Private Equity') {
+          const peProps = accountSpecificProps as any;
+          accountSpecificDbProps.price = peProps.price;
+          accountSpecificDbProps.pe_holding_percentage = peProps.pe_holding_percentage;
+        }
+
         const { data: specificData, error: specificError } = await supabase
           .from('assets')
-          .update({
-            quantity: accountSpecificProps.quantity,
-            account_entity: accountSpecificProps.account_entity,
-            account_bank: accountSpecificProps.account_bank,
-          })
+          .update(accountSpecificDbProps)
           .eq('id', asset.id)
           .select()
           .single();
