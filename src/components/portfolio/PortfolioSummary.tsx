@@ -462,7 +462,7 @@ export function PortfolioSummary({
                     borderRadius: '8px',
                     color: 'hsl(var(--foreground))'
                   }} />
-                        <Bar dataKey="value" fill="hsl(var(--financial-primary))" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="value" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
