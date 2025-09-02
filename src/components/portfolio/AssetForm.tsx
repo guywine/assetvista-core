@@ -166,12 +166,7 @@ export function AssetForm({
     
     const calculatedPrice = calculatePEPrice();
     
-    // Calculate factor for PE assets when using calculation mode
-    // For PE assets, factor should be the holding percentage as a decimal (0-1)
-    const calculatedFactor = (formData.class === 'Private Equity' && usePECalculation && 
-                             formData.pe_holding_percentage) 
-      ? formData.pe_holding_percentage / 100  // Convert percentage to decimal
-      : formData.factor;
+    // Factor is always a direct user input, never calculated
     
     const assetData: Asset = {
       id: formData.id || crypto.randomUUID(),
@@ -180,7 +175,7 @@ export function AssetForm({
       sub_class: formData.sub_class || "other",
       quantity: formData.quantity || 0,
       price: calculatedPrice,
-      factor: calculatedFactor,
+      factor: formData.factor || 1.0,
       account_entity: formData.account_entity || "Roy",
       account_bank: formData.account_bank || "Poalim",
       beneficiary: getBeneficiaryFromEntity(formData.account_entity || "Roy"),
