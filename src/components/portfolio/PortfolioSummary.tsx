@@ -246,7 +246,7 @@ export function PortfolioSummary({
             </p>
           </CardHeader>
           <CardContent>
-            <div className="h-56 p-1">
+            <div className="h-72 p-2">{/* Increased height from h-56 to h-72 and padding */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={pieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
@@ -291,7 +291,7 @@ export function PortfolioSummary({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-56 p-1">
+            <div className="h-72 p-2">{/* Increased height and padding for consistency */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={beneficiariesPieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
@@ -336,7 +336,7 @@ export function PortfolioSummary({
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-56 p-1">
+            <div className="h-72 p-2">{/* Increased height and padding for consistency */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie data={currencyPieData} cx="50%" cy="50%" outerRadius={65} fill="#8884d8" dataKey="value">
