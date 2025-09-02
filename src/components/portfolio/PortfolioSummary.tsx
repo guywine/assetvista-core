@@ -841,8 +841,8 @@ export function PortfolioSummary({
         const subClasses = subClassBreakdown[assetClass] || {};
         const subClassEntries = Object.entries(subClasses);
 
-        // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, Real Estate, and Private Equity
-        if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate', 'Private Equity'].includes(assetClass)) return null;
+        // Skip dedicated sections: Public Equity, Commodities & more, Fixed Income, Real Estate, Private Equity, and Cash
+        if (['Public Equity', 'Commodities & more', 'Fixed Income', 'Real Estate', 'Private Equity', 'Cash'].includes(assetClass)) return null;
 
         // Show chart for any asset class that has assets
         if (classData.value === 0) return null;
