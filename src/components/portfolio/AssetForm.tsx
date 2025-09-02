@@ -228,6 +228,10 @@ export function AssetForm({
 
   const isEditingSharedAsset = asset && getAssetNameCount && getAssetNameCount(asset.name) > 1;
   const isSharedFieldsLocked = currentMode === 'EXISTING_HOLDING' || currentMode === 'DUPLICATE';
+  
+  // For Private Equity assets, price and pe_holding_percentage are account-specific
+  const isPEPriceFieldLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
+  const isPEHoldingPercentageLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
   const existingAssetNames = getUniqueAssetNames();
   
   const getFormTitle = () => {
@@ -513,7 +517,7 @@ export function AssetForm({
                     onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                     placeholder="0.00"
                     className="border-border/50 focus:border-financial-primary"
-                    disabled={isSharedFieldsLocked}
+                     disabled={isPEPriceFieldLocked}
                   />
                 )}
               </div>
@@ -548,7 +552,7 @@ export function AssetForm({
                       variant={!usePECalculation ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setUsePECalculation(false)}
-                      disabled={isSharedFieldsLocked}
+                      disabled={isPEPriceFieldLocked}
                     >
                       Manual Price
                     </Button>
@@ -557,7 +561,7 @@ export function AssetForm({
                       variant={usePECalculation ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setUsePECalculation(true)}
-                      disabled={isSharedFieldsLocked}
+                      disabled={isPEPriceFieldLocked}
                     >
                       Calculate from Ownership
                     </Button>
@@ -582,7 +586,7 @@ export function AssetForm({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="holding_percentage" className="font-semibold">Percentage of Holding {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
+                      <Label htmlFor="holding_percentage" className="font-semibold">Percentage of Holding {isPEHoldingPercentageLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
                       <Input
                         id="holding_percentage"
                         type="number"
@@ -593,7 +597,7 @@ export function AssetForm({
                         onChange={(e) => setFormData(prev => ({ ...prev, pe_holding_percentage: parseFloat(e.target.value) || undefined }))}
                         placeholder="5.00"
                         className="border-border/50 focus:border-financial-primary"
-                        disabled={isSharedFieldsLocked}
+                        disabled={isPEHoldingPercentageLocked}
                       />
                       <p className="text-xs text-muted-foreground">Enter as percentage (e.g., 5.0 for 5%)</p>
                     </div>
