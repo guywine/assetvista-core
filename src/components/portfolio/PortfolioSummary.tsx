@@ -763,25 +763,36 @@ export function PortfolioSummary({
               <CardContent>
                 <div className="h-80 p-1">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={(() => {
-                  // Get Private Equity assets
-                  const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
+                     <BarChart data={(() => {
+                   // Get Private Equity assets
+                   const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
 
-                  // Calculate factored and full price for each asset
-                  const assetData = privateEquityAssets.map(asset => {
-                    const calc = calculations.get(asset.id);
-                    const factored_value = calc?.display_value || 0;
-                    const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
-                    return {
-                      name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
-                      fullName: asset.name,
-                      factored_value: factored_value,
-                      full_price: full_price
-                    };
-                  });
+                   // Group by asset name and sum their values
+                   const positionsByName = privateEquityAssets.reduce((acc, asset) => {
+                     const calc = calculations.get(asset.id);
+                     const factored_value = calc?.display_value || 0;
+                     const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
+                     
+                     if (!acc[asset.name]) {
+                       acc[asset.name] = {
+                         name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
+                         fullName: asset.name,
+                         factored_value: 0,
+                         full_price: 0
+                       };
+                     }
+                     acc[asset.name].factored_value += factored_value;
+                     acc[asset.name].full_price += full_price;
+                     return acc;
+                   }, {} as Record<string, {
+                     name: string;
+                     fullName: string;
+                     factored_value: number;
+                     full_price: number;
+                   }>);
 
-                  // Sort by factored value and take top 10
-                  return assetData.sort((a, b) => b.factored_value - a.factored_value).slice(0, 10);
+                   // Get top 10 positions by factored value
+                   return Object.values(positionsByName).sort((a, b) => b.factored_value - a.factored_value).slice(0, 10);
                 })()} margin={{
                   top: 20,
                   right: 30,
