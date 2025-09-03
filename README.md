@@ -103,6 +103,73 @@ This project uses Supabase as its backend-as-a-service, providing:
 - **Edge Functions**: Server-side logic and API endpoints
 - **Storage**: File uploads and management
 
+## Project Portability & Migration
+
+### Running Without Lovable
+
+If Lovable becomes unavailable, your project remains fully functional and portable. Since your code is standard web technology and synced to GitHub, you can run it independently.
+
+#### Your Code is Portable
+
+The generated code uses standard technologies:
+- React + TypeScript
+- Vite (build tool)
+- Tailwind CSS
+- Standard npm packages
+
+#### Migration Steps
+
+**1. Clone and Run Locally**
+```bash
+git clone your-repo-url
+cd your-project
+npm install
+npm run dev
+```
+
+**2. Deploy to Any Hosting Provider**
+You can deploy to various platforms:
+- **Vercel** (recommended for React apps)
+- **Netlify** 
+- **AWS S3 + CloudFront**
+- **GitHub Pages**
+- **Your own server**
+
+**3. Keep Your Supabase Backend**
+Your Supabase project is completely independent of Lovable:
+- Database, authentication, and all data remain in Supabase
+- Environment variables already point directly to Supabase
+- No backend changes needed
+
+**4. Build for Production**
+```bash
+npm run build  # Creates production files in 'dist' folder
+# Deploy the 'dist' folder to your hosting provider
+```
+
+#### What Remains Functional
+
+- ✅ Your Supabase database and all data
+- ✅ All environment variables work unchanged
+- ✅ Authentication system continues working
+- ✅ All application functionality remains identical
+
+#### What You Lose
+
+- ❌ Lovable's visual editor and AI assistance
+- ❌ Automatic deployments from Lovable
+- ❌ The live preview development environment
+
+#### Quick Migration Example (Vercel)
+
+1. Connect your GitHub repo to Vercel
+2. Add your environment variables in Vercel's dashboard
+3. Deploy - Vercel automatically detects Vite projects
+
+Your website will be live and fully functional within minutes.
+
+**Bottom Line**: Lovable generates standard, portable code. Your backend (Supabase) is independent, so you lose only the development tools while keeping 100% of functionality and data.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/7fa043c8-3d24-46da-855a-144f9778f2fd) and click on Share -> Publish.
