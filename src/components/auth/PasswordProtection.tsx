@@ -21,7 +21,7 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
     setIsChecking(true);
 
     // Simple password check
-    const appPassword = import.meta.env.VITE_APP_PASSWORD || 'Zaza2025';
+    const appPassword = import.meta.env.VITE_APP_PASSWORD;
     if (password === appPassword) {
       setIsAuthenticated(true);
       toast({
