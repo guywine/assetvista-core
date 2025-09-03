@@ -60,6 +60,49 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Environment Variables
+
+This project uses several environment variables for configuration. These are defined in the `.env` file:
+
+### Supabase Configuration
+
+The following environment variables configure your Supabase backend connection:
+
+- **`VITE_SUPABASE_PROJECT_ID`**: Your unique Supabase project identifier (`ntvpatckjaqkfozizszm`)
+  - This ID identifies your specific Supabase project instance
+  - Used internally for routing requests to the correct project
+
+- **`VITE_SUPABASE_URL`**: The full URL to your Supabase project (`https://ntvpatckjaqkfozizszm.supabase.co`)
+  - This is the API endpoint your frontend uses to communicate with Supabase
+  - Combines your project ID with the Supabase domain
+
+- **`VITE_SUPABASE_PUBLISHABLE_KEY`**: The public/anonymous key for frontend access
+  - This key is safe to expose in your frontend code
+  - Provides read-only access and enforces Row Level Security (RLS) policies
+  - Cannot be used to bypass database security rules
+
+### Application Configuration
+
+- **`VITE_APP_PASSWORD`**: Password protection for the application (`Zaza2026`)
+  - Controls access to the entire application
+  - Set in the PasswordProtection component
+
+### Security Notes
+
+- All `VITE_*` variables are exposed to the frontend and are publicly visible
+- The Supabase publishable key is designed to be public and cannot compromise your database
+- Actual data security is enforced through Supabase's Row Level Security (RLS) policies
+- Sensitive operations require additional authentication through Supabase's auth system
+
+### Backend Services
+
+This project uses Supabase as its backend-as-a-service, providing:
+- **Database**: PostgreSQL with Row Level Security
+- **Authentication**: User management and session handling  
+- **Real-time**: Live data synchronization
+- **Edge Functions**: Server-side logic and API endpoints
+- **Storage**: File uploads and management
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/7fa043c8-3d24-46da-855a-144f9778f2fd) and click on Share -> Publish.
