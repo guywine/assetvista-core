@@ -69,30 +69,42 @@ export function PortfolioHeader({
           </CardContent>
         </Card>
 
-        {/* Asset Count Card */}
-        
+        {/* Custom Breakdown Cards */}
+        {(() => {
+          // Calculate Liquid + Fixed Income (all except Real Estate and Private Equity)
+          const liquidFixedIncome = classTotals
+            .filter(item => !['Real Estate', 'Private Equity'].includes(item.class))
+            .reduce((sum, item) => ({ value: sum.value + item.value, count: sum.count + item.count }), { value: 0, count: 0 });
+          
+          // Get Private Equity
+          const privateEquity = classTotals.find(item => item.class === 'Private Equity') || { value: 0, count: 0 };
+          
+          // Get Real Estate
+          const realEstate = classTotals.find(item => item.class === 'Real Estate') || { value: 0, count: 0 };
 
-        {/* Class Breakdown Cards */}
-        {classTotals.slice(0, 2).map(({
-        class: assetClass,
-        value,
-        count
-      }) => <Card key={assetClass} className="bg-gradient-to-br from-muted/20 to-muted/40 border-border/50 shadow-lg">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{assetClass}</p>
-                  <h3 className="text-2xl font-bold text-foreground mt-1">
-                    {formatCurrency(value, viewCurrency)}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">{count} assets</p>
+          return [
+            { name: 'Liquid + Fixed Income', ...liquidFixedIncome },
+            { name: 'Private Equity', ...privateEquity },
+            { name: 'Real Estate', ...realEstate }
+          ].map(({ name, value, count }) => (
+            <Card key={name} className="bg-gradient-to-br from-muted/20 to-muted/40 border-border/50 shadow-lg">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">{name}</p>
+                    <h3 className="text-2xl font-bold text-foreground mt-1">
+                      {formatCurrency(value, viewCurrency)}
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-1">{count} assets</p>
+                  </div>
+                  <Badge variant="secondary" className="text-xs font-semibold">
+                    {count > 0 ? Math.round(value / totalValue * 100) : 0}%
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="text-xs font-semibold">
-                  {count > 0 ? Math.round(value / totalValue * 100) : 0}%
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>)}
+              </CardContent>
+            </Card>
+          ));
+        })()}
       </div>
 
     </div>;
