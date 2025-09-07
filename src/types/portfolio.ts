@@ -48,17 +48,6 @@ export interface FXRates {
   };
 }
 
-export interface Transaction {
-  id: string;
-  date: string;
-  type: 'buy' | 'sell';
-  asset_id: string;
-  quantity: number;
-  price: number;
-  notes?: string;
-  created_at: string;
-}
-
 export interface Snapshot {
   id: string;
   name: string;
