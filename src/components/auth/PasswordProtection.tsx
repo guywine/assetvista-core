@@ -26,7 +26,7 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
       setIsAuthenticated(true);
       toast({
         title: "Access Granted",
-        description: "Welcome to AssetVista Core",
+        description: "Welcome to your Portfolio Dashbord",
       });
     } else {
       toast({
@@ -48,7 +48,7 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center bg-gradient-to-r from-financial-primary to-financial-primary/70 bg-clip-text text-transparent">
-            AssetVista Core
+            Zaza Portfolio Dashbord
           </CardTitle>
         </CardHeader>
         <CardContent>
