@@ -102,6 +102,7 @@ export interface GroupedAssets {
   };
 }
 
+/*
 export interface Summary {
   holdings_by_class: Array<{
     class: AssetClass;
@@ -130,3 +131,4 @@ export interface Summary {
     }>;
   };
 }
+*/
