@@ -18,11 +18,7 @@ import { FXRatesBar } from './FXRatesBar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
-interface PortfolioDashboardProps {
-  initialAssets?: Asset[];
-}
-
-export function PortfolioDashboard({ initialAssets = [] }: PortfolioDashboardProps) {
+export function PortfolioDashboard() {
   const { assets, isLoading, addAsset, updateAsset, deleteAsset, getAssetNameCount } = useAssets();
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
   
