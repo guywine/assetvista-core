@@ -1,3 +1,5 @@
+export type ViewCurrency = 'USD' | 'ILS';
+
 export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income' | 'Cash' | 'Commodities & more' | 'Real Estate';
 
 export type PublicEquitySubClass = 'Big Tech' | 'China' | 'other';
@@ -48,15 +50,6 @@ export interface FXRates {
   };
 }
 
-export interface Snapshot {
-  id: string;
-  name: string;
-  description: string;
-  saved_at: string;
-  assets: Asset[];
-  fx_rates: FXRates;
-}
-
 export interface PortfolioSnapshot {
   id: string;
   name: string;
@@ -70,8 +63,6 @@ export interface PortfolioSnapshot {
   fixed_income_value_usd: number;
   created_at: string;
 }
-
-export type ViewCurrency = 'USD' | 'ILS';
 
 export interface AssetCalculations {
   raw_base_value: number;
