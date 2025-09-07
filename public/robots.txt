@@ -1,2 +1,14 @@
+# Block all search engines for privacy
 User-agent: *
 Disallow: /
+
+# To allow search engines again, replace the above with:
+# User-agent: *
+# Allow: /
+
+# Or for specific search engines:
+# User-agent: Googlebot
+# Allow: /
+# 
+# User-agent: Bingbot
+# Allow: /
