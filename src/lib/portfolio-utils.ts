@@ -122,6 +122,10 @@ export function validateAsset(asset: Partial<Asset>): string[] {
   // Price validation: required for all except Cash assets
   if (asset.class === 'Cash') {
     // Price is optional for Cash assets, defaults to 1
+    if (typeof asset.price !== 'number' || asset.price <= 0) {
+      // Set default price to 1 for cash assets if not provided or invalid
+      asset.price = 1;
+    }
   } else {
     if (typeof asset.price !== 'number' || asset.price < 0) errors.push('Price must be non-negative');
   }

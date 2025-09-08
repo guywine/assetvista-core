@@ -218,12 +218,14 @@ export function AssetForm({
   const handleClassChange = (newClass: AssetClass) => {
     const subClassOptions = getSubClassOptions(newClass);
     const defaultQuantity = (newClass === 'Private Equity' || newClass === 'Real Estate') ? 1 : (formData.quantity || 0);
+    const defaultPrice = newClass === 'Cash' ? 1 : (formData.price || 0);
     
     setFormData(prev => ({
       ...prev,
       class: newClass,
       sub_class: subClassOptions[subClassOptions.length - 1] as any,
       quantity: defaultQuantity,
+      price: defaultPrice,
     }));
   };
 
