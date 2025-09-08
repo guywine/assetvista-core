@@ -36,15 +36,15 @@ export function AssetForm({
 }: AssetFormProps) {
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '',
-    class: 'Public Equity',
-    sub_class: 'other',
+    class: 'Cash',
+    sub_class: 'USD',
     ISIN: '',
     account_entity: 'Roy',
     account_bank: 'Poalim',
     beneficiary: 'Kids',
     origin_currency: 'USD',
     quantity: 0,
-    price: 0,
+    price: 1,
     factor: 1.0,
     maturity_date: '',
     ytw: 0,
@@ -80,15 +80,15 @@ export function AssetForm({
     } else {
       setFormData({
         name: '',
-        class: 'Public Equity',
-        sub_class: 'other',
+        class: 'Cash',
+        sub_class: 'USD',
         ISIN: '',
         account_entity: 'Roy',
         account_bank: 'Poalim',
         beneficiary: 'Kids',
         origin_currency: 'USD',
         quantity: 0,
-        price: 0,
+        price: 1,
         factor: 1.0,
         maturity_date: '',
         ytw: 0,
@@ -162,7 +162,9 @@ export function AssetForm({
   }, [formData.pe_company_value, formData.pe_holding_percentage, formData.quantity, usePECalculation, formData.class]);
 
   const handleSave = () => {
-    if (!formData.name) return;
+    // For cash assets, name is optional - if not provided, use currency as name
+    const assetName = formData.name?.trim() || (formData.class === 'Cash' ? `${formData.sub_class} Cash` : '');
+    if (!assetName && formData.class !== 'Cash') return;
     
     const calculatedPrice = calculatePEPrice();
     
@@ -170,7 +172,7 @@ export function AssetForm({
     
     const assetData: Asset = {
       id: formData.id || crypto.randomUUID(),
-      name: formData.name || "",
+      name: assetName,
       class: formData.class || "Public Equity",
       sub_class: formData.sub_class || "other",
       quantity: formData.quantity || 0,
