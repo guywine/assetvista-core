@@ -1,5 +1,5 @@
 import { Asset, AssetCalculations, FXRates, ViewCurrency, AssetClass, AccountEntity } from '@/types/portfolio';
-import { ACCOUNT_BANK_MAP, CLASS_SUBCLASS_MAP, DEFAULT_FX_RATES } from '@/constants/portfolio';
+import { ACCOUNT_BANK_MAP, CLASS_SUBCLASS_MAP } from '@/constants/portfolio';
 
 export function calculateAssetValue(
   asset: Asset,

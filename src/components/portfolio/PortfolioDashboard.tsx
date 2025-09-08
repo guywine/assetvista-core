@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
 import { calculateAssetValue } from '@/lib/portfolio-utils';
-import { DEFAULT_FX_RATES } from '@/constants/portfolio';
+
 import { useAssets } from '@/hooks/useAssets';
 import { useFXRates } from '@/hooks/useFXRates';
 import { PortfolioHeader } from './PortfolioHeader';
@@ -72,12 +72,18 @@ export function PortfolioDashboard() {
 
   // Calculate aggregated data for unfiltered portfolio (for header)
   const { totalPortfolioValue, totalAssetCount, totalClassTotals } = useMemo(() => {
-    // Use default rates if FX rates haven't loaded yet
-    const effectiveFxRates = Object.keys(fxRates).length > 0 ? fxRates : DEFAULT_FX_RATES;
+    // Skip calculations if FX rates haven't loaded yet
+    if (Object.keys(fxRates).length === 0) {
+      return {
+        totalPortfolioValue: 0,
+        totalAssetCount: assets.length,
+        totalClassTotals: [],
+      };
+    }
     
     const calculations = assets.map(asset => ({
       asset,
-      calculation: calculateAssetValue(asset, effectiveFxRates, viewCurrency),
+      calculation: calculateAssetValue(asset, fxRates, viewCurrency),
     }));
 
     const total = calculations.reduce((sum, { calculation }) => sum + calculation.display_value, 0);
@@ -107,12 +113,18 @@ export function PortfolioDashboard() {
 
   // Calculate aggregated data based on filtered assets (for table and other components)
   const { totalValue, assetCount, classTotals } = useMemo(() => {
-    // Use default rates if FX rates haven't loaded yet
-    const effectiveFxRates = Object.keys(fxRates).length > 0 ? fxRates : DEFAULT_FX_RATES;
+    // Skip calculations if FX rates haven't loaded yet
+    if (Object.keys(fxRates).length === 0) {
+      return {
+        totalValue: 0,
+        assetCount: filteredAssets.length,
+        classTotals: [],
+      };
+    }
     
     const calculations = filteredAssets.map(asset => ({
       asset,
-      calculation: calculateAssetValue(asset, effectiveFxRates, viewCurrency),
+      calculation: calculateAssetValue(asset, fxRates, viewCurrency),
     }));
 
     const total = calculations.reduce((sum, { calculation }) => sum + calculation.display_value, 0);

@@ -82,13 +82,3 @@ export const ACCOUNT_BANKS: AccountBank[] = [
   'Leumi', 'etoro', 'Tom Trust'
 ];
 
-
-// Default FX Rates
-export const DEFAULT_FX_RATES = {
-  ILS: { to_USD: 0.27, to_ILS: 1, last_updated: '2024-01-01' },
-  USD: { to_USD: 1, to_ILS: 3.70, last_updated: '2024-01-01' },
-  CHF: { to_USD: 1.10, to_ILS: 4.07, last_updated: '2024-01-01' },
-  EUR: { to_USD: 1.08, to_ILS: 4.00, last_updated: '2024-01-01' },
-  CAD: { to_USD: 0.74, to_ILS: 2.74, last_updated: '2024-01-01' },
-  HKD: { to_USD: 0.13, to_ILS: 0.48, last_updated: '2024-01-01' },
-};
