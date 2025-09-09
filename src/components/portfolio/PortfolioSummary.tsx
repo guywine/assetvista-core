@@ -680,35 +680,56 @@ export function PortfolioSummary({
                   Real Estate Assets
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Individual asset values
+                  Grouped by asset name
                 </p>
               </CardHeader>
               <CardContent>
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={assets.filter(asset => asset.class === 'Real Estate').map(asset => ({
-                  name: asset.name,
-                  value: calculations.get(asset.id)?.display_value || 0
-                })).sort((a, b) => b.value - a.value)} margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 60
-                }}>
+                    <BarChart data={(() => {
+                      // Filter Real Estate assets
+                      const realEstateAssets = assets.filter(asset => asset.class === 'Real Estate');
+                      
+                      // Group by asset name and sum their values
+                      const positionsByName = realEstateAssets.reduce((acc, asset) => {
+                        const calc = calculations.get(asset.id);
+                        const value = calc?.display_value || 0;
+                        
+                        if (!acc[asset.name]) {
+                          acc[asset.name] = {
+                            name: asset.name,
+                            value: 0
+                          };
+                        }
+                        acc[asset.name].value += value;
+                        return acc;
+                      }, {} as Record<string, {
+                        name: string;
+                        value: number;
+                      }>);
+                      
+                      // Return sorted array by value
+                      return Object.values(positionsByName).sort((a, b) => b.value - a.value);
+                    })()} margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 60
+                    }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} interval={0} tick={{
-                    fontSize: 12
-                  }} />
+                        fontSize: 12
+                      }} />
                       <YAxis tickFormatter={value => formatCurrency(value, viewCurrency)} tick={{
-                    fontSize: 12
-                  }} />
+                        fontSize: 12
+                      }} />
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} labelStyle={{
-                    color: 'hsl(var(--foreground))'
-                  }} contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }} />
+                        color: 'hsl(var(--foreground))'
+                      }} contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }} />
                       <Bar dataKey="value" fill="hsl(var(--chart-1))" />
                     </BarChart>
                   </ResponsiveContainer>
