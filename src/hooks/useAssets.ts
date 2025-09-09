@@ -124,8 +124,8 @@ export function useAssets() {
       pe_company_value: asset.pe_company_value,
     };
 
-    // For Private Equity, price and pe_holding_percentage are account-specific
-    if (asset.class === 'Private Equity') {
+    // For Private Equity and Real Estate, price is account-specific
+    if (asset.class === 'Private Equity' || asset.class === 'Real Estate') {
       return baseShared;
     }
 
@@ -143,12 +143,19 @@ export function useAssets() {
       quantity: asset.quantity,
     };
 
-    // For Private Equity, price and pe_holding_percentage are account-specific
+    // For Private Equity and Real Estate, price is account-specific
     if (asset.class === 'Private Equity') {
       return {
         ...baseAccountSpecific,
         price: asset.price,
         pe_holding_percentage: asset.pe_holding_percentage,
+      };
+    }
+
+    if (asset.class === 'Real Estate') {
+      return {
+        ...baseAccountSpecific,
+        price: asset.price,
       };
     }
 
@@ -177,8 +184,8 @@ export function useAssets() {
           pe_company_value: sharedProps.pe_company_value,
         };
 
-        // Only include price in shared props if it's not Private Equity
-        if (asset.class !== 'Private Equity' && 'price' in sharedProps) {
+        // Only include price in shared props if it's not Private Equity or Real Estate
+        if (asset.class !== 'Private Equity' && asset.class !== 'Real Estate' && 'price' in sharedProps) {
           sharedDbProps.price = (sharedProps as any).price;
         }
 
@@ -206,6 +213,12 @@ export function useAssets() {
           const peProps = accountSpecificProps as any;
           accountSpecificDbProps.price = peProps.price;
           accountSpecificDbProps.pe_holding_percentage = peProps.pe_holding_percentage;
+        }
+
+        // For Real Estate, also update price
+        if (asset.class === 'Real Estate') {
+          const reProps = accountSpecificProps as any;
+          accountSpecificDbProps.price = reProps.price;
         }
 
         const { data: specificData, error: specificError } = await supabase

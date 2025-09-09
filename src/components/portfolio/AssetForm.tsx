@@ -244,8 +244,8 @@ export function AssetForm({
   const isEditingSharedAsset = asset && getAssetNameCount && getAssetNameCount(asset.name) > 1;
   const isSharedFieldsLocked = currentMode === 'EXISTING_HOLDING' || currentMode === 'DUPLICATE';
   
-  // For Private Equity assets, price and pe_holding_percentage are account-specific
-  const isPEPriceFieldLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
+  // For Private Equity and Real Estate assets, price is account-specific
+  const isPriceFieldLocked = isSharedFieldsLocked && formData.class !== 'Private Equity' && formData.class !== 'Real Estate';
   const isPEHoldingPercentageLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
   const existingAssetNames = getUniqueAssetNames();
   
@@ -532,7 +532,7 @@ export function AssetForm({
                     onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                     placeholder="0.00"
                     className="border-border/50 focus:border-financial-primary"
-                     disabled={isPEPriceFieldLocked}
+                     disabled={isPriceFieldLocked}
                   />
                 )}
               </div>
@@ -567,7 +567,7 @@ export function AssetForm({
                       variant={!usePECalculation ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setUsePECalculation(false)}
-                      disabled={isPEPriceFieldLocked}
+                      disabled={isPriceFieldLocked}
                     >
                       Manual Price
                     </Button>
@@ -576,7 +576,7 @@ export function AssetForm({
                       variant={usePECalculation ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setUsePECalculation(true)}
-                      disabled={isPEPriceFieldLocked}
+                      disabled={isPriceFieldLocked}
                     >
                       Calculate from Ownership
                     </Button>
