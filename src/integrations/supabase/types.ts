@@ -16,7 +16,6 @@ export type Database = {
     Tables: {
       asset_liquidation_settings: {
         Row: {
-          asset_id: string | null
           asset_name: string
           created_at: string
           id: string
@@ -25,7 +24,6 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          asset_id?: string | null
           asset_name: string
           created_at?: string
           id?: string
@@ -34,7 +32,6 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          asset_id?: string | null
           asset_name?: string
           created_at?: string
           id?: string
@@ -42,15 +39,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "asset_liquidation_settings_asset_id_fkey"
-            columns: ["asset_id"]
-            isOneToOne: true
-            referencedRelation: "assets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       assets: {
         Row: {

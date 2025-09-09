@@ -4,7 +4,6 @@ import { Asset } from '@/types/portfolio';
 
 interface AssetLiquidationSetting {
   id: string;
-  asset_id: string;
   asset_name: string;
   liquidation_year: string;
   user_id?: string;
@@ -49,7 +48,6 @@ export function useAssetLiquidationSettings() {
         .from('asset_liquidation_settings')
         .upsert(
           {
-            asset_id: null, // Now nullable - we use asset_name as primary identifier
             asset_name: assetName,
             liquidation_year: liquidationYear,
           },
