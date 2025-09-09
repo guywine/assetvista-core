@@ -677,7 +677,7 @@ export function PortfolioSummary({
             <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
               <CardHeader>
                 <CardTitle className="text-lg font-bold text-financial-primary">
-                  Real Estate Assets
+                  All Real Estate Assets
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Grouped by asset name
