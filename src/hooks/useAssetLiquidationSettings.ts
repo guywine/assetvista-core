@@ -6,7 +6,6 @@ interface AssetLiquidationSetting {
   id: string;
   asset_name: string;
   liquidation_year: string;
-  user_id?: string;
   created_at: string;
   updated_at: string;
 }
