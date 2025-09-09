@@ -47,11 +47,36 @@ export function useAssetLookup(assets: Asset[]) {
     };
   };
 
+  const getAssetGroupsByClass = (assetClass: string) => {
+    const filteredAssets = assets.filter(asset => asset.class === assetClass);
+    const groupedByName = new Map<string, Asset[]>();
+    
+    filteredAssets.forEach(asset => {
+      const existing = groupedByName.get(asset.name) || [];
+      groupedByName.set(asset.name, [...existing, asset]);
+    });
+    
+    return Array.from(groupedByName.entries()).map(([name, assets]) => ({
+      name,
+      assets,
+      totalQuantity: assets.reduce((sum, asset) => sum + asset.quantity, 0),
+      averagePrice: assets.reduce((sum, asset) => sum + (asset.price || 0), 0) / assets.length,
+    }));
+  };
+
+  const calculateGroupTotalValue = (groupAssets: Asset[], fxRates: any, viewCurrency: string) => {
+    // This would use the same calculation logic as in portfolio utils
+    // For now, return 0 as placeholder - will be calculated in the component
+    return 0;
+  };
+
   return {
     findAssetsByName,
     getUniqueAssetNames,
     findSimilarAssetNames,
     getAssetTemplate,
+    getAssetGroupsByClass,
+    calculateGroupTotalValue,
     assetsByName
   };
 }

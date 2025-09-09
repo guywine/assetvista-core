@@ -5,6 +5,7 @@ import { Asset } from '@/types/portfolio';
 interface AssetLiquidationSetting {
   id: string;
   asset_id: string;
+  asset_name: string;
   liquidation_year: string;
   user_id?: string;
   created_at: string;
@@ -29,7 +30,7 @@ export function useAssetLiquidationSettings() {
 
       const settingsMap = new Map<string, string>();
       data?.forEach((setting: AssetLiquidationSetting) => {
-        settingsMap.set(setting.asset_id, setting.liquidation_year);
+        settingsMap.set(setting.asset_name, setting.liquidation_year);
       });
 
       setLiquidationSettings(settingsMap);
@@ -40,17 +41,18 @@ export function useAssetLiquidationSettings() {
     }
   };
 
-  const saveLiquidationYear = async (assetId: string, liquidationYear: string) => {
+  const saveLiquidationYear = async (assetName: string, liquidationYear: string) => {
     try {
       const { data, error } = await supabase
         .from('asset_liquidation_settings')
         .upsert(
           {
-            asset_id: assetId,
+            asset_id: '', // We'll keep this for backward compatibility but use asset_name as key
+            asset_name: assetName,
             liquidation_year: liquidationYear,
           },
           {
-            onConflict: 'asset_id',
+            onConflict: 'asset_name',
           }
         );
 
@@ -60,18 +62,18 @@ export function useAssetLiquidationSettings() {
       }
 
       // Update local state
-      setLiquidationSettings(prev => new Map(prev).set(assetId, liquidationYear));
+      setLiquidationSettings(prev => new Map(prev).set(assetName, liquidationYear));
     } catch (error) {
       console.error('Error saving liquidation setting:', error);
     }
   };
 
-  const deleteLiquidationSetting = async (assetId: string) => {
+  const deleteLiquidationSetting = async (assetName: string) => {
     try {
       const { error } = await supabase
         .from('asset_liquidation_settings')
         .delete()
-        .eq('asset_id', assetId);
+        .eq('asset_name', assetName);
 
       if (error) {
         console.error('Error deleting liquidation setting:', error);
@@ -81,7 +83,7 @@ export function useAssetLiquidationSettings() {
       // Update local state
       setLiquidationSettings(prev => {
         const newMap = new Map(prev);
-        newMap.delete(assetId);
+        newMap.delete(assetName);
         return newMap;
       });
     } catch (error) {
@@ -90,7 +92,7 @@ export function useAssetLiquidationSettings() {
   };
 
   const getLiquidationYear = (asset: Asset): string => {
-    return liquidationSettings.get(asset.id) || 'later';
+    return liquidationSettings.get(asset.name) || 'later';
   };
 
   useEffect(() => {

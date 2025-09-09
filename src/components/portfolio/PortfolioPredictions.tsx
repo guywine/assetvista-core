@@ -10,18 +10,17 @@ import { Separator } from '@/components/ui/separator';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LabelList, Cell } from 'recharts';
 import { ChartContainer } from '@/components/ui/chart';
 import { useAssetLiquidationSettings } from '@/hooks/useAssetLiquidationSettings';
+import { useAssetLookup } from '@/hooks/useAssetLookup';
 
 interface PredictionSettings {
   publicEquityIRR: number;
   commoditiesMoreIRR: number;
-  realEstateToggles: Record<string, boolean>;
+  realEstateToggles: Record<string, boolean>; // Now keyed by asset name
   realEstateSubClassToggles: Record<string, boolean>;
   realEstateClassToggle: boolean;
-  realEstateLiquidationYears: Record<string, string>;
-  privateEquityToggles: Record<string, boolean>;
+  privateEquityToggles: Record<string, boolean>; // Now keyed by asset name
   privateEquitySubClassToggles: Record<string, boolean>;
   privateEquityClassToggle: boolean;
-  privateEquityLiquidationYears: Record<string, string>;
 }
 
 interface ChartDataPoint {
@@ -43,6 +42,7 @@ interface PortfolioPredictionsProps {
 
 export function PortfolioPredictions({ assets, viewCurrency, fxRates }: PortfolioPredictionsProps) {
   const { getLiquidationYear, saveLiquidationYear, isLoading: liquidationLoading } = useAssetLiquidationSettings();
+  const { getAssetGroupsByClass } = useAssetLookup(assets);
   
   const currentYear = new Date().getFullYear();
   const yearOptions = [
@@ -59,11 +59,9 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     realEstateToggles: {},
     realEstateSubClassToggles: {},
     realEstateClassToggle: false,
-    realEstateLiquidationYears: {},
     privateEquityToggles: {},
     privateEquitySubClassToggles: {},
     privateEquityClassToggle: false,
-    privateEquityLiquidationYears: {},
   });
 
   // Group assets by class
@@ -126,7 +124,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
   const shouldIncludeAssetInYear = (asset: Asset, year: string, settings: PredictionSettings): boolean => {
     if (asset.class === 'Real Estate') {
       const liquidationYear = getLiquidationYear(asset);
-      const isToggled = settings.realEstateToggles[asset.id];
+      const isToggled = settings.realEstateToggles[asset.name]; // Changed from asset.id to asset.name
       
       if (!isToggled) return false;
       
@@ -142,7 +140,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     
     if (asset.class === 'Private Equity') {
       const liquidationYear = getLiquidationYear(asset);
-      const isToggled = settings.privateEquityToggles[asset.id];
+      const isToggled = settings.privateEquityToggles[asset.name]; // Changed from asset.id to asset.name
       
       if (!isToggled) return false;
       
@@ -242,10 +240,10 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
   }, [assets, assetCalculations, settings, currentYear, fixedIncomeYTW, fxRates, viewCurrency]);
 
   // Helper functions for toggle management
-  const updateRealEstateToggle = (assetId: string, value: boolean) => {
+  const updateRealEstateToggle = (assetName: string, value: boolean) => {
     setSettings(prev => ({
       ...prev,
-      realEstateToggles: { ...prev.realEstateToggles, [assetId]: value }
+      realEstateToggles: { ...prev.realEstateToggles, [assetName]: value }
     }));
   };
 
@@ -256,10 +254,11 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
         realEstateSubClassToggles: { ...prev.realEstateSubClassToggles, [subClass]: value }
       };
       
-      // Update individual asset toggles for this subclass
+      // Update individual asset toggles for this subclass (by name)
       const realEstateAssets = assetsByClass['Real Estate'].filter(asset => asset.sub_class === subClass);
-      realEstateAssets.forEach(asset => {
-        newSettings.realEstateToggles[asset.id] = value;
+      const assetNames = [...new Set(realEstateAssets.map(asset => asset.name))];
+      assetNames.forEach(assetName => {
+        newSettings.realEstateToggles[assetName] = value;
       });
       
       return newSettings;
@@ -275,9 +274,10 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
         realEstateSubClassToggles: {}
       };
       
-      // Update all real estate assets and subclasses
-      assetsByClass['Real Estate'].forEach(asset => {
-        newSettings.realEstateToggles[asset.id] = value;
+      // Update all real estate assets by name
+      const realEstateAssetNames = [...new Set(assetsByClass['Real Estate'].map(asset => asset.name))];
+      realEstateAssetNames.forEach(assetName => {
+        newSettings.realEstateToggles[assetName] = value;
       });
       
       const realEstateSubClasses = [...new Set(assetsByClass['Real Estate'].map(a => a.sub_class))];
@@ -290,10 +290,10 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
   };
 
   // Similar functions for Private Equity
-  const updatePrivateEquityToggle = (assetId: string, value: boolean) => {
+  const updatePrivateEquityToggle = (assetName: string, value: boolean) => {
     setSettings(prev => ({
       ...prev,
-      privateEquityToggles: { ...prev.privateEquityToggles, [assetId]: value }
+      privateEquityToggles: { ...prev.privateEquityToggles, [assetName]: value }
     }));
   };
 
@@ -305,8 +305,9 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
       };
       
       const privateEquityAssets = assetsByClass['Private Equity'].filter(asset => asset.sub_class === subClass);
-      privateEquityAssets.forEach(asset => {
-        newSettings.privateEquityToggles[asset.id] = value;
+      const assetNames = [...new Set(privateEquityAssets.map(asset => asset.name))];
+      assetNames.forEach(assetName => {
+        newSettings.privateEquityToggles[assetName] = value;
       });
       
       return newSettings;
@@ -322,8 +323,9 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
         privateEquitySubClassToggles: {}
       };
       
-      assetsByClass['Private Equity'].forEach(asset => {
-        newSettings.privateEquityToggles[asset.id] = value;
+      const privateEquityAssetNames = [...new Set(assetsByClass['Private Equity'].map(asset => asset.name))];
+      privateEquityAssetNames.forEach(assetName => {
+        newSettings.privateEquityToggles[assetName] = value;
       });
       
       const privateEquitySubClasses = [...new Set(assetsByClass['Private Equity'].map(a => a.sub_class))];
@@ -335,43 +337,54 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     });
   };
 
-  // Calculate totals for toggleable assets
+  // Calculate totals for toggleable assets (grouped by name)
   const getToggleableTotal = (assetClass: AssetClass, includeFactored = false) => {
     const classAssets = assetsByClass[assetClass];
     const toggleField = assetClass === 'Real Estate' ? 'realEstateToggles' : 'privateEquityToggles';
     
-    return classAssets.reduce((total, asset) => {
-      if (settings[toggleField][asset.id]) {
-        if (assetClass === 'Private Equity') {
-          // For Private Equity: calc.display_value is already factored, need to calculate full potential
-          const calc = assetCalculations.get(asset.id);
-          if (calc) {
-            if (includeFactored) {
-              return total + calc.display_value; // Already factored
-            } else {
-              // Calculate full potential using the same logic as calculateAssetValue
-              let fxRate = 1;
-              if (viewCurrency === 'USD') {
-                const originToILS = fxRates[asset.origin_currency]?.to_ILS || 1;
-                const usdToILS = fxRates['USD']?.to_ILS || 1;
-                fxRate = originToILS / usdToILS;
-              } else { // ILS
-                fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
+    // Group assets by name first
+    const assetGroups = new Map<string, Asset[]>();
+    classAssets.forEach(asset => {
+      const existing = assetGroups.get(asset.name) || [];
+      assetGroups.set(asset.name, [...existing, asset]);
+    });
+    
+    let total = 0;
+    assetGroups.forEach((groupAssets, assetName) => {
+      if (settings[toggleField][assetName]) {
+        // Calculate total for all assets with this name
+        groupAssets.forEach(asset => {
+          if (assetClass === 'Private Equity') {
+            const calc = assetCalculations.get(asset.id);
+            if (calc) {
+              if (includeFactored) {
+                total += calc.display_value; // Already factored
+              } else {
+                // Calculate full potential
+                let fxRate = 1;
+                if (viewCurrency === 'USD') {
+                  const originToILS = fxRates[asset.origin_currency]?.to_ILS || 1;
+                  const usdToILS = fxRates['USD']?.to_ILS || 1;
+                  fxRate = originToILS / usdToILS;
+                } else { // ILS
+                  fxRate = fxRates[asset.origin_currency]?.to_ILS || 1;
+                }
+                const fullPotentialValue = (asset.price || 0) * asset.quantity * fxRate;
+                total += fullPotentialValue;
               }
-              const fullPotentialValue = (asset.price || 0) * asset.quantity * fxRate;
-              return total + fullPotentialValue;
+            }
+          } else {
+            // For Real Estate: use calc.display_value
+            const calc = assetCalculations.get(asset.id);
+            if (calc) {
+              total += calc.display_value;
             }
           }
-        } else {
-          // For Real Estate: use calc.display_value
-          const calc = assetCalculations.get(asset.id);
-          if (calc) {
-            return total + calc.display_value;
-          }
-        }
+        });
       }
-      return total;
-    }, 0);
+    });
+    
+    return total;
   };
 
   const chartConfig = {
@@ -539,42 +552,62 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                     </div>
                   </div>
 
-                  {/* Individual Assets */}
-                  {assetsByClass['Real Estate']
-                    .filter(asset => asset.sub_class === subClass)
-                    .map(asset => (
-                       <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
-                         <div className="flex items-center space-x-2">
-                           <span className="text-muted-foreground">{asset.name}</span>
-                           <span className="text-xs text-muted-foreground">
-                             {formatCurrency(assetCalculations.get(asset.id)?.display_value || 0, viewCurrency)}
-                           </span>
-                         </div>
-                         <div className="flex items-center space-x-4">
-                           <Select 
-                             value={getLiquidationYear(asset)}
-                             onValueChange={(value) => saveLiquidationYear(asset.id, value)}
-                           >
-                            <SelectTrigger className="w-20">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {yearOptions.map(year => (
-                                <SelectItem key={year} value={year}>{year}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <div className="flex items-center space-x-2">
-                            <Label htmlFor={`re-${asset.id}`} className="text-xs">Include</Label>
-                            <Switch
-                              id={`re-${asset.id}`}
-                              checked={settings.realEstateToggles[asset.id] || false}
-                              onCheckedChange={(value) => updateRealEstateToggle(asset.id, value)}
-                            />
+                   {/* Asset Groups by Name */}
+                   {(() => {
+                     const assetGroups = new Map<string, Asset[]>();
+                     assetsByClass['Real Estate']
+                       .filter(asset => asset.sub_class === subClass)
+                       .forEach(asset => {
+                         const existing = assetGroups.get(asset.name) || [];
+                         assetGroups.set(asset.name, [...existing, asset]);
+                       });
+                     
+                     return Array.from(assetGroups.entries()).map(([assetName, groupAssets]) => {
+                       const totalValue = groupAssets.reduce((sum, asset) => {
+                         const calc = assetCalculations.get(asset.id);
+                         return sum + (calc?.display_value || 0);
+                       }, 0);
+                       
+                       return (
+                         <div key={assetName} className="ml-4 flex items-center justify-between text-sm">
+                           <div className="flex items-center space-x-2">
+                             <span className="text-muted-foreground">{assetName}</span>
+                             <span className="text-xs text-muted-foreground">
+                               {formatCurrency(totalValue, viewCurrency)}
+                             </span>
+                             {groupAssets.length > 1 && (
+                               <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                                 {groupAssets.length} holdings
+                               </span>
+                             )}
+                           </div>
+                           <div className="flex items-center space-x-4">
+                             <Select 
+                               value={getLiquidationYear(groupAssets[0])}
+                               onValueChange={(value) => saveLiquidationYear(assetName, value)}
+                             >
+                              <SelectTrigger className="w-20">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {yearOptions.map(year => (
+                                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <div className="flex items-center space-x-2">
+                              <Label htmlFor={`re-${assetName}`} className="text-xs">Include</Label>
+                              <Switch
+                                id={`re-${assetName}`}
+                                checked={settings.realEstateToggles[assetName] || false}
+                                onCheckedChange={(value) => updateRealEstateToggle(assetName, value)}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                       );
+                     });
+                   })()}
                 </div>
               ))}
             </div>
@@ -621,47 +654,68 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                     </div>
                   </div>
 
-                  {/* Individual Assets */}
-                  {assetsByClass['Private Equity']
-                    .filter(asset => asset.sub_class === subClass)
-                    .map(asset => (
-                       <div key={asset.id} className="ml-4 flex items-center justify-between text-sm">
-                         <div className="flex items-center space-x-2">
-                           <span className="text-muted-foreground">{asset.name}</span>
-                           <span className="text-xs text-muted-foreground">
-                             {formatCurrency(assetCalculations.get(asset.id)?.display_value || 0, viewCurrency)}
-                           </span>
-                           {asset.factor !== undefined && (
-                             <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                               {(asset.factor * 100).toFixed(0)}%
+                   {/* Asset Groups by Name */}
+                   {(() => {
+                     const assetGroups = new Map<string, Asset[]>();
+                     assetsByClass['Private Equity']
+                       .filter(asset => asset.sub_class === subClass)
+                       .forEach(asset => {
+                         const existing = assetGroups.get(asset.name) || [];
+                         assetGroups.set(asset.name, [...existing, asset]);
+                       });
+                     
+                     return Array.from(assetGroups.entries()).map(([assetName, groupAssets]) => {
+                       const totalValue = groupAssets.reduce((sum, asset) => {
+                         const calc = assetCalculations.get(asset.id);
+                         return sum + (calc?.display_value || 0);
+                       }, 0);
+                       
+                       // Calculate average factor for display
+                       const averageFactor = groupAssets.reduce((sum, asset) => sum + (asset.factor || 0), 0) / groupAssets.length;
+                       
+                       return (
+                         <div key={assetName} className="ml-4 flex items-center justify-between text-sm">
+                           <div className="flex items-center space-x-2">
+                             <span className="text-muted-foreground">{assetName}</span>
+                             <span className="text-xs text-muted-foreground">
+                               {formatCurrency(totalValue, viewCurrency)}
                              </span>
-                           )}
-                         </div>
-                         <div className="flex items-center space-x-4">
-                           <Select 
-                             value={getLiquidationYear(asset)}
-                             onValueChange={(value) => saveLiquidationYear(asset.id, value)}
-                           >
-                            <SelectTrigger className="w-20">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {yearOptions.map(year => (
-                                <SelectItem key={year} value={year}>{year}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <div className="flex items-center space-x-2">
-                            <Label htmlFor={`pe-${asset.id}`} className="text-xs">Include</Label>
-                            <Switch
-                              id={`pe-${asset.id}`}
-                              checked={settings.privateEquityToggles[asset.id] || false}
-                              onCheckedChange={(value) => updatePrivateEquityToggle(asset.id, value)}
-                            />
+                             <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                               {(averageFactor * 100).toFixed(0)}%
+                             </span>
+                             {groupAssets.length > 1 && (
+                               <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                                 {groupAssets.length} holdings
+                               </span>
+                             )}
+                           </div>
+                           <div className="flex items-center space-x-4">
+                             <Select 
+                               value={getLiquidationYear(groupAssets[0])}
+                               onValueChange={(value) => saveLiquidationYear(assetName, value)}
+                             >
+                              <SelectTrigger className="w-20">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {yearOptions.map(year => (
+                                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <div className="flex items-center space-x-2">
+                              <Label htmlFor={`pe-${assetName}`} className="text-xs">Include</Label>
+                              <Switch
+                                id={`pe-${assetName}`}
+                                checked={settings.privateEquityToggles[assetName] || false}
+                                onCheckedChange={(value) => updatePrivateEquityToggle(assetName, value)}
+                              />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                       );
+                     });
+                   })()}
                 </div>
               ))}
             </div>
