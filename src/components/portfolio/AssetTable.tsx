@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Edit, Trash2, ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { GroupByField } from './PortfolioGrouping';
+import { format } from 'date-fns';
 
 interface AssetTableProps {
   assets: Asset[];
@@ -34,7 +35,7 @@ export function AssetTable({
   onDuplicateAsset,
   onAddAsset 
 }: AssetTableProps) {
-  const [sortField, setSortField] = useState<keyof Asset | 'value' | 'percentage'>('name');
+  const [sortField, setSortField] = useState<keyof Asset | 'value' | 'percentage' | 'updated_at'>('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [deletingAsset, setDeletingAsset] = useState<Asset | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -165,7 +166,7 @@ export function AssetTable({
     };
   }, [filteredAssets, fxRates, viewCurrency, sortField, sortDirection]);
 
-  const handleSort = (field: keyof Asset | 'value' | 'percentage') => {
+  const handleSort = (field: keyof Asset | 'value' | 'percentage' | 'updated_at') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -184,9 +185,17 @@ export function AssetTable({
     setExpandedGroups(newExpanded);
   };
 
-  const getSortIcon = (field: keyof Asset | 'value' | 'percentage') => {
+  const getSortIcon = (field: keyof Asset | 'value' | 'percentage' | 'updated_at') => {
     if (sortField !== field) return <ArrowUpDown className="ml-2 h-4 w-4" />;
     return sortDirection === 'asc' ? <ArrowUp className="ml-2 h-4 w-4" /> : <ArrowDown className="ml-2 h-4 w-4" />;
+  };
+
+  const formatLastUpdated = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch {
+      return '';
+    }
   };
 
   return (
@@ -279,6 +288,12 @@ export function AssetTable({
                     {getSortIcon('percentage')}
                   </div>
                 </TableHead>
+                <TableHead className="cursor-pointer" onClick={() => handleSort('updated_at')}>
+                  <div className="flex items-center">
+                    Last Updated
+                    {getSortIcon('updated_at')}
+                  </div>
+                </TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -290,7 +305,7 @@ export function AssetTable({
                     {/* Group header row */}
                     <TableRow className="bg-muted/30 hover:bg-muted/50 border-t-2 border-muted">
                       <TableCell 
-                        colSpan={11} 
+                        colSpan={12} 
                         className="font-semibold cursor-pointer"
                         onClick={() => toggleGroup(group.key)}
                       >
@@ -331,6 +346,9 @@ export function AssetTable({
                           </TableCell>
                           <TableCell className="text-right text-muted-foreground">
                             {formatPercentage(calculation.percentage_of_scope)}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {formatLastUpdated(asset.updated_at)}
                           </TableCell>
                           <TableCell>
                             <DropdownMenu>
@@ -385,6 +403,9 @@ export function AssetTable({
                       <TableCell className="text-right text-muted-foreground">
                         {formatPercentage(calculation.percentage_of_scope)}
                       </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatLastUpdated(asset.updated_at)}
+                      </TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -418,7 +439,7 @@ export function AssetTable({
               
               {(groupedAssets ? groupedAssets.length === 0 : sortedAssets.length === 0) && (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
                     {filteredAssets.length === 0 ? (
                       <div className="space-y-3">
                         <p>No assets match the current filters.</p>
