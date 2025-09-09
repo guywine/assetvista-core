@@ -632,7 +632,7 @@ export function AssetForm({
 
           {formData.class === 'Fixed Income' && (
             <div className="grid grid-cols-2 gap-4">
-              {!['REIT stock', 'Private Credit'].includes(formData.sub_class!) && (
+              {!['REIT stock', 'Private Credit', 'Money Market'].includes(formData.sub_class!) && (
                 <div className="space-y-2">
                   <Label htmlFor="maturity" className="font-semibold">Maturity Date {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
                   <Input
@@ -646,11 +646,13 @@ export function AssetForm({
                 </div>
               )}
 
-              {['REIT stock', 'Private Credit'].includes(formData.sub_class!) && (
+              {['REIT stock', 'Private Credit', 'Money Market'].includes(formData.sub_class!) && (
                 <div className="space-y-2">
                   <Label className="font-semibold">Maturity Date</Label>
                   <div className="px-3 py-2 text-sm text-muted-foreground bg-muted rounded-md">
-                    None ({formData.sub_class === 'REIT stock' ? 'REIT stock has no maturity' : 'Private Credit has no fixed maturity'})
+                    None ({formData.sub_class === 'REIT stock' ? 'REIT stock has no maturity' : 
+                           formData.sub_class === 'Money Market' ? 'Money Market has no maturity' : 
+                           'Private Credit has no fixed maturity'})
                   </div>
                 </div>
               )}
