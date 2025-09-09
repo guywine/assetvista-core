@@ -43,11 +43,13 @@ export function useAssetLiquidationSettings() {
 
   const saveLiquidationYear = async (assetName: string, liquidationYear: string) => {
     try {
+      console.log('Saving liquidation year:', assetName, liquidationYear);
+      
       const { data, error } = await supabase
         .from('asset_liquidation_settings')
         .upsert(
           {
-            asset_id: '', // We'll keep this for backward compatibility but use asset_name as key
+            asset_id: null, // Now nullable - we use asset_name as primary identifier
             asset_name: assetName,
             liquidation_year: liquidationYear,
           },
@@ -58,13 +60,16 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error saving liquidation setting:', error);
-        return;
+        throw error;
       }
 
+      console.log('Successfully saved liquidation setting');
+      
       // Update local state
       setLiquidationSettings(prev => new Map(prev).set(assetName, liquidationYear));
     } catch (error) {
       console.error('Error saving liquidation setting:', error);
+      throw error;
     }
   };
 

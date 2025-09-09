@@ -16,7 +16,7 @@ export type Database = {
     Tables: {
       asset_liquidation_settings: {
         Row: {
-          asset_id: string
+          asset_id: string | null
           asset_name: string
           created_at: string
           id: string
@@ -25,7 +25,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          asset_id: string
+          asset_id?: string | null
           asset_name: string
           created_at?: string
           id?: string
@@ -34,7 +34,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          asset_id?: string
+          asset_id?: string | null
           asset_name?: string
           created_at?: string
           id?: string
