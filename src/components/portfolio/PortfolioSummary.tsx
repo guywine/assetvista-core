@@ -35,6 +35,25 @@ export function PortfolioSummary({
     return sum + (calc?.display_value || 0);
   }, 0);
 
+  // Cash & Equivalents calculation
+  const cashEquivalentsValue = assets.reduce((sum, asset) => {
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+    
+    // Include all Cash assets
+    if (asset.class === 'Cash') {
+      return sum + value;
+    }
+    
+    // Include specific Fixed Income sub-classes
+    if (asset.class === 'Fixed Income' && 
+        ['Gov 1-2', 'Money Market', 'Bank Deposit'].includes(asset.sub_class)) {
+      return sum + value;
+    }
+    
+    return sum;
+  }, 0);
+
   // Holdings by Class
   const holdingsByClass = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
@@ -231,6 +250,24 @@ export function PortfolioSummary({
   ];
   const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
   return <div className="space-y-8">{/* Increased spacing between major sections */}
+      {/* Cash & Equivalents Summary */}
+      <Card className="bg-gradient-to-br from-accent/10 to-accent/5 shadow-card border-accent/20">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold text-accent-foreground">Cash & Equivalents</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Includes: All Cash assets + Fixed Income (Gov 1-2, Money Market, Bank Deposit)
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold text-accent-foreground">
+            {formatCurrency(cashEquivalentsValue, viewCurrency)}
+          </div>
+          <div className="text-sm text-muted-foreground mt-1">
+            {((cashEquivalentsValue / totalValue) * 100).toFixed(1)}% of total portfolio
+          </div>
+        </CardContent>
+      </Card>
+
       {/* First Row - Holdings Tables */}
       
 
