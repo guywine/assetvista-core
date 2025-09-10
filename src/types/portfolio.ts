@@ -4,7 +4,7 @@ export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income' | '
 
 export type PublicEquitySubClass = 'Big Tech' | 'China' | 'other';
 export type PrivateEquitySubClass = 'Initial' | 'Near Future' | 'Growth' | 'none';
-export type FixedIncomeSubClass = 'Money Market' | 'Gov 1-2' | 'Gov long' | 'CPI linked' | 'Corporate' | 'REIT stock' | 'Private Credit' | 'none';
+export type FixedIncomeSubClass = 'Money Market' | 'Gov 1-2' | 'Gov long' | 'CPI linked' | 'Corporate' | 'REIT stock' | 'Private Credit' | 'Bank Deposit' | 'none';
 export type CashSubClass = Currency;
 export type CommoditiesMoreSubClass = 'Cryptocurrency' | 'Commodities';
 export type RealEstateSubClass = 'Living' | 'Tel-Aviv' | 'Abroad';
