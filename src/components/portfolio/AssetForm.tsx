@@ -147,7 +147,8 @@ export function AssetForm({
   const calculatePEPrice = () => {
     if (formData.class === 'Private Equity' && usePECalculation && 
         formData.pe_company_value && formData.pe_holding_percentage && formData.quantity) {
-      return (formData.pe_company_value * (formData.pe_holding_percentage / 100)) / formData.quantity;
+      const calculatedPrice = (formData.pe_company_value * (formData.pe_holding_percentage / 100)) / formData.quantity;
+      return Math.round(calculatedPrice);
     }
     return formData.price || 0;
   };
@@ -157,7 +158,7 @@ export function AssetForm({
     if (formData.class === 'Private Equity' && usePECalculation && 
         formData.pe_company_value && formData.pe_holding_percentage && formData.quantity) {
       const calculatedPrice = (formData.pe_company_value * (formData.pe_holding_percentage / 100)) / formData.quantity;
-      setFormData(prev => ({ ...prev, price: calculatedPrice }));
+      setFormData(prev => ({ ...prev, price: Math.round(calculatedPrice) }));
     }
   }, [formData.pe_company_value, formData.pe_holding_percentage, formData.quantity, usePECalculation, formData.class]);
 
@@ -518,7 +519,7 @@ export function AssetForm({
                   <Input
                     id="price"
                     type="number"
-                    value={calculatePEPrice().toFixed(2)}
+                    value={calculatePEPrice()}
                     readOnly
                     className="border-border/50 bg-muted text-muted-foreground"
                   />
@@ -622,7 +623,7 @@ export function AssetForm({
                 {usePECalculation && formData.pe_company_value && formData.pe_holding_percentage && formData.quantity && (
                   <div className="mt-4 p-3 bg-primary/5 rounded-md">
                     <div className="text-sm text-muted-foreground">
-                      <strong>Calculation:</strong> ({formData.pe_company_value.toLocaleString()} × {formData.pe_holding_percentage}%) ÷ {formData.quantity} = <strong>{calculatePEPrice().toLocaleString()} per unit</strong>
+                      <strong>Calculation:</strong> ({formData.pe_company_value.toLocaleString()} × {formData.pe_holding_percentage}%) ÷ {formData.quantity} = <strong>{Math.round(calculatePEPrice()).toLocaleString()} per unit</strong>
                     </div>
                   </div>
                 )}
