@@ -671,7 +671,7 @@ export function AssetForm({
                     const decimalValue = percentValue / 100;
                     setFormData(prev => ({ ...prev, ytw: decimalValue }));
                   }}
-                  placeholder="4.51"
+                  placeholder="0.00"
                   className="border-border/50 focus:border-financial-primary"
                   disabled={isSharedFieldsLocked}
                 />
