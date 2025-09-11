@@ -165,7 +165,6 @@ export function AssetForm({
   const handleSave = () => {
     // For cash assets, name is optional - if not provided, use currency as name
     const assetName = formData.name?.trim() || (formData.class === 'Cash' ? `${formData.sub_class} Cash` : '');
-    if (!assetName && formData.class !== 'Cash') return;
     
     const calculatedPrice = calculatePEPrice();
     
@@ -269,20 +268,6 @@ export function AssetForm({
         </DialogHeader>
 
         <div className="grid gap-6 py-4">
-          {errors.length > 0 && (
-            <Card className="border-financial-danger bg-financial-danger/5">
-              <CardContent className="pt-4">
-                <div className="text-financial-danger text-sm">
-                  <p className="font-semibold mb-2">Please fix the following errors:</p>
-                  <ul className="list-disc list-inside space-y-1">
-                    {errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Mode selector for new assets */}
           {!asset && (currentMode === 'NEW' || currentMode === 'EXISTING_HOLDING') && (
@@ -679,6 +664,21 @@ export function AssetForm({
             </div>
           )}
         </div>
+
+        {errors.length > 0 && (
+          <Card className="border-financial-danger bg-financial-danger/5 mb-4">
+            <CardContent className="pt-4">
+              <div className="text-financial-danger text-sm">
+                <p className="font-semibold mb-2">Please fix the following errors:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {errors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex justify-end space-x-3 pt-4 border-t border-border/30">
           <Button variant="outline" onClick={onClose}>
