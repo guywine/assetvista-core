@@ -237,16 +237,16 @@ export function PortfolioSummary({
     percentage: number;
   }>>);
   const COLORS = [
-    'hsl(var(--chart-1))',     // Blue
-    'hsl(var(--chart-2))',     // Green  
-    'hsl(var(--chart-3))',     // Orange
-    'hsl(var(--chart-4))',     // Red
-    'hsl(var(--chart-5))',     // Purple
-    'hsl(var(--financial-primary))',  // Teal
-    'hsl(var(--financial-success))',  // Emerald
-    'hsl(var(--financial-warning))',  // Yellow
-    'hsl(var(--financial-danger))',   // Rose
-    'hsl(var(--accent))'       // Violet
+    'hsl(var(--chart-1))',
+    'hsl(var(--chart-2))',
+    'hsl(var(--chart-3))',
+    'hsl(var(--chart-4))',
+    'hsl(var(--chart-5))',
+    'hsl(var(--chart-6))',
+    'hsl(var(--chart-7))',
+    'hsl(var(--chart-8))',
+    'hsl(var(--chart-9))',
+    'hsl(var(--chart-10))'
   ];
   const SUB_CLASS_COLORS = [
     'hsl(var(--chart-1))', 
@@ -254,11 +254,11 @@ export function PortfolioSummary({
     'hsl(var(--chart-3))', 
     'hsl(var(--chart-4))', 
     'hsl(var(--chart-5))',
-    'hsl(var(--financial-primary))',
-    'hsl(var(--financial-success))',
-    'hsl(var(--financial-warning))',
-    'hsl(var(--financial-danger))',
-    'hsl(var(--accent))'
+    'hsl(var(--chart-6))',
+    'hsl(var(--chart-7))',
+    'hsl(var(--chart-8))',
+    'hsl(var(--chart-9))',
+    'hsl(var(--chart-10))'
   ];
   return <div className="space-y-8">{/* Increased spacing between major sections */}
       {/* Cash & Equivalents Summary */}
