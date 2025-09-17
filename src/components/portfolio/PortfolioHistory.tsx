@@ -221,9 +221,9 @@ export function PortfolioHistory() {
     // Summary sheet
     const summaryData = [
       { Metric: 'Total Value (USD)', Value: snapshot.total_value_usd },
+      { Metric: 'Liquid + Fixed Income (USD)', Value: snapshot.liquid_fixed_income_value_usd },
       { Metric: 'Private Equity (USD)', Value: snapshot.private_equity_value_usd },
-      { Metric: 'Public Equity (USD)', Value: snapshot.public_equity_value_usd },
-      { Metric: 'Fixed Income (USD)', Value: snapshot.fixed_income_value_usd },
+      { Metric: 'Real Estate (USD)', Value: snapshot.real_estate_value_usd },
       { Metric: 'Snapshot Date', Value: snapshot.snapshot_date },
       { Metric: 'Description', Value: snapshot.description || '' }
     ];
@@ -380,27 +380,27 @@ export function PortfolioHistory() {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
+                  <div className="text-sm text-muted-foreground">Total Value</div>
+                  <div className="font-semibold text-lg">
+                    {formatCurrency(snapshot.total_value_usd, 'USD')}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground">Liquid + Fixed Income</div>
+                  <div className="font-semibold">
+                    {formatCurrency(snapshot.liquid_fixed_income_value_usd, 'USD')}
+                  </div>
+                </div>
+                <div className="text-center">
                   <div className="text-sm text-muted-foreground">Private Equity</div>
                   <div className="font-semibold">
                     {formatCurrency(snapshot.private_equity_value_usd, 'USD')}
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-sm text-muted-foreground">Public Equity</div>
+                  <div className="text-sm text-muted-foreground">Real Estate</div>
                   <div className="font-semibold">
-                    {formatCurrency(snapshot.public_equity_value_usd, 'USD')}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground">Fixed Income</div>
-                  <div className="font-semibold">
-                    {formatCurrency(snapshot.fixed_income_value_usd, 'USD')}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-muted-foreground">Total Value</div>
-                  <div className="font-semibold text-lg">
-                    {formatCurrency(snapshot.total_value_usd, 'USD')}
+                    {formatCurrency(snapshot.real_estate_value_usd, 'USD')}
                   </div>
                 </div>
               </div>

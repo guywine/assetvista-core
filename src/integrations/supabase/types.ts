@@ -142,12 +142,12 @@ export type Database = {
           assets: Json
           created_at: string
           description: string | null
-          fixed_income_value_usd: number | null
           fx_rates: Json
           id: string
+          liquid_fixed_income_value_usd: number | null
           name: string
           private_equity_value_usd: number | null
-          public_equity_value_usd: number | null
+          real_estate_value_usd: number | null
           snapshot_date: string
           total_value_usd: number | null
           updated_at: string
@@ -156,12 +156,12 @@ export type Database = {
           assets?: Json
           created_at?: string
           description?: string | null
-          fixed_income_value_usd?: number | null
           fx_rates?: Json
           id?: string
+          liquid_fixed_income_value_usd?: number | null
           name: string
           private_equity_value_usd?: number | null
-          public_equity_value_usd?: number | null
+          real_estate_value_usd?: number | null
           snapshot_date?: string
           total_value_usd?: number | null
           updated_at?: string
@@ -170,12 +170,12 @@ export type Database = {
           assets?: Json
           created_at?: string
           description?: string | null
-          fixed_income_value_usd?: number | null
           fx_rates?: Json
           id?: string
+          liquid_fixed_income_value_usd?: number | null
           name?: string
           private_equity_value_usd?: number | null
-          public_equity_value_usd?: number | null
+          real_estate_value_usd?: number | null
           snapshot_date?: string
           total_value_usd?: number | null
           updated_at?: string

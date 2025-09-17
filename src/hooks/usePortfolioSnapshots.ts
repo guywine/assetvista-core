@@ -13,8 +13,8 @@ export function usePortfolioSnapshots() {
     try {
       // Calculate class totals in USD
       let privateEquityTotal = 0;
-      let publicEquityTotal = 0;
-      let fixedIncomeTotal = 0;
+      let liquidFixedIncomeTotal = 0;
+      let realEstateTotal = 0;
       let totalValue = 0;
 
       assets.forEach(asset => {
@@ -27,11 +27,12 @@ export function usePortfolioSnapshots() {
           case 'Private Equity':
             privateEquityTotal += usdValue;
             break;
-          case 'Public Equity':
-            publicEquityTotal += usdValue;
+          case 'Real Estate':
+            realEstateTotal += usdValue;
             break;
-          case 'Fixed Income':
-            fixedIncomeTotal += usdValue;
+          default:
+            // All other classes (Public Equity, Fixed Income, Cash, Commodities & more) go to liquid + fixed income
+            liquidFixedIncomeTotal += usdValue;
             break;
         }
       });
@@ -44,9 +45,9 @@ export function usePortfolioSnapshots() {
           assets: JSON.parse(JSON.stringify(assets)),
           fx_rates: JSON.parse(JSON.stringify(fxRates)),
           total_value_usd: totalValue,
+          liquid_fixed_income_value_usd: liquidFixedIncomeTotal,
           private_equity_value_usd: privateEquityTotal,
-          public_equity_value_usd: publicEquityTotal,
-          fixed_income_value_usd: fixedIncomeTotal,
+          real_estate_value_usd: realEstateTotal,
         });
 
       if (error) throw error;
