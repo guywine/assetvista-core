@@ -23,8 +23,8 @@ export function usePortfolioSnapshots() {
 
       assets.forEach(asset => {
         try {
-          const calculations = calculateAssetValue(asset, fxRates, 'USD');
-          const usdValue = calculations.converted_value;
+        const calculations = calculateAssetValue(asset, fxRates, 'USD');
+        const usdValue = calculations.display_value; // Use display_value to include factor for Private Equity
           
           // Validate calculated value
           if (isNaN(usdValue) || !isFinite(usdValue) || usdValue < 0) {
