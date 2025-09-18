@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, GroupedAssets } from '@/types/portfolio';
-import { calculateAssetValue, calculatePercentages, formatCurrency, formatPercentage } from '@/lib/portfolio-utils';
+import { calculateAssetValue, calculatePercentages, formatCurrency, formatPercentage, filterAssetsByFilters } from '@/lib/portfolio-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -42,37 +42,7 @@ export function AssetTable({
 
   // Filter assets based on current filters
   const filteredAssets = useMemo(() => {
-    return assets.filter(asset => {
-      // Include filters - asset must match at least one if specified
-      if (filters.class && !filters.class.includes(asset.class)) return false;
-      if (filters.sub_class && !filters.sub_class.includes(asset.sub_class)) return false;
-      if (filters.account_entity && !filters.account_entity.includes(asset.account_entity)) return false;
-      if (filters.account_bank && !filters.account_bank.includes(asset.account_bank)) return false;
-      if (filters.origin_currency && !filters.origin_currency.includes(asset.origin_currency)) return false;
-      if (filters.beneficiary && !filters.beneficiary.includes(asset.beneficiary)) return false;
-      
-      // Exclude filters - asset must NOT match any if specified
-      if (filters.exclude_class && filters.exclude_class.includes(asset.class)) return false;
-      if (filters.exclude_sub_class && filters.exclude_sub_class.includes(asset.sub_class)) return false;
-      if (filters.exclude_account_entity && filters.exclude_account_entity.includes(asset.account_entity)) return false;
-      if (filters.exclude_account_bank && filters.exclude_account_bank.includes(asset.account_bank)) return false;
-      if (filters.exclude_origin_currency && filters.exclude_origin_currency.includes(asset.origin_currency)) return false;
-      if (filters.exclude_beneficiary && filters.exclude_beneficiary.includes(asset.beneficiary)) return false;
-      
-      // For maturity date filters, exclude assets without maturity dates
-      if (filters.maturity_date_from || filters.maturity_date_to) {
-        if (!asset.maturity_date) return false;
-      }
-      
-      if (filters.maturity_date_from && asset.maturity_date) {
-        if (asset.maturity_date < filters.maturity_date_from) return false;
-      }
-      if (filters.maturity_date_to && asset.maturity_date) {
-        if (asset.maturity_date > filters.maturity_date_to) return false;
-      }
-      
-      return true;
-    });
+    return filterAssetsByFilters(assets, filters);
   }, [assets, filters]);
 
   // Group assets if groupByFields is provided
