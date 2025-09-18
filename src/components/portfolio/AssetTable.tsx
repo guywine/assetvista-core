@@ -59,6 +59,11 @@ export function AssetTable({
       if (filters.exclude_origin_currency && filters.exclude_origin_currency.includes(asset.origin_currency)) return false;
       if (filters.exclude_beneficiary && filters.exclude_beneficiary.includes(asset.beneficiary)) return false;
       
+      // For maturity date filters, exclude assets without maturity dates
+      if (filters.maturity_date_from || filters.maturity_date_to) {
+        if (!asset.maturity_date) return false;
+      }
+      
       if (filters.maturity_date_from && asset.maturity_date) {
         if (asset.maturity_date < filters.maturity_date_from) return false;
       }
