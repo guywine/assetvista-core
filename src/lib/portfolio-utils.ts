@@ -119,6 +119,11 @@ export function validateAsset(asset: Partial<Asset>): string[] {
   if (!asset.origin_currency) errors.push('Currency is required');
   if (typeof asset.quantity !== 'number' || asset.quantity < 0) errors.push('Quantity must be non-negative');
   
+  // Validate that Cash assets have matching sub_class and origin_currency
+  if (asset.class === 'Cash' && asset.sub_class !== asset.origin_currency) {
+    errors.push('Cash assets must have matching sub-class and currency');
+  }
+  
   // Price validation: required for all except Cash assets
   if (asset.class === 'Cash') {
     // Price is optional for Cash assets, defaults to 1

@@ -219,15 +219,18 @@ export function AssetForm({
 
   const handleClassChange = (newClass: AssetClass) => {
     const subClassOptions = getSubClassOptions(newClass);
+    const defaultSubClass = subClassOptions[subClassOptions.length - 1];
     const defaultQuantity = (newClass === 'Private Equity' || newClass === 'Real Estate') ? 1 : (formData.quantity || 0);
     const defaultPrice = newClass === 'Cash' ? 1 : (formData.price || 0);
     
     setFormData(prev => ({
       ...prev,
       class: newClass,
-      sub_class: subClassOptions[subClassOptions.length - 1] as any,
+      sub_class: defaultSubClass as any,
       quantity: defaultQuantity,
       price: defaultPrice,
+      // For Cash assets, always sync currency with sub-class
+      origin_currency: newClass === 'Cash' ? defaultSubClass as Currency : prev.origin_currency,
     }));
   };
 
@@ -396,7 +399,8 @@ export function AssetForm({
                   setFormData(prev => ({ 
                     ...prev, 
                     sub_class: value as any,
-                    origin_currency: formData.class === 'Cash' ? value as Currency : prev.origin_currency
+                    // For Cash assets, always sync currency with sub-class
+                    origin_currency: prev.class === 'Cash' ? value as Currency : prev.origin_currency
                   }));
                 }}
                 disabled={isSharedFieldsLocked}
@@ -461,21 +465,37 @@ export function AssetForm({
 
           <div className="grid grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="currency" className="font-semibold">Currency {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
-              <Select 
-                value={formData.origin_currency} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, origin_currency: value as Currency }))}
-                disabled={isSharedFieldsLocked}
-              >
-                <SelectTrigger className="border-border/50 focus:border-financial-primary">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CURRENCIES.map(currency => (
-                    <SelectItem key={currency} value={currency}>{currency}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="currency" className="font-semibold">
+                Currency {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *
+                {formData.class === 'Cash' && <Badge variant="secondary" className="ml-1">Auto</Badge>}
+              </Label>
+              {formData.class === 'Cash' ? (
+                <div className="flex items-center space-x-2">
+                  <Input
+                    value={formData.origin_currency}
+                    readOnly
+                    className="border-border/50 bg-muted text-muted-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground">
+                    (Matches sub-class)
+                  </span>
+                </div>
+              ) : (
+                <Select 
+                  value={formData.origin_currency} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, origin_currency: value as Currency }))}
+                  disabled={isSharedFieldsLocked}
+                >
+                  <SelectTrigger className="border-border/50 focus:border-financial-primary">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCIES.map(currency => (
+                      <SelectItem key={currency} value={currency}>{currency}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             <div className="space-y-2">
