@@ -670,7 +670,7 @@ export function AssetForm({
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.ytw ? (formData.ytw * 100).toFixed(2) : ''}
+                  value={formData.ytw !== undefined ? (formData.ytw * 100).toFixed(2) : ''}
                   onChange={(e) => {
                     const percentValue = parseFloat(e.target.value) || 0;
                     const decimalValue = percentValue / 100;

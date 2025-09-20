@@ -23,7 +23,7 @@ export function useAssets() {
     price: parseFloat(row.price),
     factor: row.factor ? parseFloat(row.factor) : undefined,
     maturity_date: row.maturity_date,
-    ytw: row.ytw ? parseFloat(row.ytw) : undefined,
+    ytw: row.ytw === null || row.ytw === undefined ? undefined : Number(row.ytw),
     pe_company_value: row.pe_company_value ? parseFloat(row.pe_company_value) : undefined,
     pe_holding_percentage: row.pe_holding_percentage ? parseFloat(row.pe_holding_percentage) : undefined,
     created_at: row.created_at,
