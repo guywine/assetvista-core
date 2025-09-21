@@ -251,21 +251,22 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
 
       // Apply yearly spending deduction (cumulative, starting from year after current)
       if (year !== 'current') {
-        const spendingDeduction = settings.yearlySpending * yearsFromCurrent;
-        const totalValue = dataPoint.Cash + dataPoint["Fixed Income"] + dataPoint["Public Equity"] + 
-                          dataPoint["Commodities & more"] + dataPoint["Real Estate"] + 
-                          dataPoint["Private Equity Factored"] + dataPoint["Private Equity Potential"];
+        let remainingSpending = settings.yearlySpending * yearsFromCurrent;
         
-        if (totalValue > 0 && spendingDeduction > 0) {
-          // Proportionally reduce each category
-          const reductionFactor = Math.max(0, (totalValue - spendingDeduction) / totalValue);
-          dataPoint.Cash *= reductionFactor;
-          dataPoint["Fixed Income"] *= reductionFactor;
-          dataPoint["Public Equity"] *= reductionFactor;
-          dataPoint["Commodities & more"] *= reductionFactor;
-          dataPoint["Real Estate"] *= reductionFactor;
-          dataPoint["Private Equity Factored"] *= reductionFactor;
-          dataPoint["Private Equity Potential"] *= reductionFactor;
+        // First deduct from Cash
+        if (dataPoint.Cash >= remainingSpending) {
+          dataPoint.Cash -= remainingSpending;
+          remainingSpending = 0;
+        } else {
+          remainingSpending -= dataPoint.Cash;
+          dataPoint.Cash = 0;
+          
+          // If still remaining, deduct from Fixed Income
+          if (remainingSpending > 0 && dataPoint["Fixed Income"] >= remainingSpending) {
+            dataPoint["Fixed Income"] -= remainingSpending;
+          } else if (remainingSpending > 0) {
+            dataPoint["Fixed Income"] = Math.max(0, dataPoint["Fixed Income"] - remainingSpending);
+          }
         }
       }
 
