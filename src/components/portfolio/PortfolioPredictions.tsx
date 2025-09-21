@@ -15,6 +15,7 @@ import { useAssetLookup } from '@/hooks/useAssetLookup';
 interface PredictionSettings {
   publicEquityIRR: number;
   commoditiesMoreIRR: number;
+  yearlySpending: number;
   realEstateToggles: Record<string, boolean>; // Now keyed by asset name
   realEstateSubClassToggles: Record<string, boolean>;
   realEstateClassToggle: boolean;
@@ -53,9 +54,22 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     'later'
   ];
 
+  // Calculate default yearly spending in current view currency
+  const getDefaultYearlySpending = (): number => {
+    const defaultUSD = 800000;
+    if (viewCurrency === 'USD') {
+      return defaultUSD;
+    } else {
+      // Convert USD to ILS
+      const usdToILS = fxRates['USD']?.to_ILS || 3.5; // Fallback rate
+      return defaultUSD * usdToILS;
+    }
+  };
+
   const [settings, setSettings] = useState<PredictionSettings>({
     publicEquityIRR: 12,
     commoditiesMoreIRR: 12,
+    yearlySpending: getDefaultYearlySpending(),
     realEstateToggles: {},
     realEstateSubClassToggles: {},
     realEstateClassToggle: false,
@@ -234,6 +248,26 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
             break;
         }
       });
+
+      // Apply yearly spending deduction (cumulative, starting from year after current)
+      if (year !== 'current') {
+        const spendingDeduction = settings.yearlySpending * yearsFromCurrent;
+        const totalValue = dataPoint.Cash + dataPoint["Fixed Income"] + dataPoint["Public Equity"] + 
+                          dataPoint["Commodities & more"] + dataPoint["Real Estate"] + 
+                          dataPoint["Private Equity Factored"] + dataPoint["Private Equity Potential"];
+        
+        if (totalValue > 0 && spendingDeduction > 0) {
+          // Proportionally reduce each category
+          const reductionFactor = Math.max(0, (totalValue - spendingDeduction) / totalValue);
+          dataPoint.Cash *= reductionFactor;
+          dataPoint["Fixed Income"] *= reductionFactor;
+          dataPoint["Public Equity"] *= reductionFactor;
+          dataPoint["Commodities & more"] *= reductionFactor;
+          dataPoint["Real Estate"] *= reductionFactor;
+          dataPoint["Private Equity Factored"] *= reductionFactor;
+          dataPoint["Private Equity Potential"] *= reductionFactor;
+        }
+      }
 
       return dataPoint;
     });
@@ -514,6 +548,27 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                   step="0.1"
                 />
               </div>
+            </div>
+
+            <Separator />
+
+            {/* Yearly Spending */}
+            <div className="space-y-3">
+              <h3 className="text-lg font-semibold text-foreground">Yearly Spending</h3>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="yearly-spending" className="text-muted-foreground">Annual Spending ({viewCurrency}):</Label>
+                <Input
+                  id="yearly-spending"
+                  type="number"
+                  value={settings.yearlySpending}
+                  onChange={(e) => setSettings(prev => ({ ...prev, yearlySpending: Number(e.target.value) }))}
+                  className="w-32 text-right"
+                  step="1000"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Spending starts from {currentYear + 1}. Each year reduces portfolio value cumulatively.
+              </p>
             </div>
 
             <Separator />
