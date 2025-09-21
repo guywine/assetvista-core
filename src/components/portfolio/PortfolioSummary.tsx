@@ -1,5 +1,5 @@
 import { Asset, ViewCurrency, FXRates, AssetCalculations } from '@/types/portfolio';
-import { calculateAssetValue, formatCurrency, formatPercentage, calculateWeightedYTW } from '@/lib/portfolio-utils';
+import { calculateAssetValue, formatCurrency, formatPercentage, calculateWeightedYTW, isMaturityWithinYear } from '@/lib/portfolio-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -45,10 +45,12 @@ export function PortfolioSummary({
       return sum + value;
     }
     
-    // Include specific Fixed Income sub-classes
-    if (asset.class === 'Fixed Income' && 
-        ['Gov 1-2', 'Money Market', 'Bank Deposit'].includes(asset.sub_class)) {
-      return sum + value;
+    // Include specific Fixed Income sub-classes and assets maturing within 365 days
+    if (asset.class === 'Fixed Income') {
+      if (['Money Market', 'Bank Deposit'].includes(asset.sub_class) || 
+          isMaturityWithinYear(asset.maturity_date)) {
+        return sum + value;
+      }
     }
     
     return sum;
@@ -266,7 +268,7 @@ export function PortfolioSummary({
         <CardHeader>
           <CardTitle className="text-xl font-bold text-accent-foreground">Cash & Equivalents</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Includes: All Cash assets + Fixed Income (Gov 1-2, Money Market, Bank Deposit)
+            Includes: All Cash assets + Fixed Income (Money Market, Bank Deposit, + assets maturing within 365 days)
           </p>
         </CardHeader>
         <CardContent>

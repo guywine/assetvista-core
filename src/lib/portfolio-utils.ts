@@ -1,5 +1,6 @@
 import { Asset, AssetCalculations, FXRates, ViewCurrency, AssetClass, AccountEntity, FilterCriteria } from '@/types/portfolio';
 import { ACCOUNT_BANK_MAP, CLASS_SUBCLASS_MAP } from '@/constants/portfolio';
+import { addDays, parseISO, isBefore } from 'date-fns';
 
 export function calculateAssetValue(
   asset: Asset,
@@ -181,4 +182,16 @@ export function filterAssetsByFilters(assets: Asset[], filters: FilterCriteria):
     
     return true;
   });
+}
+
+export function isMaturityWithinYear(maturityDate: string | undefined): boolean {
+  if (!maturityDate || maturityDate === 'none') return false;
+  
+  try {
+    const maturity = parseISO(maturityDate);
+    const oneYearFromNow = addDays(new Date(), 365);
+    return isBefore(maturity, oneYearFromNow);
+  } catch {
+    return false;
+  }
 }
