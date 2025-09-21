@@ -268,7 +268,7 @@ export function PortfolioSummary({
         <CardHeader>
           <CardTitle className="text-xl font-bold text-accent-foreground">Cash & Equivalents</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Includes: All Cash assets + Fixed Income (Money Market, Bank Deposit, + assets maturing within 365 days)
+            Includes: Cash, Money Market funds, Bank Deposits and Notes maturing within 365 days
           </p>
         </CardHeader>
         <CardContent>
