@@ -54,16 +54,9 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     'later'
   ];
 
-  // Calculate default yearly spending in current view currency
+  // Yearly spending is always stored in USD
   const getDefaultYearlySpending = (): number => {
-    const defaultUSD = 800000;
-    if (viewCurrency === 'USD') {
-      return defaultUSD;
-    } else {
-      // Convert USD to ILS
-      const usdToILS = fxRates['USD']?.to_ILS || 3.5; // Fallback rate
-      return defaultUSD * usdToILS;
-    }
+    return 800000; // Always in USD
   };
 
   const [settings, setSettings] = useState<PredictionSettings>({
@@ -251,7 +244,12 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
 
       // Apply yearly spending deduction (cumulative, starting from year after current)
       if (year !== 'current') {
-        let remainingSpending = settings.yearlySpending * yearsFromCurrent;
+        // Convert USD spending to view currency if needed
+        const spendingInViewCurrency = viewCurrency === 'USD' 
+          ? settings.yearlySpending 
+          : settings.yearlySpending * (fxRates['USD']?.to_ILS || 3.5);
+        
+        let remainingSpending = spendingInViewCurrency * yearsFromCurrent;
         
         // First deduct from Cash
         if (dataPoint.Cash >= remainingSpending) {
@@ -557,7 +555,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-foreground">Yearly Spending</h3>
               <div className="flex justify-between items-center">
-                <Label htmlFor="yearly-spending" className="text-muted-foreground">Annual Spending ({viewCurrency}):</Label>
+                <Label htmlFor="yearly-spending" className="text-muted-foreground">Annual Spending (USD):</Label>
                 <Input
                   id="yearly-spending"
                   type="number"
