@@ -34,7 +34,7 @@ serve(async (req) => {
     // Get the stored password from app_config table
     const { data: configData, error: configError } = await supabase
       .from('app_config')
-      .select('password_hash')
+      .select('password')
       .single();
 
     if (configError) {
@@ -49,7 +49,7 @@ serve(async (req) => {
     }
 
     // Compare passwords
-    const isValid = password === configData.password_hash;
+    const isValid = password === configData.password;
 
     if (isValid) {
       // Generate a simple session token (you could make this more sophisticated)
