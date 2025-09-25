@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSessionAuth } from '@/hooks/useSessionAuth';
 
 interface PasswordProtectionProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
   const { toast } = useToast();
+  const { setSessionToken } = useSessionAuth();
 
   // Check for existing session on component mount
   useEffect(() => {

@@ -52,9 +52,31 @@ serve(async (req) => {
     const isValid = password === configData.password;
 
     if (isValid) {
-      // Generate a simple session token (you could make this more sophisticated)
+      // Generate a session token and store it in the database
       const sessionToken = crypto.randomUUID();
       const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Store the session in the database
+      const { error: sessionError } = await supabase
+        .from('sessions')
+        .insert({
+          session_token: sessionToken,
+          expires_at: expiresAt.toISOString()
+        });
+
+      if (sessionError) {
+        console.error('Error creating session:', sessionError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create session' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+
+      // Clean up expired sessions
+      await supabase.rpc('cleanup_expired_sessions');
 
       return new Response(
         JSON.stringify({ 
