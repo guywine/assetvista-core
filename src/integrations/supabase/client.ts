@@ -32,11 +32,11 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   },
   global: {
-    headers: {
-      // Add session token to all requests
-      get 'X-Session-Token'() {
-        return getSessionToken() || '';
-      }
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      const token = getSessionToken();
+      const headers = new Headers(init?.headers || {});
+      if (token) headers.set('X-Session-Token', token);
+      return fetch(input, { ...init, headers });
     }
   }
 });
