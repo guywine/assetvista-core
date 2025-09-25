@@ -19,23 +19,57 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
   const { toast } = useToast();
   const { setSessionToken } = useSessionAuth();
 
-  // Check for existing session on component mount
+  // Check for existing session on component mount and validate server-side
   useEffect(() => {
-    const sessionToken = localStorage.getItem('app_session_token');
-    const expiresAt = localStorage.getItem('app_session_expires');
-    
-    if (sessionToken && expiresAt) {
-      const now = new Date();
-      const expiry = new Date(expiresAt);
+    const validateSession = async () => {
+      const sessionToken = localStorage.getItem('app_session_token');
+      const expiresAt = localStorage.getItem('app_session_expires');
       
-      if (now < expiry) {
-        setIsAuthenticated(true);
+      if (sessionToken && expiresAt) {
+        const now = new Date();
+        const expiry = new Date(expiresAt);
+        
+        if (now < expiry) {
+          // Token exists and not expired locally, verify server-side
+          try {
+            const { data, error } = await supabase.rpc('is_authorized');
+            
+            if (error) {
+              console.error('Session validation error:', error);
+              // Clear invalid session
+              localStorage.removeItem('app_session_token');
+              localStorage.removeItem('app_session_expires');
+              setIsAuthenticated(false);
+              return;
+            }
+            
+            if (data === true) {
+              setIsAuthenticated(true);
+            } else {
+              // Session invalid on server, clear local storage
+              localStorage.removeItem('app_session_token');
+              localStorage.removeItem('app_session_expires');
+              setIsAuthenticated(false);
+            }
+          } catch (error) {
+            console.error('Failed to validate session:', error);
+            // Clear session on validation failure
+            localStorage.removeItem('app_session_token');
+            localStorage.removeItem('app_session_expires');
+            setIsAuthenticated(false);
+          }
+        } else {
+          // Clear expired session
+          localStorage.removeItem('app_session_token');
+          localStorage.removeItem('app_session_expires');
+          setIsAuthenticated(false);
+        }
       } else {
-        // Clear expired session
-        localStorage.removeItem('app_session_token');
-        localStorage.removeItem('app_session_expires');
+        setIsAuthenticated(false);
       }
-    }
+    };
+
+    validateSession();
   }, []);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
