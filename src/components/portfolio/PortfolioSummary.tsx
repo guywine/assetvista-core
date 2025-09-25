@@ -436,19 +436,29 @@ export function PortfolioSummary({
         const targetClasses = ['Public Equity', 'Commodities & more'];
         const filteredAssets = assets.filter(asset => targetClasses.includes(asset.class));
 
-        // Group by asset name and sum their values
+        // Helper function to detect Bitcoin-related assets
+        const isBitcoinAsset = (assetName: string): boolean => {
+          const name = assetName.toLowerCase();
+          return name.includes('bitcoin') || name.includes('btc');
+        };
+
+        // Group by asset name and sum their values, with special handling for Bitcoin
         const positionsByName = filteredAssets.reduce((acc, asset) => {
           const calc = calculations.get(asset.id);
           const value = calc?.display_value || 0;
-          if (!acc[asset.name]) {
-            acc[asset.name] = {
-              name: asset.name,
+          
+          // Group all Bitcoin-related assets under one name
+          const groupName = isBitcoinAsset(asset.name) ? 'Bitcoin (All)' : asset.name;
+          
+          if (!acc[groupName]) {
+            acc[groupName] = {
+              name: groupName,
               class: asset.class,
-              sub_class: asset.sub_class,
+              sub_class: isBitcoinAsset(asset.name) ? 'Cryptocurrency' : asset.sub_class,
               totalValue: 0
             };
           }
-          acc[asset.name].totalValue += value;
+          acc[groupName].totalValue += value;
           return acc;
         }, {} as Record<string, {
           name: string;
