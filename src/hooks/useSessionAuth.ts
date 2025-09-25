@@ -20,6 +20,9 @@ export function useSessionAuth() {
             });
           } catch (error) {
             console.error('Failed to set session token:', error);
+            // If session is invalid, clear it
+            localStorage.removeItem('app_session_token');
+            localStorage.removeItem('app_session_expires');
           }
         } else {
           // Clear expired session
