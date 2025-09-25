@@ -1,3 +1,5 @@
+import { ACCOUNT_BANKS } from '@/constants/portfolio';
+
 export type ViewCurrency = 'USD' | 'ILS';
 
 export type AssetClass = 'Public Equity' | 'Private Equity' | 'Fixed Income' | 'Cash' | 'Commodities & more' | 'Real Estate';
@@ -13,9 +15,7 @@ export type SubClass = PublicEquitySubClass | PrivateEquitySubClass | FixedIncom
 
 export type AccountEntity = 'Roy' | 'Roni' | 'Guy' | 'Shimon' | 'Hagit' | 'SW2009' | 'Weintraub' | 'B Joel' | 'Tom';
 
-export type AccountBank = 
-  | 'U bank' | 'Leumi 1' | 'Leumi 2' | 'Julius Bär' | 'Poalim' | 'Poalim Phoenix'
-  | 'Leumi' | 'etoro' | 'Tom Trust' | 'Off-Bank';
+export type AccountBank = typeof ACCOUNT_BANKS[number];
 
 export type Currency = 'ILS' | 'USD' | 'CHF' | 'EUR' | 'CAD' | 'HKD' | 'GBP';
 

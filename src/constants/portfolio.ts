@@ -7,7 +7,6 @@ import type {
   CommoditiesMoreSubClass, 
   RealEstateSubClass,
   AccountEntity,
-  AccountBank,
   Currency,
   Beneficiary
 } from '@/types/portfolio';
@@ -63,8 +62,8 @@ export const ENTITY_BENEFICIARY_MAP: Record<AccountEntity, Beneficiary> = {
   'Tom': 'Tom'
 };
 
-// Account Banks by Entity
-export const ACCOUNT_BANK_MAP: Record<AccountEntity, AccountBank[]> = {
+// Account Banks by Entity  
+export const ACCOUNT_BANK_MAP: Record<AccountEntity, (typeof ACCOUNT_BANKS)[number][]> = {
   'Hagit': ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix', 'Off-Bank'],
   'Guy': ['Poalim', 'Julius Bär', 'Off-Bank'],
   'Roni': ['Julius Bär', 'Off-Bank'],
@@ -77,8 +76,8 @@ export const ACCOUNT_BANK_MAP: Record<AccountEntity, AccountBank[]> = {
 };
 
 // All Banks
-export const ACCOUNT_BANKS: AccountBank[] = [
+export const ACCOUNT_BANKS = [
   'U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix',
   'Leumi', 'etoro', 'Tom Trust', 'Off-Bank'
-];
+] as const;
 
