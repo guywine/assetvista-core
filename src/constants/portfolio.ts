@@ -65,20 +65,20 @@ export const ENTITY_BENEFICIARY_MAP: Record<AccountEntity, Beneficiary> = {
 
 // Account Banks by Entity
 export const ACCOUNT_BANK_MAP: Record<AccountEntity, AccountBank[]> = {
-  'Hagit': ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix'],
-  'Guy': ['Poalim', 'Julius Bär'],
-  'Roni': ['Julius Bär'],
-  'Roy': ['Poalim', 'Julius Bär', 'etoro'],
-  'SW2009': ['Poalim', 'Julius Bär'],
-  'Weintraub': ['Poalim', 'Julius Bär'],
-  'Shimon': ['U bank', 'Leumi', 'Julius Bär', 'Poalim', 'Poalim Phoenix'],
-  'B Joel': ['Poalim', 'Julius Bär'],
-  'Tom': ['Tom Trust'],
+  'Hagit': ['U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix', 'Off-Bank'],
+  'Guy': ['Poalim', 'Julius Bär', 'Off-Bank'],
+  'Roni': ['Julius Bär', 'Off-Bank'],
+  'Roy': ['Poalim', 'Julius Bär', 'etoro', 'Off-Bank'],
+  'SW2009': ['Poalim', 'Julius Bär', 'Off-Bank'],
+  'Weintraub': ['Poalim', 'Julius Bär', 'Off-Bank'],
+  'Shimon': ['U bank', 'Leumi', 'Julius Bär', 'Poalim', 'Poalim Phoenix', 'Off-Bank'],
+  'B Joel': ['Poalim', 'Julius Bär', 'Off-Bank'],
+  'Tom': ['Tom Trust', 'Off-Bank'],
 };
 
 // All Banks
 export const ACCOUNT_BANKS: AccountBank[] = [
   'U bank', 'Leumi 1', 'Leumi 2', 'Julius Bär', 'Poalim', 'Poalim Phoenix',
-  'Leumi', 'etoro', 'Tom Trust'
+  'Leumi', 'etoro', 'Tom Trust', 'Off-Bank'
 ];
 

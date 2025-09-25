@@ -15,7 +15,7 @@ export type AccountEntity = 'Roy' | 'Roni' | 'Guy' | 'Shimon' | 'Hagit' | 'SW200
 
 export type AccountBank = 
   | 'U bank' | 'Leumi 1' | 'Leumi 2' | 'Julius Bär' | 'Poalim' | 'Poalim Phoenix'
-  | 'Leumi' | 'etoro' | 'Tom Trust';
+  | 'Leumi' | 'etoro' | 'Tom Trust' | 'Off-Bank';
 
 export type Currency = 'ILS' | 'USD' | 'CHF' | 'EUR' | 'CAD' | 'HKD' | 'GBP';
 
