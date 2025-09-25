@@ -232,10 +232,17 @@ export function useAssets() {
           throw specificError;
         }
 
-        // Update local state with all affected assets
+        // Update local state with all affected assets including the specific one
         const updatedAssets = (data || []).map(convertFromDb);
+        const specificUpdatedAsset = convertFromDb(specificData);
+
         setAssets(prev => 
           prev.map(a => {
+            // First check if this is the specifically updated asset
+            if (a.id === specificUpdatedAsset.id) {
+              return specificUpdatedAsset;
+            }
+            // Then check for batch updates
             const updated = updatedAssets.find(u => u.id === a.id);
             return updated || a;
           })
