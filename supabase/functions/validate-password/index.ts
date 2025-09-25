@@ -54,7 +54,7 @@ serve(async (req) => {
     if (isValid) {
       // Generate a session token and store it in the database
       const sessionToken = crypto.randomUUID();
-      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours
 
       // Store the session in the database
       const { error: sessionError } = await supabase
