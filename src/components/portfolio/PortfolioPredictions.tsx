@@ -792,8 +792,9 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
               <ResponsiveContainer width="100%" height="100%">
                  <BarChart data={chartData} margin={{ top: 40, right: 30, left: 20, bottom: 5 }}>
                   <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    stroke="hsl(var(--border))"
+                    strokeDasharray="2 2" 
+                    stroke="hsl(var(--muted-foreground))"
+                    strokeOpacity={0.6}
                     horizontal={true}
                     vertical={false}
                   />
@@ -806,6 +807,8 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                     className="text-muted-foreground"
                     tick={{ fontSize: 12 }}
                     tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                    tickCount={10}
+                    minTickGap={20}
                   />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend 
