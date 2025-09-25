@@ -15,10 +15,8 @@ export function useSessionAuth() {
         if (now < expiry) {
           // Set session token using a database function call
           try {
-            await supabase.rpc('set_config', {
-              setting_name: 'app.session_token',
-              setting_value: sessionToken,
-              is_local: true
+            await supabase.rpc('set_session_token', {
+              token: sessionToken
             });
           } catch (error) {
             console.error('Failed to set session token:', error);
@@ -40,10 +38,8 @@ export function useSessionAuth() {
     
     // Set session token in database session
     try {
-      await supabase.rpc('set_config', {
-        setting_name: 'app.session_token',
-        setting_value: sessionToken,
-        is_local: true
+      await supabase.rpc('set_session_token', {
+        token: sessionToken
       });
     } catch (error) {
       console.error('Failed to set session token:', error);

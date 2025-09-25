@@ -53,9 +53,8 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
       }
 
       if (data.success) {
-        // Store session information
-        localStorage.setItem('app_session_token', data.sessionToken);
-        localStorage.setItem('app_session_expires', data.expiresAt);
+        // Store session information and set headers
+        await setSessionToken(data.sessionToken, data.expiresAt);
         
         setIsAuthenticated(true);
         toast({
