@@ -8,10 +8,35 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
+// Function to get current session token from localStorage
+const getSessionToken = () => {
+  const sessionToken = localStorage.getItem('app_session_token');
+  const expiresAt = localStorage.getItem('app_session_expires');
+  
+  if (sessionToken && expiresAt) {
+    const now = new Date();
+    const expiry = new Date(expiresAt);
+    
+    if (now < expiry) {
+      return sessionToken;
+    }
+  }
+  
+  return null;
+};
+
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+  },
+  global: {
+    headers: {
+      // Add session token to all requests
+      get 'X-Session-Token'() {
+        return getSessionToken() || '';
+      }
+    }
   }
 });

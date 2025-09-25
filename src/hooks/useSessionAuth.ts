@@ -39,14 +39,7 @@ export function useSessionAuth() {
     localStorage.setItem('app_session_token', sessionToken);
     localStorage.setItem('app_session_expires', expiresAt);
     
-    // Set session token in database session
-    try {
-      await supabase.rpc('set_session_token', {
-        token: sessionToken
-      });
-    } catch (error) {
-      console.error('Failed to set session token:', error);
-    }
+    // Session token will be automatically included in headers via the Supabase client
   };
 
   const clearSession = () => {
