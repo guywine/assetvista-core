@@ -22,7 +22,7 @@ export function FXRatesBar({
   const [isEditing, setIsEditing] = useState(false);
   const [editingRates, setEditingRates] = useState<FXRates>(fxRates);
 
-  const currencies: Currency[] = ['ILS', 'USD', 'EUR', 'CHF', 'CAD', 'HKD'];
+  const currencies: Currency[] = ['ILS', 'USD', 'EUR', 'CHF', 'CAD', 'HKD', 'GBP'];
 
   const handleStartEdit = () => {
     setEditingRates(fxRates);

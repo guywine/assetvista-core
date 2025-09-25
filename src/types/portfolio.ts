@@ -17,7 +17,7 @@ export type AccountBank =
   | 'U bank' | 'Leumi 1' | 'Leumi 2' | 'Julius Bär' | 'Poalim' | 'Poalim Phoenix'
   | 'Leumi' | 'etoro' | 'Tom Trust';
 
-export type Currency = 'ILS' | 'USD' | 'CHF' | 'EUR' | 'CAD' | 'HKD';
+export type Currency = 'ILS' | 'USD' | 'CHF' | 'EUR' | 'CAD' | 'HKD' | 'GBP';
 
 export type Beneficiary = 'Shimon' | 'Hagit' | 'Kids' | 'Tom';
 

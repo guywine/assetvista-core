@@ -13,7 +13,7 @@ import type {
 } from '@/types/portfolio';
 
 // Currencies
-export const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD'];
+export const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD', 'GBP'];
 
 // Asset Classes
 export const ASSET_CLASSES: AssetClass[] = [
