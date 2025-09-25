@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PasswordProtectionProps {
   children: React.ReactNode;
@@ -16,27 +17,66 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
   const [isChecking, setIsChecking] = useState(false);
   const { toast } = useToast();
 
+  // Check for existing session on component mount
+  useEffect(() => {
+    const sessionToken = localStorage.getItem('app_session_token');
+    const expiresAt = localStorage.getItem('app_session_expires');
+    
+    if (sessionToken && expiresAt) {
+      const now = new Date();
+      const expiry = new Date(expiresAt);
+      
+      if (now < expiry) {
+        setIsAuthenticated(true);
+      } else {
+        // Clear expired session
+        localStorage.removeItem('app_session_token');
+        localStorage.removeItem('app_session_expires');
+      }
+    }
+  }, []);
+
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsChecking(true);
 
-    // Simple password check
-    const appPassword = import.meta.env.VITE_APP_PASSWORD;
-    if (password === appPassword) {
-      setIsAuthenticated(true);
-      toast({
-        title: "Access Granted",
-        description: "Welcome to your Portfolio Dashbord",
+    try {
+      // Call the edge function to validate password
+      const { data, error } = await supabase.functions.invoke('validate-password', {
+        body: { password }
       });
-    } else {
+
+      if (error) {
+        throw error;
+      }
+
+      if (data.success) {
+        // Store session information
+        localStorage.setItem('app_session_token', data.sessionToken);
+        localStorage.setItem('app_session_expires', data.expiresAt);
+        
+        setIsAuthenticated(true);
+        toast({
+          title: "Access Granted",
+          description: "Welcome to your Portfolio Dashboard",
+        });
+      } else {
+        toast({
+          title: "Access Denied",
+          description: data.error || "Incorrect password",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
       toast({
-        title: "Access Denied",
-        description: "Incorrect password",
+        title: "Error",
+        description: "Failed to authenticate. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsChecking(false);
     }
-
-    setIsChecking(false);
   };
 
   if (isAuthenticated) {
@@ -48,7 +88,7 @@ export function PasswordProtection({ children }: PasswordProtectionProps) {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center bg-gradient-to-r from-financial-primary to-financial-primary/70 bg-clip-text text-transparent">
-            Zaza Portfolio Dashbord
+            Zaza Portfolio Dashboard
           </CardTitle>
         </CardHeader>
         <CardContent>
