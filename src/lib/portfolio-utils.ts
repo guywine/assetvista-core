@@ -184,6 +184,19 @@ export function filterAssetsByFilters(assets: Asset[], filters: FilterCriteria):
   });
 }
 
+export function calculatePEPrice(
+  companyValue: number,
+  holdingPercentage: number,
+  quantity: number
+): number {
+  if (!companyValue || !holdingPercentage || !quantity || quantity <= 0) {
+    return 0;
+  }
+  
+  const calculatedPrice = (companyValue * (holdingPercentage / 100)) / quantity;
+  return Math.round(calculatedPrice);
+}
+
 export function isMaturityWithinYear(maturityDate: string | undefined): boolean {
   if (!maturityDate || maturityDate === 'none') return false;
   

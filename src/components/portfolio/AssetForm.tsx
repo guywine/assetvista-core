@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Asset, AssetClass, AccountEntity, Currency } from '@/types/portfolio';
-import { validateAsset, generateId, getSubClassOptions, getBankOptions } from '@/lib/portfolio-utils';
+import { validateAsset, generateId, getSubClassOptions, getBankOptions, calculatePEPrice } from '@/lib/portfolio-utils';
 import { ASSET_CLASSES, ACCOUNT_ENTITIES, CURRENCIES } from '@/constants/portfolio';
 import { getBeneficiaryFromEntity } from '@/lib/beneficiary-utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -144,11 +144,10 @@ export function AssetForm({
   };
 
   // Calculate price for PE assets if using calculation mode
-  const calculatePEPrice = () => {
+  const getPECalculatedPrice = () => {
     if (formData.class === 'Private Equity' && usePECalculation && 
         formData.pe_company_value && formData.pe_holding_percentage && formData.quantity) {
-      const calculatedPrice = (formData.pe_company_value * (formData.pe_holding_percentage / 100)) / formData.quantity;
-      return Math.round(calculatedPrice);
+      return calculatePEPrice(formData.pe_company_value, formData.pe_holding_percentage, formData.quantity);
     }
     return formData.price || 0;
   };
@@ -157,8 +156,8 @@ export function AssetForm({
   useEffect(() => {
     if (formData.class === 'Private Equity' && usePECalculation && 
         formData.pe_company_value && formData.pe_holding_percentage && formData.quantity) {
-      const calculatedPrice = (formData.pe_company_value * (formData.pe_holding_percentage / 100)) / formData.quantity;
-      setFormData(prev => ({ ...prev, price: Math.round(calculatedPrice) }));
+      const calculatedPrice = calculatePEPrice(formData.pe_company_value, formData.pe_holding_percentage, formData.quantity);
+      setFormData(prev => ({ ...prev, price: calculatedPrice }));
     }
   }, [formData.pe_company_value, formData.pe_holding_percentage, formData.quantity, usePECalculation, formData.class]);
 
@@ -166,7 +165,7 @@ export function AssetForm({
     // For cash assets, name is optional - if not provided, use currency as name
     const assetName = formData.name?.trim() || (formData.class === 'Cash' ? `${formData.sub_class} Cash` : '');
     
-    const calculatedPrice = calculatePEPrice();
+    const calculatedPrice = getPECalculatedPrice();
     
     // Factor is always a direct user input, never calculated
     
@@ -524,7 +523,7 @@ export function AssetForm({
                   <Input
                     id="price"
                     type="number"
-                    value={calculatePEPrice()}
+                    value={getPECalculatedPrice()}
                     readOnly
                     className="border-border/50 bg-muted text-muted-foreground"
                   />
@@ -628,7 +627,7 @@ export function AssetForm({
                 {usePECalculation && formData.pe_company_value && formData.pe_holding_percentage && formData.quantity && (
                   <div className="mt-4 p-3 bg-primary/5 rounded-md">
                     <div className="text-sm text-muted-foreground">
-                      <strong>Calculation:</strong> ({formData.pe_company_value.toLocaleString()} × {formData.pe_holding_percentage}%) ÷ {formData.quantity} = <strong>{Math.round(calculatePEPrice()).toLocaleString()} per unit</strong>
+                      <strong>Calculation:</strong> ({formData.pe_company_value.toLocaleString()} × {formData.pe_holding_percentage}%) ÷ {formData.quantity} = <strong>{getPECalculatedPrice().toLocaleString()} per unit</strong>
                     </div>
                   </div>
                 )}

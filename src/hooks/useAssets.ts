@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Asset } from '@/types/portfolio';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { calculatePEPrice } from '@/lib/portfolio-utils';
 
 export function useAssets() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -381,7 +382,7 @@ export function useAssets() {
                   if (companyValue && holdingPercentage && quantity) {
                     return {
                       ...updated,
-                      price: (companyValue * holdingPercentage) / quantity
+                      price: calculatePEPrice(companyValue, holdingPercentage, quantity)
                     };
                   }
                 }
