@@ -162,6 +162,24 @@ export function useAssets() {
     return baseAccountSpecific;
   };
 
+  // Helper function to detect what type of changes were made
+  const detectChanges = (originalAsset: Asset, updatedAsset: Asset) => {
+    const originalShared = getSharedProperties(originalAsset);
+    const updatedShared = getSharedProperties(updatedAsset);
+    const originalAccountSpecific = getAccountSpecificProperties(originalAsset);
+    const updatedAccountSpecific = getAccountSpecificProperties(updatedAsset);
+
+    const sharedChanged = JSON.stringify(originalShared) !== JSON.stringify(updatedShared);
+    const accountSpecificChanged = JSON.stringify(originalAccountSpecific) !== JSON.stringify(updatedAccountSpecific);
+
+    return {
+      sharedChanged,
+      accountSpecificChanged,
+      bothChanged: sharedChanged && accountSpecificChanged,
+      neitherChanged: !sharedChanged && !accountSpecificChanged
+    };
+  };
+
   // Update existing asset with synchronization
   const updateAsset = async (asset: Asset) => {
     try {
@@ -170,90 +188,199 @@ export function useAssets() {
       const willUpdateMultiple = assetsWithSameName.length > 1;
 
       if (willUpdateMultiple) {
-        // Prepare shared properties for batch update
-        const sharedProps = getSharedProperties(asset);
-        const sharedDbProps: any = {
-          name: sharedProps.name,
-          class: sharedProps.class,
-          sub_class: sharedProps.sub_class,
-          isin: sharedProps.ISIN,
-          origin_currency: sharedProps.origin_currency,
-          factor: sharedProps.factor,
-          maturity_date: sharedProps.maturity_date,
-          ytw: sharedProps.ytw,
-          pe_company_value: sharedProps.pe_company_value,
-        };
-
-        // Only include price in shared props if it's not Private Equity or Real Estate
-        if (asset.class !== 'Private Equity' && asset.class !== 'Real Estate' && 'price' in sharedProps) {
-          sharedDbProps.price = (sharedProps as any).price;
+        // Find the original asset to compare changes
+        const originalAsset = assets.find(a => a.id === asset.id);
+        if (!originalAsset) {
+          throw new Error("Original asset not found");
         }
 
-        // Batch update all assets with same name
-        const { data, error } = await supabase
-          .from('assets')
-          .update(sharedDbProps)
-          .eq('name', asset.name)
-          .select();
+        // Detect what type of changes were made
+        const changes = detectChanges(originalAsset, asset);
 
-        if (error) {
-          throw error;
+        if (changes.neitherChanged) {
+          // No changes detected, return original asset
+          return originalAsset;
         }
 
-        // Update specific asset's account properties
-        const accountSpecificProps = getAccountSpecificProperties(asset);
-        const accountSpecificDbProps: any = {
-          quantity: accountSpecificProps.quantity,
-          account_entity: accountSpecificProps.account_entity,
-          account_bank: accountSpecificProps.account_bank,
-        };
+        let updatedAssets: Asset[] = [];
+        let specificUpdatedAsset: Asset;
 
-        // For Private Equity, also update price and pe_holding_percentage
-        if (asset.class === 'Private Equity') {
-          const peProps = accountSpecificProps as any;
-          accountSpecificDbProps.price = peProps.price;
-          accountSpecificDbProps.pe_holding_percentage = peProps.pe_holding_percentage;
+        if (changes.sharedChanged && !changes.accountSpecificChanged) {
+          // Only shared properties changed - batch update all holdings
+          const sharedProps = getSharedProperties(asset);
+          const sharedDbProps: any = {
+            name: sharedProps.name,
+            class: sharedProps.class,
+            sub_class: sharedProps.sub_class,
+            isin: sharedProps.ISIN,
+            origin_currency: sharedProps.origin_currency,
+            factor: sharedProps.factor,
+            maturity_date: sharedProps.maturity_date,
+            ytw: sharedProps.ytw,
+            pe_company_value: sharedProps.pe_company_value,
+          };
+
+          // Only include price in shared props if it's not Private Equity or Real Estate
+          if (asset.class !== 'Private Equity' && asset.class !== 'Real Estate' && 'price' in sharedProps) {
+            sharedDbProps.price = (sharedProps as any).price;
+          }
+
+          // Batch update all assets with same name
+          const { data, error } = await supabase
+            .from('assets')
+            .update(sharedDbProps)
+            .eq('name', asset.name)
+            .select();
+
+          if (error) {
+            throw error;
+          }
+
+          updatedAssets = (data || []).map(convertFromDb);
+          specificUpdatedAsset = updatedAssets.find(a => a.id === asset.id) || asset;
+
+          setAssets(prev => 
+            prev.map(a => {
+              const updated = updatedAssets.find(u => u.id === a.id);
+              return updated || a;
+            })
+          );
+
+          toast({
+            title: "Assets Updated",
+            description: `${asset.name} updated across ${updatedAssets.length} holdings.`,
+          });
+
+        } else if (!changes.sharedChanged && changes.accountSpecificChanged) {
+          // Only account-specific properties changed - update only this asset
+          const accountSpecificProps = getAccountSpecificProperties(asset);
+          const accountSpecificDbProps: any = {
+            quantity: accountSpecificProps.quantity,
+            account_entity: accountSpecificProps.account_entity,
+            account_bank: accountSpecificProps.account_bank,
+          };
+
+          // For Private Equity, also update price and pe_holding_percentage
+          if (asset.class === 'Private Equity') {
+            const peProps = accountSpecificProps as any;
+            accountSpecificDbProps.price = peProps.price;
+            accountSpecificDbProps.pe_holding_percentage = peProps.pe_holding_percentage;
+          }
+
+          // For Real Estate, also update price
+          if (asset.class === 'Real Estate') {
+            const reProps = accountSpecificProps as any;
+            accountSpecificDbProps.price = reProps.price;
+          }
+
+          const { data: specificData, error: specificError } = await supabase
+            .from('assets')
+            .update(accountSpecificDbProps)
+            .eq('id', asset.id)
+            .select()
+            .single();
+
+          if (specificError) {
+            throw specificError;
+          }
+
+          specificUpdatedAsset = convertFromDb(specificData);
+
+          setAssets(prev => 
+            prev.map(a => a.id === asset.id ? specificUpdatedAsset : a)
+          );
+
+          toast({
+            title: "Asset Updated",
+            description: `${asset.name} has been successfully updated.`,
+          });
+
+        } else {
+          // Both shared and account-specific properties changed
+          // First do batch update for shared properties
+          const sharedProps = getSharedProperties(asset);
+          const sharedDbProps: any = {
+            name: sharedProps.name,
+            class: sharedProps.class,
+            sub_class: sharedProps.sub_class,
+            isin: sharedProps.ISIN,
+            origin_currency: sharedProps.origin_currency,
+            factor: sharedProps.factor,
+            maturity_date: sharedProps.maturity_date,
+            ytw: sharedProps.ytw,
+            pe_company_value: sharedProps.pe_company_value,
+          };
+
+          // Only include price in shared props if it's not Private Equity or Real Estate
+          if (asset.class !== 'Private Equity' && asset.class !== 'Real Estate' && 'price' in sharedProps) {
+            sharedDbProps.price = (sharedProps as any).price;
+          }
+
+          // Batch update all assets with same name
+          const { data, error } = await supabase
+            .from('assets')
+            .update(sharedDbProps)
+            .eq('name', asset.name)
+            .select();
+
+          if (error) {
+            throw error;
+          }
+
+          // Then update specific asset's account properties
+          const accountSpecificProps = getAccountSpecificProperties(asset);
+          const accountSpecificDbProps: any = {
+            quantity: accountSpecificProps.quantity,
+            account_entity: accountSpecificProps.account_entity,
+            account_bank: accountSpecificProps.account_bank,
+          };
+
+          // For Private Equity, also update price and pe_holding_percentage
+          if (asset.class === 'Private Equity') {
+            const peProps = accountSpecificProps as any;
+            accountSpecificDbProps.price = peProps.price;
+            accountSpecificDbProps.pe_holding_percentage = peProps.pe_holding_percentage;
+          }
+
+          // For Real Estate, also update price
+          if (asset.class === 'Real Estate') {
+            const reProps = accountSpecificProps as any;
+            accountSpecificDbProps.price = reProps.price;
+          }
+
+          const { data: specificData, error: specificError } = await supabase
+            .from('assets')
+            .update(accountSpecificDbProps)
+            .eq('id', asset.id)
+            .select()
+            .single();
+
+          if (specificError) {
+            throw specificError;
+          }
+
+          updatedAssets = (data || []).map(convertFromDb);
+          specificUpdatedAsset = convertFromDb(specificData);
+
+          setAssets(prev => 
+            prev.map(a => {
+              // First check if this is the specifically updated asset
+              if (a.id === specificUpdatedAsset.id) {
+                return specificUpdatedAsset;
+              }
+              // Then check for batch updates
+              const updated = updatedAssets.find(u => u.id === a.id);
+              return updated || a;
+            })
+          );
+
+          toast({
+            title: "Assets Updated",
+            description: `${asset.name} updated across ${updatedAssets.length} holdings.`,
+          });
         }
 
-        // For Real Estate, also update price
-        if (asset.class === 'Real Estate') {
-          const reProps = accountSpecificProps as any;
-          accountSpecificDbProps.price = reProps.price;
-        }
-
-        const { data: specificData, error: specificError } = await supabase
-          .from('assets')
-          .update(accountSpecificDbProps)
-          .eq('id', asset.id)
-          .select()
-          .single();
-
-        if (specificError) {
-          throw specificError;
-        }
-
-        // Update local state with all affected assets including the specific one
-        const updatedAssets = (data || []).map(convertFromDb);
-        const specificUpdatedAsset = convertFromDb(specificData);
-
-        setAssets(prev => 
-          prev.map(a => {
-            // First check if this is the specifically updated asset
-            if (a.id === specificUpdatedAsset.id) {
-              return specificUpdatedAsset;
-            }
-            // Then check for batch updates
-            const updated = updatedAssets.find(u => u.id === a.id);
-            return updated || a;
-          })
-        );
-
-        toast({
-          title: "Assets Updated",
-          description: `${asset.name} updated across ${updatedAssets.length} holdings.`,
-        });
-
-        return convertFromDb(specificData);
+        return specificUpdatedAsset;
       } else {
         // Single asset update
         const dbAsset = convertToDb(asset);
