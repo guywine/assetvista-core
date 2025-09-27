@@ -370,7 +370,17 @@ export function useAssets() {
               }
               // Then check for batch updates
               const updated = updatedAssets.find(u => u.id === a.id);
-              return updated || a;
+              if (updated) {
+                // For Private Equity assets, recalculate derived properties
+                if (updated.class === 'Private Equity' && updated.pe_company_value && updated.pe_holding_percentage) {
+                  return {
+                    ...updated,
+                    price: (updated.pe_company_value * updated.pe_holding_percentage) / updated.quantity
+                  };
+                }
+                return updated;
+              }
+              return a;
             })
           );
 
