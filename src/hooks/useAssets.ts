@@ -372,11 +372,18 @@ export function useAssets() {
               const updated = updatedAssets.find(u => u.id === a.id);
               if (updated) {
                 // For Private Equity assets, recalculate derived properties
-                if (updated.class === 'Private Equity' && updated.pe_company_value && updated.pe_holding_percentage) {
-                  return {
-                    ...updated,
-                    price: (updated.pe_company_value * updated.pe_holding_percentage) / updated.quantity
-                  };
+                const assetClass = updated.class ?? a.class;
+                if (assetClass === 'Private Equity') {
+                  const companyValue = updated.pe_company_value ?? a.pe_company_value;
+                  const holdingPercentage = updated.pe_holding_percentage ?? a.pe_holding_percentage;
+                  const quantity = updated.quantity ?? a.quantity;
+                  
+                  if (companyValue && holdingPercentage && quantity) {
+                    return {
+                      ...updated,
+                      price: (companyValue * holdingPercentage) / quantity
+                    };
+                  }
                 }
                 return updated;
               }
