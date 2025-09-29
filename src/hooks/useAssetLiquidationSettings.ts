@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset } from '@/types/portfolio';
-import { useSessionExpiration } from '@/lib/session-utils';
+import { handleWriteError } from '@/lib/session-utils';
 import { useSessionAuth } from '@/hooks/useSessionAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface AssetLiquidationSetting {
   id: string;
@@ -15,8 +16,8 @@ interface AssetLiquidationSetting {
 export function useAssetLiquidationSettings() {
   const [liquidationSettings, setLiquidationSettings] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
-  const { handleSessionExpiration } = useSessionExpiration();
   const { clearSession } = useSessionAuth();
+  const { toast } = useToast();
 
   const loadLiquidationSettings = async () => {
     try {
@@ -61,12 +62,16 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error saving liquidation setting:', error);
-        // Check if session expired before showing generic error
-        const sessionExpired = await handleSessionExpiration(clearSession);
-        if (!sessionExpired) {
-          throw error;
+        const sessionExpired = await handleWriteError(error, clearSession);
+        if (sessionExpired) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+          return;
         }
-        return;
+        throw error;
       }
 
       console.log('Successfully saved liquidation setting');
@@ -88,12 +93,16 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error deleting liquidation setting:', error);
-        // Check if session expired before showing generic error
-        const sessionExpired = await handleSessionExpiration(clearSession);
-        if (!sessionExpired) {
-          throw error;
+        const sessionExpired = await handleWriteError(error, clearSession);
+        if (sessionExpired) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+          return;
         }
-        return;
+        throw error;
       }
 
       // Update local state

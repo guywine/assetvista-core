@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Asset } from '@/types/portfolio';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useSessionExpiration } from '@/lib/session-utils';
+import { handleWriteError, verifySession } from '@/lib/session-utils';
 import { useSessionAuth } from '@/hooks/useSessionAuth';
 import { calculatePEPrice } from '@/lib/portfolio-utils';
 
@@ -10,7 +10,6 @@ export function useAssets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { handleSessionExpiration } = useSessionExpiration();
   const { clearSession } = useSessionAuth();
 
   // Convert database row to Asset
@@ -93,16 +92,31 @@ export function useAssets() {
         .maybeSingle();
 
       if (error) {
-        // Check if session expired before showing generic error
-        const sessionExpired = await handleSessionExpiration(clearSession);
-        if (!sessionExpired) {
-          throw error;
+        const sessionExpired = await handleWriteError(error, clearSession);
+        if (sessionExpired) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+          return;
         }
-        return;
+        throw error;
       }
 
       if (!data) {
-        throw new Error('No data returned from insert operation');
+        // Check if this might be due to session expiration
+        const sessionValid = await verifySession();
+        if (!sessionValid) {
+          clearSession();
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw new Error('Asset was not created. Please try again.');
       }
 
       const newAsset = convertFromDb(data);
@@ -247,12 +261,16 @@ export function useAssets() {
             .select();
 
           if (error) {
-            // Check if session expired before showing generic error
-            const sessionExpired = await handleSessionExpiration(clearSession);
-            if (!sessionExpired) {
-              throw error;
+            const sessionExpired = await handleWriteError(error, clearSession);
+            if (sessionExpired) {
+              toast({
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return originalAsset;
             }
-            return originalAsset;
+            throw error;
           }
 
           updatedAssets = (data || []).map(convertFromDb);
@@ -300,16 +318,30 @@ export function useAssets() {
             .maybeSingle();
 
           if (specificError) {
-            // Check if session expired before showing generic error
-            const sessionExpired = await handleSessionExpiration(clearSession);
-            if (!sessionExpired) {
-              throw specificError;
+            const sessionExpired = await handleWriteError(specificError, clearSession);
+            if (sessionExpired) {
+              toast({
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return originalAsset;
             }
-            return originalAsset;
+            throw specificError;
           }
 
           if (!specificData) {
-            throw new Error('No data returned from update operation');
+            const sessionValid = await verifySession();
+            if (!sessionValid) {
+              clearSession();
+              toast({
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return originalAsset;
+            }
+            throw new Error('Asset update failed. Please try again.');
           }
 
           specificUpdatedAsset = convertFromDb(specificData);
@@ -352,6 +384,15 @@ export function useAssets() {
             .select();
 
           if (error) {
+            const sessionExpired = await handleWriteError(error, clearSession);
+            if (sessionExpired) {
+              toast({
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return originalAsset;
+            }
             throw error;
           }
 
@@ -381,10 +422,33 @@ export function useAssets() {
             .update(accountSpecificDbProps)
             .eq('id', asset.id)
             .select()
-            .single();
+            .maybeSingle();
 
           if (specificError) {
+            const sessionExpired = await handleWriteError(specificError, clearSession);
+            if (sessionExpired) {
+              toast({
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return originalAsset;
+            }
             throw specificError;
+          }
+
+          if (!specificData) {
+            const sessionValid = await verifySession();
+            if (!sessionValid) {
+              clearSession();
+              toast({
+                title: "Session Expired", 
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return originalAsset;
+            }
+            throw new Error('Asset update failed. Please try again.');
           }
 
           updatedAssets = (data || []).map(convertFromDb);
@@ -438,16 +502,30 @@ export function useAssets() {
           .maybeSingle();
 
         if (error) {
-          // Check if session expired before showing generic error
-          const sessionExpired = await handleSessionExpiration(clearSession);
-          if (!sessionExpired) {
-            throw error;
+          const sessionExpired = await handleWriteError(error, clearSession);
+          if (sessionExpired) {
+            toast({
+              title: "Session Expired",
+              description: "Your session has expired. Please log in again.",
+              variant: "destructive",
+            });
+            return asset;
           }
-          return asset;
+          throw error;
         }
 
         if (!data) {
-          throw new Error('No data returned from update operation');
+          const sessionValid = await verifySession();
+          if (!sessionValid) {
+            clearSession();
+            toast({
+              title: "Session Expired",
+              description: "Your session has expired. Please log in again.",
+              variant: "destructive",
+            });
+            return asset;
+          }
+          throw new Error('Asset update failed. Please try again.');
         }
 
         const updatedAsset = convertFromDb(data);
@@ -479,12 +557,16 @@ export function useAssets() {
         .eq('id', asset.id);
 
       if (error) {
-        // Check if session expired before showing generic error
-        const sessionExpired = await handleSessionExpiration(clearSession);
-        if (!sessionExpired) {
-          throw error;
+        const sessionExpired = await handleWriteError(error, clearSession);
+        if (sessionExpired) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+          return;
         }
-        return;
+        throw error;
       }
 
       setAssets(prev => prev.filter(a => a.id !== asset.id));

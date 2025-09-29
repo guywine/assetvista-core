@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FXRates } from '@/types/portfolio';
 import { useToast } from '@/hooks/use-toast';
-import { useSessionExpiration } from '@/lib/session-utils';
+import { handleWriteError } from '@/lib/session-utils';
 import { useSessionAuth } from '@/hooks/useSessionAuth';
 
 export interface FXRateData {
@@ -19,7 +19,6 @@ export function useFXRates() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { handleSessionExpiration } = useSessionExpiration();
   const { clearSession } = useSessionAuth();
 
   // Load FX rates from database
@@ -94,12 +93,16 @@ export function useFXRates() {
         });
 
       if (updateError) {
-        // Check if session expired before showing generic error
-        const sessionExpired = await handleSessionExpiration(clearSession);
-        if (!sessionExpired) {
-          throw updateError;
+        const sessionExpired = await handleWriteError(updateError, clearSession);
+        if (sessionExpired) {
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+          return;
         }
-        return;
+        throw updateError;
       }
 
       // Now, if USD was updated, we need to recalculate all other currencies' to_USD rates
@@ -130,12 +133,16 @@ export function useFXRates() {
             });
 
           if (batchUpdateError) {
-            // Check if session expired before showing generic error
-            const sessionExpired = await handleSessionExpiration(clearSession);
-            if (!sessionExpired) {
-              throw batchUpdateError;
+            const sessionExpired = await handleWriteError(batchUpdateError, clearSession);
+            if (sessionExpired) {
+              toast({
+                title: "Session Expired",
+                description: "Your session has expired. Please log in again.",
+                variant: "destructive",
+              });
+              return;
             }
-            return;
+            throw batchUpdateError;
           }
         }
       }
@@ -153,7 +160,7 @@ export function useFXRates() {
       console.error('Error updating manual rate:', error);
       toast({
         title: "Failed to update rate",
-        description: "Please try again",
+        description: error?.message || "Please try again",
         variant: "destructive",
       });
     }
