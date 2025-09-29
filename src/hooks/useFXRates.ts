@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { FXRates } from '@/types/portfolio';
 import { useToast } from '@/hooks/use-toast';
 import { handleWriteError } from '@/lib/session-utils';
-import { useSessionAuth } from '@/hooks/useSessionAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface FXRateData {
   currency: string;
@@ -19,7 +19,7 @@ export function useFXRates() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { clearSession } = useSessionAuth();
+  const { logout } = useAuth();
 
   // Load FX rates from database
   const loadFXRates = async () => {
@@ -93,7 +93,7 @@ export function useFXRates() {
         });
 
       if (updateError) {
-        const sessionExpired = await handleWriteError(updateError, clearSession);
+        const sessionExpired = await handleWriteError(updateError, logout);
         if (sessionExpired) {
           toast({
             title: "Session Expired",
@@ -133,7 +133,7 @@ export function useFXRates() {
             });
 
           if (batchUpdateError) {
-            const sessionExpired = await handleWriteError(batchUpdateError, clearSession);
+            const sessionExpired = await handleWriteError(batchUpdateError, logout);
             if (sessionExpired) {
               toast({
                 title: "Session Expired",

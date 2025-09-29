@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset } from '@/types/portfolio';
 import { handleWriteError } from '@/lib/session-utils';
-import { useSessionAuth } from '@/hooks/useSessionAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 interface AssetLiquidationSetting {
@@ -16,7 +16,7 @@ interface AssetLiquidationSetting {
 export function useAssetLiquidationSettings() {
   const [liquidationSettings, setLiquidationSettings] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
-  const { clearSession } = useSessionAuth();
+  const { logout } = useAuth();
   const { toast } = useToast();
 
   const loadLiquidationSettings = async () => {
@@ -62,7 +62,7 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error saving liquidation setting:', error);
-        const sessionExpired = await handleWriteError(error, clearSession);
+        const sessionExpired = await handleWriteError(error, logout);
         if (sessionExpired) {
           toast({
             title: "Session Expired",
@@ -93,7 +93,7 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error deleting liquidation setting:', error);
-        const sessionExpired = await handleWriteError(error, clearSession);
+        const sessionExpired = await handleWriteError(error, logout);
         if (sessionExpired) {
           toast({
             title: "Session Expired",

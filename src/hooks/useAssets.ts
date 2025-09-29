@@ -3,14 +3,14 @@ import { Asset } from '@/types/portfolio';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { handleWriteError, verifySession } from '@/lib/session-utils';
-import { useSessionAuth } from '@/hooks/useSessionAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { calculatePEPrice } from '@/lib/portfolio-utils';
 
 export function useAssets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { clearSession } = useSessionAuth();
+  const { logout } = useAuth();
 
   // Convert database row to Asset
   const convertFromDb = (row: any): Asset => ({
@@ -92,7 +92,7 @@ export function useAssets() {
         .maybeSingle();
 
       if (error) {
-        const sessionExpired = await handleWriteError(error, clearSession);
+        const sessionExpired = await handleWriteError(error, logout);
         if (sessionExpired) {
           toast({
             title: "Session Expired",
@@ -108,7 +108,7 @@ export function useAssets() {
         // Check if this might be due to session expiration
         const sessionValid = await verifySession();
         if (!sessionValid) {
-          clearSession();
+          logout();
           toast({
             title: "Session Expired",
             description: "Your session has expired. Please log in again.",
@@ -261,7 +261,7 @@ export function useAssets() {
             .select();
 
           if (error) {
-            const sessionExpired = await handleWriteError(error, clearSession);
+            const sessionExpired = await handleWriteError(error, logout);
             if (sessionExpired) {
               toast({
                 title: "Session Expired",
@@ -318,7 +318,7 @@ export function useAssets() {
             .maybeSingle();
 
           if (specificError) {
-            const sessionExpired = await handleWriteError(specificError, clearSession);
+            const sessionExpired = await handleWriteError(specificError, logout);
             if (sessionExpired) {
               toast({
                 title: "Session Expired",
@@ -333,7 +333,7 @@ export function useAssets() {
           if (!specificData) {
             const sessionValid = await verifySession();
             if (!sessionValid) {
-              clearSession();
+              logout();
               toast({
                 title: "Session Expired",
                 description: "Your session has expired. Please log in again.",
@@ -384,7 +384,7 @@ export function useAssets() {
             .select();
 
           if (error) {
-            const sessionExpired = await handleWriteError(error, clearSession);
+            const sessionExpired = await handleWriteError(error, logout);
             if (sessionExpired) {
               toast({
                 title: "Session Expired",
@@ -425,7 +425,7 @@ export function useAssets() {
             .maybeSingle();
 
           if (specificError) {
-            const sessionExpired = await handleWriteError(specificError, clearSession);
+            const sessionExpired = await handleWriteError(specificError, logout);
             if (sessionExpired) {
               toast({
                 title: "Session Expired",
@@ -440,7 +440,7 @@ export function useAssets() {
           if (!specificData) {
             const sessionValid = await verifySession();
             if (!sessionValid) {
-              clearSession();
+              logout();
               toast({
                 title: "Session Expired", 
                 description: "Your session has expired. Please log in again.",
@@ -502,7 +502,7 @@ export function useAssets() {
           .maybeSingle();
 
         if (error) {
-          const sessionExpired = await handleWriteError(error, clearSession);
+          const sessionExpired = await handleWriteError(error, logout);
           if (sessionExpired) {
             toast({
               title: "Session Expired",
@@ -517,7 +517,7 @@ export function useAssets() {
         if (!data) {
           const sessionValid = await verifySession();
           if (!sessionValid) {
-            clearSession();
+            logout();
             toast({
               title: "Session Expired",
               description: "Your session has expired. Please log in again.",
@@ -557,7 +557,7 @@ export function useAssets() {
         .eq('id', asset.id);
 
       if (error) {
-        const sessionExpired = await handleWriteError(error, clearSession);
+        const sessionExpired = await handleWriteError(error, logout);
         if (sessionExpired) {
           toast({
             title: "Session Expired",

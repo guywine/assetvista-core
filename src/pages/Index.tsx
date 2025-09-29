@@ -1,11 +1,14 @@
+import { AuthProvider } from '@/contexts/AuthContext';
 import { PasswordProtection } from '@/components/auth/PasswordProtection';
 import { PortfolioDashboard } from '@/components/portfolio/PortfolioDashboard';
 
 const Index = () => {
   return (
-    <PasswordProtection>
-      <PortfolioDashboard />
-    </PasswordProtection>
+    <AuthProvider>
+      <PasswordProtection>
+        <PortfolioDashboard />
+      </PasswordProtection>
+    </AuthProvider>
   );
 };
 

@@ -51,13 +51,13 @@ export async function verifySession(): Promise<boolean> {
  * Handles write operation errors by checking for session expiration
  * Returns true if session expired and logout was triggered, false otherwise
  */
-export async function handleWriteError(error: any, clearSession: () => void): Promise<boolean> {
+export async function handleWriteError(error: any, logout: () => void): Promise<boolean> {
   console.debug('Checking error for session expiration:', error);
   
   // First check if error directly indicates session issues
   if (isSessionExpiredError(error)) {
     console.debug('Error indicates session expiration');
-    clearSession();
+    logout();
     return true;
   }
   
@@ -65,7 +65,7 @@ export async function handleWriteError(error: any, clearSession: () => void): Pr
   const sessionValid = await verifySession();
   if (!sessionValid) {
     console.debug('Session verification failed, logging out');
-    clearSession();
+    logout();
     return true;
   }
   
