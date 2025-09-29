@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Asset } from '@/types/portfolio';
+import { useSessionExpiration } from '@/lib/session-utils';
+import { useSessionAuth } from '@/hooks/useSessionAuth';
 
 interface AssetLiquidationSetting {
   id: string;
@@ -13,6 +15,8 @@ interface AssetLiquidationSetting {
 export function useAssetLiquidationSettings() {
   const [liquidationSettings, setLiquidationSettings] = useState<Map<string, string>>(new Map());
   const [isLoading, setIsLoading] = useState(true);
+  const { handleSessionExpiration } = useSessionExpiration();
+  const { clearSession } = useSessionAuth();
 
   const loadLiquidationSettings = async () => {
     try {
@@ -57,7 +61,12 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error saving liquidation setting:', error);
-        throw error;
+        // Check if session expired before showing generic error
+        const sessionExpired = await handleSessionExpiration(clearSession);
+        if (!sessionExpired) {
+          throw error;
+        }
+        return;
       }
 
       console.log('Successfully saved liquidation setting');
@@ -79,6 +88,11 @@ export function useAssetLiquidationSettings() {
 
       if (error) {
         console.error('Error deleting liquidation setting:', error);
+        // Check if session expired before showing generic error
+        const sessionExpired = await handleSessionExpiration(clearSession);
+        if (!sessionExpired) {
+          throw error;
+        }
         return;
       }
 

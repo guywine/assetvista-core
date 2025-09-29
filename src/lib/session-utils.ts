@@ -8,9 +8,10 @@ import { useToast } from '@/hooks/use-toast';
 export async function checkSessionExpiration(): Promise<boolean> {
   try {
     // Use RPC to get session status flags from the database
-    const { data: sessionExpired } = await supabase.rpc('get_config', { 
-      config_name: 'app.session_expired' 
-    });
+    const { data: sessionExpired } = await supabase
+      .rpc('get_config', { 
+        config_name: 'app.session_expired' 
+      });
     
     return sessionExpired === 'true';
   } catch (error) {

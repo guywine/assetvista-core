@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import { Asset } from '@/types/portfolio';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionExpiration } from '@/lib/session-utils';
+import { useSessionAuth } from '@/hooks/useSessionAuth';
 import { calculatePEPrice } from '@/lib/portfolio-utils';
 
 export function useAssets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { handleSessionExpiration } = useSessionExpiration();
+  const { clearSession } = useSessionAuth();
 
   // Convert database row to Asset
   const convertFromDb = (row: any): Asset => ({
@@ -86,10 +90,19 @@ export function useAssets() {
         .from('assets')
         .insert([dbAsset])
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) {
-        throw error;
+        // Check if session expired before showing generic error
+        const sessionExpired = await handleSessionExpiration(clearSession);
+        if (!sessionExpired) {
+          throw error;
+        }
+        return;
+      }
+
+      if (!data) {
+        throw new Error('No data returned from insert operation');
       }
 
       const newAsset = convertFromDb(data);
@@ -234,7 +247,12 @@ export function useAssets() {
             .select();
 
           if (error) {
-            throw error;
+            // Check if session expired before showing generic error
+            const sessionExpired = await handleSessionExpiration(clearSession);
+            if (!sessionExpired) {
+              throw error;
+            }
+            return originalAsset;
           }
 
           updatedAssets = (data || []).map(convertFromDb);
@@ -279,10 +297,19 @@ export function useAssets() {
             .update(accountSpecificDbProps)
             .eq('id', asset.id)
             .select()
-            .single();
+            .maybeSingle();
 
           if (specificError) {
-            throw specificError;
+            // Check if session expired before showing generic error
+            const sessionExpired = await handleSessionExpiration(clearSession);
+            if (!sessionExpired) {
+              throw specificError;
+            }
+            return originalAsset;
+          }
+
+          if (!specificData) {
+            throw new Error('No data returned from update operation');
           }
 
           specificUpdatedAsset = convertFromDb(specificData);
@@ -408,10 +435,19 @@ export function useAssets() {
           .update(dbAsset)
           .eq('id', asset.id)
           .select()
-          .single();
+          .maybeSingle();
 
         if (error) {
-          throw error;
+          // Check if session expired before showing generic error
+          const sessionExpired = await handleSessionExpiration(clearSession);
+          if (!sessionExpired) {
+            throw error;
+          }
+          return asset;
+        }
+
+        if (!data) {
+          throw new Error('No data returned from update operation');
         }
 
         const updatedAsset = convertFromDb(data);
@@ -443,7 +479,12 @@ export function useAssets() {
         .eq('id', asset.id);
 
       if (error) {
-        throw error;
+        // Check if session expired before showing generic error
+        const sessionExpired = await handleSessionExpiration(clearSession);
+        if (!sessionExpired) {
+          throw error;
+        }
+        return;
       }
 
       setAssets(prev => prev.filter(a => a.id !== asset.id));

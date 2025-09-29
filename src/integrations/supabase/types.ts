@@ -233,6 +233,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_config: {
+        Args: { config_name: string }
+        Returns: string
+      }
       is_authorized: {
         Args: Record<PropertyKey, never>
         Returns: boolean

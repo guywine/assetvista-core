@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FXRates } from '@/types/portfolio';
 import { useToast } from '@/hooks/use-toast';
+import { useSessionExpiration } from '@/lib/session-utils';
+import { useSessionAuth } from '@/hooks/useSessionAuth';
 
 export interface FXRateData {
   currency: string;
@@ -17,6 +19,8 @@ export function useFXRates() {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { handleSessionExpiration } = useSessionExpiration();
+  const { clearSession } = useSessionAuth();
 
   // Load FX rates from database
   const loadFXRates = async () => {
@@ -89,7 +93,14 @@ export function useFXRates() {
           onConflict: 'currency'
         });
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        // Check if session expired before showing generic error
+        const sessionExpired = await handleSessionExpiration(clearSession);
+        if (!sessionExpired) {
+          throw updateError;
+        }
+        return;
+      }
 
       // Now, if USD was updated, we need to recalculate all other currencies' to_USD rates
       if (currency === 'USD') {
@@ -118,7 +129,14 @@ export function useFXRates() {
               onConflict: 'currency'
             });
 
-          if (batchUpdateError) throw batchUpdateError;
+          if (batchUpdateError) {
+            // Check if session expired before showing generic error
+            const sessionExpired = await handleSessionExpiration(clearSession);
+            if (!sessionExpired) {
+              throw batchUpdateError;
+            }
+            return;
+          }
         }
       }
 

@@ -3,10 +3,14 @@ import { Asset, FXRates, PortfolioSnapshot } from '@/types/portfolio';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { calculateAssetValue } from '@/lib/portfolio-utils';
+import { useSessionExpiration } from '@/lib/session-utils';
+import { useSessionAuth } from '@/hooks/useSessionAuth';
 
 export function usePortfolioSnapshots() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { handleSessionExpiration } = useSessionExpiration();
+  const { clearSession } = useSessionAuth();
 
   const saveSnapshot = async (name: string, description: string, assets: Asset[], fxRates: FXRates) => {
     setIsLoading(true);
@@ -96,7 +100,12 @@ export function usePortfolioSnapshots() {
 
       if (error) {
         console.error('Supabase insert error:', error);
-        throw error;
+        // Check if session expired before showing generic error
+        const sessionExpired = await handleSessionExpiration(clearSession);
+        if (!sessionExpired) {
+          throw error;
+        }
+        return false;
       }
 
       toast({
