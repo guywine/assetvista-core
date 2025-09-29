@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
 import { calculateAssetValue, filterAssetsByFilters } from '@/lib/portfolio-utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { verifySession } from '@/lib/session-utils';
 
 import { useAssets } from '@/hooks/useAssets';
 import { useFXRates } from '@/hooks/useFXRates';
@@ -21,6 +23,8 @@ import { useToast } from '@/hooks/use-toast';
 export function PortfolioDashboard() {
   const { assets, isLoading, addAsset, updateAsset, deleteAsset, getAssetNameCount } = useAssets();
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
+  const [activeTab, setActiveTab] = useState<string>('assets');
+  const { logout } = useAuth();
   
   const {
     fxRates,
@@ -188,6 +192,18 @@ export function PortfolioDashboard() {
     await saveSnapshot(name, description, assets, fxRates);
   };
 
+  const handleTabChange = async (value: string) => {
+    // Check session validity before switching to predictions or history tabs
+    if (value === 'predictions' || value === 'history') {
+      const sessionValid = await verifySession();
+      if (!sessionValid) {
+        logout();
+        return;
+      }
+    }
+    setActiveTab(value);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <div className="container mx-auto p-6 space-y-8">
@@ -207,7 +223,7 @@ export function PortfolioDashboard() {
             onManualRateChange={updateManualRate}
           />
 
-        <Tabs defaultValue="assets" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 max-w-lg bg-muted/50 p-1">
             <TabsTrigger 
               value="assets" 
