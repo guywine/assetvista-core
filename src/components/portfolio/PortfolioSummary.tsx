@@ -673,20 +673,21 @@ export function PortfolioSummary({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {/* Overall Fixed Income YTW */}
-                <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">All Fixed Income</p>
-                  <p className="text-2xl font-bold text-financial-success">
-                    {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
-                  </p>
-                </div>
+                {/* Overall Fixed Income YTW - Side by Side */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-2">All Fixed Income</p>
+                    <p className="text-2xl font-bold text-financial-success">
+                      {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
+                    </p>
+                  </div>
 
-                {/* Fixed Income YTW excluding Money Market and Bank Deposit */}
-                <div className="mb-6 p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground mb-2">Excluding Money Market and Bank Deposits</p>
-                  <p className="text-2xl font-bold text-financial-success">
-                    {(fixedIncomeWeightedYTWExcludingCash * 100).toFixed(2)}%
-                  </p>
+                  <div className="p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-2">Excluding Money Market and Bank Deposits</p>
+                    <p className="text-2xl font-bold text-financial-success">
+                      {(fixedIncomeWeightedYTWExcludingCash * 100).toFixed(2)}%
+                    </p>
+                  </div>
                 </div>
 
                 {/* YTW by Sub-class */}
