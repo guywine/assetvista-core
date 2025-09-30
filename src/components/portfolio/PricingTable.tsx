@@ -33,7 +33,7 @@ export function PricingTable({
     setEditingAsset({
       id: asset.id,
       price: asset.price.toString(),
-      ytw: asset.ytw?.toString() || '',
+      ytw: asset.ytw ? (asset.ytw * 100).toString() : '', // Convert to percentage for editing
     });
   };
 
@@ -45,7 +45,7 @@ export function PricingTable({
 
     try {
       const price = parseFloat(editingAsset.price);
-      const ytw = editingAsset.ytw ? parseFloat(editingAsset.ytw) : undefined;
+      const ytw = editingAsset.ytw ? parseFloat(editingAsset.ytw) / 100 : undefined; // Convert percentage back to decimal
 
       if (isNaN(price) || price < 0) {
         toast({
@@ -144,37 +144,60 @@ export function PricingTable({
                       {asset.name}
                     </td>
                     <td className="p-2 py-1.5 text-right">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={editingAsset.price}
-                          onChange={(e) => setEditingAsset(prev => 
-                            prev ? { ...prev, price: e.target.value } : null
-                          )}
-                          className="w-20 h-7 text-xs text-right"
-                        />
-                      ) : (
-                        <span className="font-medium">{asset.price}</span>
-                      )}
+                      <div className="flex items-center justify-end gap-1">
+                        {isEditing ? (
+                          <>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={editingAsset.price}
+                              onChange={(e) => setEditingAsset(prev => 
+                                prev ? { ...prev, price: e.target.value } : null
+                              )}
+                              className="w-20 h-7 text-xs text-right"
+                            />
+                            <span className="text-xs text-muted-foreground min-w-[28px]">
+                              {asset.origin_currency}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="font-medium">{asset.price}</span>
+                            <span className="text-xs text-muted-foreground ml-1">
+                              {asset.origin_currency}
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </td>
                     <td className="p-2 py-1.5 text-right">
                       {showYTW ? (
-                        isEditing ? (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={editingAsset.ytw}
-                            onChange={(e) => setEditingAsset(prev => 
-                              prev ? { ...prev, ytw: e.target.value } : null
-                            )}
-                            className="w-20 h-7 text-xs text-right"
-                          />
-                        ) : (
-                          <span className="font-medium">
-                            {asset.ytw?.toFixed(2) || '-'}
-                          </span>
-                        )
+                        <div className="flex items-center justify-end gap-1">
+                          {isEditing ? (
+                            <>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={editingAsset.ytw}
+                                onChange={(e) => setEditingAsset(prev => 
+                                  prev ? { ...prev, ytw: e.target.value } : null
+                                )}
+                                className="w-16 h-7 text-xs text-right"
+                                placeholder="0.00"
+                              />
+                              <span className="text-xs text-muted-foreground">%</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-medium">
+                                {asset.ytw ? (asset.ytw * 100).toFixed(2) : '-'}
+                              </span>
+                              {asset.ytw && (
+                                <span className="text-xs text-muted-foreground">%</span>
+                              )}
+                            </>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">-</span>
                       )}
