@@ -501,9 +501,8 @@ export function AssetForm({
               <Label htmlFor="quantity" className="font-semibold">Quantity *</Label>
               <Input
                 id="quantity"
-                type="number"
-                min="0"
-                step="0.0001"
+                type="text"
+                inputMode="decimal"
                 value={formData.quantity}
                 onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
                 placeholder="0"
@@ -530,9 +529,8 @@ export function AssetForm({
                 ) : (
                   <Input
                     id="price"
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                     placeholder="0.00"
@@ -550,10 +548,8 @@ export function AssetForm({
                 <Label htmlFor="factor" className="font-semibold">Factor (0-1) {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
                 <Input
                   id="factor"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={formData.factor}
                   onChange={(e) => setFormData(prev => ({ ...prev, factor: parseFloat(e.target.value) || 1.0 }))}
                   placeholder="1.0"
@@ -594,9 +590,8 @@ export function AssetForm({
                       <Label htmlFor="company_value" className="font-semibold">Company Market Value {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
                       <Input
                         id="company_value"
-                        type="number"
-                        min="0"
-                        step="1000"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.pe_company_value || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, pe_company_value: parseFloat(e.target.value) || undefined }))}
                         placeholder="10000000"
@@ -609,10 +604,8 @@ export function AssetForm({
                       <Label htmlFor="holding_percentage" className="font-semibold">Percentage of Holding {isPEHoldingPercentageLocked && <Badge variant="outline" className="ml-1">Shared</Badge>} *</Label>
                       <Input
                         id="holding_percentage"
-                        type="number"
-                        min="0"
-                        max="100"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={formData.pe_holding_percentage || ''}
                         onChange={(e) => setFormData(prev => ({ ...prev, pe_holding_percentage: parseFloat(e.target.value) || undefined }))}
                         placeholder="5.00"
@@ -666,9 +659,8 @@ export function AssetForm({
                 <Label htmlFor="ytw" className="font-semibold">YTW (%) {isSharedFieldsLocked && <Badge variant="outline" className="ml-1">Shared</Badge>}</Label>
                 <Input
                   id="ytw"
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={formData.ytw !== undefined ? (formData.ytw * 100).toFixed(2) : ''}
                   onChange={(e) => {
                     const percentValue = parseFloat(e.target.value) || 0;
