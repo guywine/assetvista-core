@@ -180,6 +180,15 @@ export function PortfolioSummary({
   const fixedIncomeAssets = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined);
   const fixedIncomeWeightedYTW = calculateWeightedYTW(assets, calculations);
 
+  // Fixed Income YTW excluding Money Market and Bank Deposit
+  const fixedIncomeExcludingCashEquivalents = assets.filter(
+    asset => asset.class === 'Fixed Income' && 
+    asset.ytw !== undefined && 
+    asset.sub_class !== 'Money Market' && 
+    asset.sub_class !== 'Bank Deposit'
+  );
+  const fixedIncomeWeightedYTWExcludingCash = calculateWeightedYTW(fixedIncomeExcludingCashEquivalents, calculations);
+
   // Fixed Income sub-class YTW calculations
   const fixedIncomeSubClassYTW = fixedIncomeAssets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
@@ -669,6 +678,14 @@ export function PortfolioSummary({
                   <p className="text-sm text-muted-foreground mb-2">All Fixed Income</p>
                   <p className="text-2xl font-bold text-financial-success">
                     {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
+                  </p>
+                </div>
+
+                {/* Fixed Income YTW excluding Money Market and Bank Deposit */}
+                <div className="mb-6 p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Excluding Money Market and Bank Deposits</p>
+                  <p className="text-2xl font-bold text-financial-success">
+                    {(fixedIncomeWeightedYTWExcludingCash * 100).toFixed(2)}%
                   </p>
                 </div>
 
