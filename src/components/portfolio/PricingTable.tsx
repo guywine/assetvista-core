@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Asset } from '@/types/portfolio';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ interface EditingAsset {
   id: string;
   price: string;
   ytw: string;
+  field?: 'price' | 'ytw'; // Track which field was double-clicked
 }
 
 export function PricingTable({ 
@@ -26,14 +27,28 @@ export function PricingTable({
 }: PricingTableProps) {
   const [editingAsset, setEditingAsset] = useState<EditingAsset | null>(null);
   const { toast } = useToast();
+  const priceInputRef = useRef<HTMLInputElement>(null);
+  const ytwInputRef = useRef<HTMLInputElement>(null);
 
   const allAssets = [...groupAAssets, ...groupBAssets];
 
-  const handleStartEdit = (asset: Asset) => {
+  // Auto-focus input when entering edit mode
+  useEffect(() => {
+    if (editingAsset?.field === 'price' && priceInputRef.current) {
+      priceInputRef.current.focus();
+      priceInputRef.current.select();
+    } else if (editingAsset?.field === 'ytw' && ytwInputRef.current) {
+      ytwInputRef.current.focus();
+      ytwInputRef.current.select();
+    }
+  }, [editingAsset]);
+
+  const handleStartEdit = (asset: Asset, field?: 'price' | 'ytw') => {
     setEditingAsset({
       id: asset.id,
       price: asset.price.toString(),
       ytw: asset.ytw ? (asset.ytw * 100).toString() : '', // Convert to percentage for editing
+      field,
     });
   };
 
@@ -92,6 +107,20 @@ export function PricingTable({
     setEditingAsset(null);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancel();
+    }
+  };
+
+  const handleDoubleClick = (asset: Asset, field: 'price' | 'ytw') => {
+    handleStartEdit(asset, field);
+  };
+
   const isGroupB = (asset: Asset) => {
     return asset.class === 'Fixed Income' && 
            ['Corporate', 'Gov long', 'Gov 1-2', 'CPI linked'].includes(asset.sub_class);
@@ -112,7 +141,8 @@ export function PricingTable({
           Quick Pricing Updates ({allAssets.length} assets)
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Update prices and YTW for assets that require regular pricing updates
+          Update prices and YTW for assets that require regular pricing updates. 
+          <span className="text-xs opacity-75">Double-click values to edit, Enter to save, Escape to cancel.</span>
         </p>
       </CardHeader>
       <CardContent>
@@ -148,12 +178,14 @@ export function PricingTable({
                         {isEditing ? (
                           <>
                             <Input
+                              ref={priceInputRef}
                               type="number"
                               step="0.01"
                               value={editingAsset.price}
                               onChange={(e) => setEditingAsset(prev => 
                                 prev ? { ...prev, price: e.target.value } : null
                               )}
+                              onKeyDown={handleKeyDown}
                               className="w-20 h-7 text-xs text-right"
                             />
                             <span className="text-xs text-muted-foreground min-w-[28px]">
@@ -162,7 +194,13 @@ export function PricingTable({
                           </>
                         ) : (
                           <>
-                            <span className="font-medium">{asset.price}</span>
+                            <span 
+                              className="font-medium cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors"
+                              onDoubleClick={() => handleDoubleClick(asset, 'price')}
+                              title="Double-click to edit"
+                            >
+                              {asset.price}
+                            </span>
                             <span className="text-xs text-muted-foreground ml-1">
                               {asset.origin_currency}
                             </span>
@@ -176,12 +214,14 @@ export function PricingTable({
                           {isEditing ? (
                             <>
                               <Input
+                                ref={ytwInputRef}
                                 type="number"
                                 step="0.01"
                                 value={editingAsset.ytw}
                                 onChange={(e) => setEditingAsset(prev => 
                                   prev ? { ...prev, ytw: e.target.value } : null
                                 )}
+                                onKeyDown={handleKeyDown}
                                 className="w-16 h-7 text-xs text-right"
                                 placeholder="0.00"
                               />
@@ -189,7 +229,11 @@ export function PricingTable({
                             </>
                           ) : (
                             <>
-                              <span className="font-medium">
+                              <span 
+                                className="font-medium cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded transition-colors"
+                                onDoubleClick={() => handleDoubleClick(asset, 'ytw')}
+                                title="Double-click to edit"
+                              >
                                 {asset.ytw ? (asset.ytw * 100).toFixed(2) : '-'}
                               </span>
                               {asset.ytw && (
