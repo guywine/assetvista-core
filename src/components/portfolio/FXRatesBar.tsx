@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FXRates, Currency } from '@/types/portfolio';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,12 +21,30 @@ export function FXRatesBar({
 }: FXRatesBarProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingRates, setEditingRates] = useState<FXRates>(fxRates);
+  const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const currencies: Currency[] = ['ILS', 'USD', 'EUR', 'CHF', 'CAD', 'HKD', 'GBP'];
 
-  const handleStartEdit = () => {
+  useEffect(() => {
+    if (editingCurrency && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingCurrency]);
+
+  const handleStartEdit = (currency?: Currency) => {
     setEditingRates(fxRates);
     setIsEditing(true);
+    if (currency) {
+      setEditingCurrency(currency);
+    }
+  };
+
+  const handleDoubleClick = (currency: Currency) => {
+    if (currency !== 'ILS') {
+      handleStartEdit(currency);
+    }
   };
 
   const handleSave = () => {
@@ -46,6 +64,15 @@ export function FXRatesBar({
   const handleCancel = () => {
     setEditingRates(fxRates);
     setIsEditing(false);
+    setEditingCurrency(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSave();
+    } else if (e.key === 'Escape') {
+      handleCancel();
+    }
   };
 
   const handleRateChange = (currency: Currency, field: 'to_USD' | 'to_ILS', value: string) => {
@@ -109,14 +136,19 @@ export function FXRatesBar({
                     <div className="flex items-center gap-1">
                       {isEditing ? (
                         <Input
+                          ref={editingCurrency === currency ? inputRef : null}
                           type="number"
                           step="0.001"
                           value={displayRates[currency]?.to_ILS || 0}
                           onChange={(e) => handleRateChange(currency, 'to_ILS', e.target.value)}
+                          onKeyDown={handleKeyDown}
                           className="w-16 h-6 text-xs p-1 text-center"
                         />
                       ) : (
-                        <span className="text-sm font-semibold">
+                        <span 
+                          className="text-sm font-semibold cursor-pointer hover:text-primary transition-colors"
+                          onDoubleClick={() => handleDoubleClick(currency)}
+                        >
                           {displayRates[currency]?.to_ILS?.toFixed(3) || '0.000'}
                         </span>
                       )}
@@ -154,7 +186,7 @@ export function FXRatesBar({
                   <Button 
                     size="sm" 
                     variant="ghost" 
-                    onClick={handleStartEdit}
+                    onClick={() => handleStartEdit()}
                     className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                   >
                     <Edit2 className="h-3 w-3" />
