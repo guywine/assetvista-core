@@ -39,12 +39,11 @@ export function PortfolioSummary({
   const cashEquivalentsValue = assets.reduce((sum, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
-    
+
     // Use the pre-calculated is_cash_equivalent field
     if (asset.is_cash_equivalent) {
       return sum + value;
     }
-    
     return sum;
   }, 0);
 
@@ -166,7 +165,6 @@ export function PortfolioSummary({
     acc[asset.origin_currency] += value;
     return acc;
   }, {} as Record<string, number>);
-
   const currencyTotalValue = Object.values(holdingsByCurrency).reduce((sum, value) => sum + value, 0);
 
   // Currency pie chart data
@@ -181,12 +179,7 @@ export function PortfolioSummary({
   const fixedIncomeWeightedYTW = calculateWeightedYTW(assets, calculations);
 
   // Fixed Income YTW excluding Money Market and Bank Deposit
-  const fixedIncomeExcludingCashEquivalents = assets.filter(
-    asset => asset.class === 'Fixed Income' && 
-    asset.ytw !== undefined && 
-    asset.sub_class !== 'Money Market' && 
-    asset.sub_class !== 'Bank Deposit'
-  );
+  const fixedIncomeExcludingCashEquivalents = assets.filter(asset => asset.class === 'Fixed Income' && asset.ytw !== undefined && asset.sub_class !== 'Money Market' && asset.sub_class !== 'Bank Deposit');
   const fixedIncomeWeightedYTWExcludingCash = calculateWeightedYTW(fixedIncomeExcludingCashEquivalents, calculations);
 
   // Fixed Income sub-class YTW calculations
@@ -239,30 +232,8 @@ export function PortfolioSummary({
     value: number;
     percentage: number;
   }>>);
-  const COLORS = [
-    'hsl(var(--chart-1))',
-    'hsl(var(--chart-2))',
-    'hsl(var(--chart-3))',
-    'hsl(var(--chart-4))',
-    'hsl(var(--chart-5))',
-    'hsl(var(--chart-6))',
-    'hsl(var(--chart-7))',
-    'hsl(var(--chart-8))',
-    'hsl(var(--chart-9))',
-    'hsl(var(--chart-10))'
-  ];
-  const SUB_CLASS_COLORS = [
-    'hsl(var(--chart-1))', 
-    'hsl(var(--chart-2))', 
-    'hsl(var(--chart-3))', 
-    'hsl(var(--chart-4))', 
-    'hsl(var(--chart-5))',
-    'hsl(var(--chart-6))',
-    'hsl(var(--chart-7))',
-    'hsl(var(--chart-8))',
-    'hsl(var(--chart-9))',
-    'hsl(var(--chart-10))'
-  ];
+  const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))', 'hsl(var(--chart-7))', 'hsl(var(--chart-8))', 'hsl(var(--chart-9))', 'hsl(var(--chart-10))'];
+  const SUB_CLASS_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', 'hsl(var(--chart-6))', 'hsl(var(--chart-7))', 'hsl(var(--chart-8))', 'hsl(var(--chart-9))', 'hsl(var(--chart-10))'];
   return <div className="space-y-8">{/* Increased spacing between major sections */}
       {/* Cash & Equivalents Summary */}
       <Card className="bg-gradient-to-br from-accent/10 to-accent/5 shadow-card border-accent/20">
@@ -277,7 +248,7 @@ export function PortfolioSummary({
             {formatCurrency(cashEquivalentsValue, viewCurrency)}
           </div>
           <div className="text-sm text-muted-foreground mt-1">
-            {((cashEquivalentsValue / totalValue) * 100).toFixed(1)}% of total portfolio
+            {(cashEquivalentsValue / totalValue * 100).toFixed(1)}% of total portfolio
           </div>
         </CardContent>
       </Card>
@@ -447,10 +418,9 @@ export function PortfolioSummary({
         const positionsByName = filteredAssets.reduce((acc, asset) => {
           const calc = calculations.get(asset.id);
           const value = calc?.display_value || 0;
-          
+
           // Group all Bitcoin-related assets under one name
           const groupName = isBitcoinAsset(asset.name) ? 'Bitcoin (All)' : asset.name;
-          
           if (!acc[groupName]) {
             acc[groupName] = {
               name: groupName,
@@ -683,7 +653,7 @@ export function PortfolioSummary({
                   </div>
 
                   <div className="p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-2">Excluding Money Market and Bank Deposits</p>
+                    <p className="text-sm text-muted-foreground mb-2">Excl. MM and Deposits</p>
                     <p className="text-2xl font-bold text-financial-success">
                       {(fixedIncomeWeightedYTWExcludingCash * 100).toFixed(2)}%
                     </p>
@@ -757,49 +727,48 @@ export function PortfolioSummary({
                 <div className="h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={(() => {
-                      // Filter Real Estate assets
-                      const realEstateAssets = assets.filter(asset => asset.class === 'Real Estate');
-                      
-                      // Group by asset name and sum their values
-                      const positionsByName = realEstateAssets.reduce((acc, asset) => {
-                        const calc = calculations.get(asset.id);
-                        const value = calc?.display_value || 0;
-                        
-                        if (!acc[asset.name]) {
-                          acc[asset.name] = {
-                            name: asset.name,
-                            value: 0
-                          };
-                        }
-                        acc[asset.name].value += value;
-                        return acc;
-                      }, {} as Record<string, {
-                        name: string;
-                        value: number;
-                      }>);
-                      
-                      // Return sorted array by value
-                      return Object.values(positionsByName).sort((a, b) => b.value - a.value);
-                    })()} margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
-                      bottom: 60
-                    }}>
+                  // Filter Real Estate assets
+                  const realEstateAssets = assets.filter(asset => asset.class === 'Real Estate');
+
+                  // Group by asset name and sum their values
+                  const positionsByName = realEstateAssets.reduce((acc, asset) => {
+                    const calc = calculations.get(asset.id);
+                    const value = calc?.display_value || 0;
+                    if (!acc[asset.name]) {
+                      acc[asset.name] = {
+                        name: asset.name,
+                        value: 0
+                      };
+                    }
+                    acc[asset.name].value += value;
+                    return acc;
+                  }, {} as Record<string, {
+                    name: string;
+                    value: number;
+                  }>);
+
+                  // Return sorted array by value
+                  return Object.values(positionsByName).sort((a, b) => b.value - a.value);
+                })()} margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 60
+                }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} interval={0} tick={{
-                        fontSize: 12
-                      }} />
+                    fontSize: 12
+                  }} />
                       <YAxis tickFormatter={value => formatCurrency(value, viewCurrency)} tick={{
-                        fontSize: 12
-                      }} />
+                    fontSize: 12
+                  }} />
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} labelStyle={{
-                        color: 'hsl(var(--foreground))'
-                      }} contentStyle={{
-                        backgroundColor: 'hsl(var(--background))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }} />
+                    color: 'hsl(var(--foreground))'
+                  }} contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }} />
                       <Bar dataKey="value" fill="hsl(var(--chart-1))" />
                     </BarChart>
                   </ResponsiveContainer>
@@ -857,35 +826,34 @@ export function PortfolioSummary({
                 <div className="h-80 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                      <BarChart data={(() => {
-                   // Get Private Equity assets
-                   const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
+                  // Get Private Equity assets
+                  const privateEquityAssets = assets.filter(asset => asset.class === 'Private Equity');
 
-                   // Group by asset name and sum their values
-                   const positionsByName = privateEquityAssets.reduce((acc, asset) => {
-                     const calc = calculations.get(asset.id);
-                     const factored_value = calc?.display_value || 0;
-                     const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
-                     
-                     if (!acc[asset.name]) {
-                       acc[asset.name] = {
-                         name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
-                         fullName: asset.name,
-                         factored_value: 0,
-                         full_price: 0
-                       };
-                     }
-                     acc[asset.name].factored_value += factored_value;
-                     acc[asset.name].full_price += full_price;
-                     return acc;
-                   }, {} as Record<string, {
-                     name: string;
-                     fullName: string;
-                     factored_value: number;
-                     full_price: number;
-                   }>);
+                  // Group by asset name and sum their values
+                  const positionsByName = privateEquityAssets.reduce((acc, asset) => {
+                    const calc = calculations.get(asset.id);
+                    const factored_value = calc?.display_value || 0;
+                    const full_price = asset.quantity * (asset.price || 0) * (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
+                    if (!acc[asset.name]) {
+                      acc[asset.name] = {
+                        name: asset.name.length > 15 ? asset.name.substring(0, 15) + '...' : asset.name,
+                        fullName: asset.name,
+                        factored_value: 0,
+                        full_price: 0
+                      };
+                    }
+                    acc[asset.name].factored_value += factored_value;
+                    acc[asset.name].full_price += full_price;
+                    return acc;
+                  }, {} as Record<string, {
+                    name: string;
+                    fullName: string;
+                    factored_value: number;
+                    full_price: number;
+                  }>);
 
-                   // Get top 10 positions by factored value
-                   return Object.values(positionsByName).sort((a, b) => b.factored_value - a.factored_value).slice(0, 10);
+                  // Get top 10 positions by factored value
+                  return Object.values(positionsByName).sort((a, b) => b.factored_value - a.factored_value).slice(0, 10);
                 })()} margin={{
                   top: 20,
                   right: 30,
