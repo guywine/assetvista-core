@@ -25,6 +25,9 @@ export function PortfolioSummary({
   // State for managing Real Estate inclusion in currency chart
   const [includeRealEstateInCurrency, setIncludeRealEstateInCurrency] = useState<boolean>(true);
 
+  // State for excluding Money Market and Bank Deposits from Fixed Income chart
+  const [excludeMMAndDeposits, setExcludeMMAndDeposits] = useState<boolean>(true);
+
   // Calculate all asset values
   const calculations = new Map<string, AssetCalculations>();
   assets.forEach(asset => {
@@ -208,11 +211,18 @@ export function PortfolioSummary({
 
   // Fixed Income pie chart data
   const fixedIncomeSubClasses = subClassBreakdown['Fixed Income'] || {};
-  const fixedIncomePieData = Object.entries(fixedIncomeSubClasses).map(([subClass, value]) => ({
+  const fixedIncomePieDataAll = Object.entries(fixedIncomeSubClasses).map(([subClass, value]) => ({
     name: subClass,
     value: value,
     percentage: holdingsByClass['Fixed Income']?.value > 0 ? value / holdingsByClass['Fixed Income'].value * 100 : 0
   }));
+  
+  // Filter based on toggle state
+  const fixedIncomePieData = excludeMMAndDeposits 
+    ? fixedIncomePieDataAll.filter(item => item.name !== 'Money Market' && item.name !== 'Bank Deposit')
+    : fixedIncomePieDataAll;
+  
+  const fixedIncomePieTotal = fixedIncomePieData.reduce((sum, item) => sum + item.value, 0);
 
   // Create pie chart data for each asset class that has assets
   const subClassPieData = Object.entries(subClassBreakdown).reduce((acc, [assetClass, subClasses]) => {
@@ -613,11 +623,23 @@ export function PortfolioSummary({
             {/* Fixed Income Sub-class Pie Chart */}
             <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
               <CardHeader>
-                <CardTitle className="text-lg font-bold text-financial-primary">
-                  Fixed Income Sub-classes
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg font-bold text-financial-primary">
+                    Fixed Income Sub-classes
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="exclude-mm-deposits" className="text-xs text-muted-foreground cursor-pointer">
+                      Exclude MM & Deposits
+                    </label>
+                    <Switch 
+                      id="exclude-mm-deposits"
+                      checked={excludeMMAndDeposits} 
+                      onCheckedChange={setExcludeMMAndDeposits}
+                    />
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Total: {formatCurrency(holdingsByClass['Fixed Income'].value, viewCurrency)}
+                  Total: {formatCurrency(fixedIncomePieTotal, viewCurrency)}
                 </p>
               </CardHeader>
               <CardContent>
@@ -628,7 +650,7 @@ export function PortfolioSummary({
                         {fixedIncomePieData.map((entry, index) => <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />)}
                       </Pie>
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), 'Value']} />
-                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / holdingsByClass['Fixed Income'].value * 100).toFixed(1)}%`} />
+                      <Legend verticalAlign="bottom" height={36} formatter={(value, entry) => `${value}: ${(entry.payload.value / fixedIncomePieTotal * 100).toFixed(1)}%`} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
