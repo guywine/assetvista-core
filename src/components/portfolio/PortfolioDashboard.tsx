@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
-import { calculateAssetValue, filterAssetsByFilters } from '@/lib/portfolio-utils';
+import { calculateAssetValue, filterAssetsByFilters, getPricingGroupAAssets, getPricingGroupBAssets } from '@/lib/portfolio-utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { verifySession } from '@/lib/session-utils';
 
@@ -16,6 +16,7 @@ import { usePortfolioSnapshots } from '@/hooks/usePortfolioSnapshots';
 import { PortfolioFilters } from './PortfolioFilters';
 import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
 import { PortfolioPredictions } from './PortfolioPredictions';
+import { PricingTable } from './PricingTable';
 import { FXRatesBar } from './FXRatesBar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +49,15 @@ export function PortfolioDashboard() {
   const filteredAssets = useMemo(() => {
     return filterAssetsByFilters(assets, filters);
   }, [assets, filters]);
+
+  // Get pricing assets for Group A (price only) and Group B (price + YTW)
+  const pricingGroupAAssets = useMemo(() => {
+    return getPricingGroupAAssets(assets);
+  }, [assets]);
+
+  const pricingGroupBAssets = useMemo(() => {
+    return getPricingGroupBAssets(assets);
+  }, [assets]);
 
   // Calculate aggregated data for unfiltered portfolio (for header)
   const { totalPortfolioValue, totalAssetCount, totalClassTotals } = useMemo(() => {
@@ -193,8 +203,8 @@ export function PortfolioDashboard() {
   };
 
   const handleTabChange = async (value: string) => {
-    // Check session validity before switching to predictions or history tabs
-    if (value === 'predictions' || value === 'history') {
+    // Check session validity before switching to predictions, pricing, or history tabs
+    if (value === 'predictions' || value === 'history' || value === 'pricing') {
       const sessionValid = await verifySession();
       if (!sessionValid) {
         logout();
@@ -224,7 +234,7 @@ export function PortfolioDashboard() {
           />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 max-w-lg bg-muted/50 p-1">
+          <TabsList className="grid w-full grid-cols-5 max-w-2xl bg-muted/50 p-1">
             <TabsTrigger 
               value="assets" 
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
@@ -236,6 +246,12 @@ export function PortfolioDashboard() {
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
             >
               Summary
+            </TabsTrigger>
+            <TabsTrigger 
+              value="pricing" 
+              className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
+            >
+              Pricing
             </TabsTrigger>
             <TabsTrigger 
               value="predictions" 
@@ -293,6 +309,14 @@ export function PortfolioDashboard() {
               assets={assets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
+            />
+          </TabsContent>
+
+          <TabsContent value="pricing" className="space-y-6">
+            <PricingTable
+              groupAAssets={pricingGroupAAssets}
+              groupBAssets={pricingGroupBAssets}
+              onUpdateAsset={updateAsset}
             />
           </TabsContent>
 

@@ -208,3 +208,19 @@ export function isMaturityWithinYear(maturityDate: string | undefined): boolean 
     return false;
   }
 }
+
+export function getPricingGroupAAssets(assets: Asset[]): Asset[] {
+  return assets.filter(asset => {
+    // Group A: Public Equity (all sub-classes) + Fixed Income REIT stock
+    return asset.class === 'Public Equity' || 
+           (asset.class === 'Fixed Income' && asset.sub_class === 'REIT stock');
+  });
+}
+
+export function getPricingGroupBAssets(assets: Asset[]): Asset[] {
+  return assets.filter(asset => {
+    // Group B: Fixed Income (Corporate, Gov long, Gov 1-2, CPI linked)
+    return asset.class === 'Fixed Income' && 
+           ['Corporate', 'Gov long', 'Gov 1-2', 'CPI linked'].includes(asset.sub_class);
+  });
+}
