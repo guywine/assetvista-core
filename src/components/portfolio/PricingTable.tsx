@@ -34,9 +34,33 @@ export function PricingTable({
 
   const allAssets = [...groupAAssets, ...groupBAssets];
 
+  // Consolidate assets by name - each asset name appears only once
+  const consolidatedAssets = useMemo(() => {
+    const assetMap = new Map<string, Asset[]>();
+    
+    allAssets.forEach(asset => {
+      if (!assetMap.has(asset.name)) {
+        assetMap.set(asset.name, []);
+      }
+      assetMap.get(asset.name)!.push(asset);
+    });
+
+    // Create a representative asset for each name (using the most recently updated one)
+    return Array.from(assetMap.entries()).map(([name, assets]) => {
+      const mostRecent = assets.reduce((latest, current) => 
+        new Date(current.updated_at) > new Date(latest.updated_at) ? current : latest
+      );
+      return {
+        ...mostRecent,
+        // Store all asset IDs that share this name for bulk updates
+        _allAssetIds: assets.map(a => a.id),
+      };
+    });
+  }, [allAssets]);
+
   // Sort assets based on current sort settings
   const sortedAssets = useMemo(() => {
-    const sorted = [...allAssets].sort((a, b) => {
+    const sorted = [...consolidatedAssets].sort((a, b) => {
       let comparison = 0;
       
       switch (sortBy) {
@@ -59,7 +83,7 @@ export function PricingTable({
     });
     
     return sorted;
-  }, [allAssets, sortBy, sortDirection]);
+  }, [consolidatedAssets, sortBy, sortDirection]);
 
   const handleSort = (column: 'name' | 'sub_class' | 'updated_at') => {
     if (sortBy === column) {
@@ -100,12 +124,12 @@ export function PricingTable({
   const handleSave = async () => {
     if (!editingAsset) return;
     
-    const originalAsset = allAssets.find(a => a.id === editingAsset.id);
+    const originalAsset = sortedAssets.find(a => a.id === editingAsset.id);
     if (!originalAsset) return;
 
     try {
       const price = parseFloat(editingAsset.price);
-      const ytw = editingAsset.ytw ? parseFloat(editingAsset.ytw) / 100 : undefined; // Convert percentage back to decimal
+      const ytw = editingAsset.ytw ? parseFloat(editingAsset.ytw) / 100 : undefined;
 
       if (isNaN(price) || price < 0) {
         toast({
@@ -125,19 +149,29 @@ export function PricingTable({
         return;
       }
 
-      const updatedAsset: Asset = {
-        ...originalAsset,
-        price,
-        ytw,
-        updated_at: new Date().toISOString(),
-      };
+      // Update ALL assets with the same name
+      const assetIdsToUpdate = (originalAsset as any)._allAssetIds || [originalAsset.id];
+      const updatePromises = assetIdsToUpdate.map((assetId: string) => {
+        const assetToUpdate = allAssets.find(a => a.id === assetId);
+        if (!assetToUpdate) return Promise.resolve(null);
 
-      await onUpdateAsset(updatedAsset);
+        const updatedAsset: Asset = {
+          ...assetToUpdate,
+          price,
+          ytw,
+          updated_at: new Date().toISOString(),
+        };
+
+        return onUpdateAsset(updatedAsset);
+      });
+
+      await Promise.all(updatePromises);
       setEditingAsset(null);
 
+      const count = assetIdsToUpdate.length;
       toast({
         title: "Success",
-        description: "Asset pricing updated successfully",
+        description: `Updated ${count} holding${count > 1 ? 's' : ''} of ${originalAsset.name}`,
       });
     } catch (error) {
       toast({
@@ -183,7 +217,7 @@ export function PricingTable({
     <Card>
       <CardHeader>
         <CardTitle>
-          Quick Pricing Updates ({allAssets.length} assets)
+          Quick Pricing Updates ({consolidatedAssets.length} unique assets, {allAssets.length} total holdings)
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Update prices and YTW for assets that require regular pricing updates. 
