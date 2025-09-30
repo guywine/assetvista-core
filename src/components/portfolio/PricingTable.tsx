@@ -36,10 +36,8 @@ export function PricingTable({
   useEffect(() => {
     if (editingAsset?.field === 'price' && priceInputRef.current) {
       priceInputRef.current.focus();
-      priceInputRef.current.select();
     } else if (editingAsset?.field === 'ytw' && ytwInputRef.current) {
       ytwInputRef.current.focus();
-      ytwInputRef.current.select();
     }
   }, [editingAsset]);
 
@@ -179,8 +177,8 @@ export function PricingTable({
                           <>
                             <Input
                               ref={priceInputRef}
-                              type="number"
-                              step="0.01"
+                              type="text"
+                              inputMode="decimal"
                               value={editingAsset.price}
                               onChange={(e) => setEditingAsset(prev => 
                                 prev ? { ...prev, price: e.target.value } : null
@@ -215,8 +213,8 @@ export function PricingTable({
                             <>
                               <Input
                                 ref={ytwInputRef}
-                                type="number"
-                                step="0.01"
+                                type="text"
+                                inputMode="decimal"
                                 value={editingAsset.ytw}
                                 onChange={(e) => setEditingAsset(prev => 
                                   prev ? { ...prev, ytw: e.target.value } : null
