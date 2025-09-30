@@ -38,6 +38,7 @@ export interface Asset {
   ytw?: number; // Fixed Income only, stored as decimal
   pe_company_value?: number; // Private Equity only - company market value
   pe_holding_percentage?: number; // Private Equity only - percentage of holding
+  is_cash_equivalent?: boolean; // Automatically calculated field
   created_at: string;
   updated_at: string;
 }
@@ -80,12 +81,14 @@ export interface FilterCriteria {
   origin_currency?: Currency[];
   maturity_date_from?: string;
   maturity_date_to?: string;
+  cash_equivalent?: boolean[];
   exclude_class?: AssetClass[];
   exclude_sub_class?: SubClass[];
   exclude_account_entity?: AccountEntity[];
   exclude_account_bank?: AccountBank[];
   exclude_beneficiary?: Beneficiary[];
   exclude_origin_currency?: Currency[];
+  exclude_cash_equivalent?: boolean[];
 }
 
 export interface GroupBy {

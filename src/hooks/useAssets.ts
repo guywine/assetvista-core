@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { handleWriteError, verifySession } from '@/lib/session-utils';
 import { useAuth } from '@/contexts/AuthContext';
-import { calculatePEPrice } from '@/lib/portfolio-utils';
+import { calculatePEPrice, isCashEquivalent } from '@/lib/portfolio-utils';
 
 export function useAssets() {
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -30,6 +30,7 @@ export function useAssets() {
     ytw: row.ytw === null || row.ytw === undefined ? undefined : Number(row.ytw),
     pe_company_value: row.pe_company_value ? parseFloat(row.pe_company_value) : undefined,
     pe_holding_percentage: row.pe_holding_percentage ? parseFloat(row.pe_holding_percentage) : undefined,
+    is_cash_equivalent: row.is_cash_equivalent,
     created_at: row.created_at,
     updated_at: row.updated_at,
   });
@@ -52,7 +53,41 @@ export function useAssets() {
     ytw: asset.ytw,
     pe_company_value: asset.pe_company_value,
     pe_holding_percentage: asset.pe_holding_percentage,
+    is_cash_equivalent: isCashEquivalent(asset),
   });
+
+  // Update cash equivalent status for assets
+  const updateCashEquivalentStatus = async (assets: Asset[]) => {
+    const assetsToUpdate = assets.filter(asset => {
+      const currentStatus = !!asset.is_cash_equivalent;
+      const calculatedStatus = isCashEquivalent(asset);
+      return currentStatus !== calculatedStatus;
+    });
+
+    if (assetsToUpdate.length > 0) {
+      console.log(`Updating cash equivalent status for ${assetsToUpdate.length} assets`);
+      
+      const updates = assetsToUpdate.map(asset => ({
+        id: asset.id,
+        is_cash_equivalent: isCashEquivalent(asset)
+      }));
+
+      try {
+        for (const update of updates) {
+          const { error } = await supabase
+            .from('assets')
+            .update({ is_cash_equivalent: update.is_cash_equivalent })
+            .eq('id', update.id);
+
+          if (error) {
+            console.error('Error updating cash equivalent status:', error);
+          }
+        }
+      } catch (error) {
+        console.error('Error in bulk cash equivalent update:', error);
+      }
+    }
+  };
 
   // Load assets from database
   const loadAssets = async () => {
@@ -68,7 +103,22 @@ export function useAssets() {
       }
 
       const convertedAssets = (data || []).map(convertFromDb);
-      setAssets(convertedAssets);
+      
+      // Update cash equivalent status for assets that may have changed
+      await updateCashEquivalentStatus(convertedAssets);
+      
+      // Reload after potential updates
+      const { data: updatedData, error: reloadError } = await supabase
+        .from('assets')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (reloadError) {
+        throw reloadError;
+      }
+
+      const finalAssets = (updatedData || []).map(convertFromDb);
+      setAssets(finalAssets);
     } catch (error: any) {
       toast({
         title: "Error Loading Assets",
@@ -83,6 +133,8 @@ export function useAssets() {
   // Add new asset
   const addAsset = async (asset: Asset) => {
     try {
+      // Set cash equivalent status before saving
+      asset.is_cash_equivalent = isCashEquivalent(asset);
       const dbAsset = convertToDb(asset);
 
       const { data, error } = await supabase

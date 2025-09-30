@@ -2,6 +2,33 @@ import { Asset, AssetCalculations, FXRates, ViewCurrency, AssetClass, AccountEnt
 import { ACCOUNT_BANK_MAP, CLASS_SUBCLASS_MAP } from '@/constants/portfolio';
 import { addDays, parseISO, isBefore } from 'date-fns';
 
+/**
+ * Determines if an asset should be classified as a cash equivalent
+ * Cash equivalents include:
+ * 1. All Cash assets
+ * 2. Fixed Income: Money Market funds and Bank Deposits
+ * 3. Fixed Income: Notes maturing within 365 days
+ */
+export function isCashEquivalent(asset: Asset): boolean {
+  // All Cash assets are cash equivalents
+  if (asset.class === 'Cash') {
+    return true;
+  }
+  
+  // Fixed Income: Money Market and Bank Deposits
+  if (asset.class === 'Fixed Income') {
+    if (['Money Market', 'Bank Deposit'].includes(asset.sub_class)) {
+      return true;
+    }
+    // Fixed Income maturing within 365 days
+    if (isMaturityWithinYear(asset.maturity_date)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
 export function calculateAssetValue(
   asset: Asset,
   fxRates: FXRates,
@@ -159,6 +186,7 @@ export function filterAssetsByFilters(assets: Asset[], filters: FilterCriteria):
     if (filters.account_bank && !filters.account_bank.includes(asset.account_bank)) return false;
     if (filters.origin_currency && !filters.origin_currency.includes(asset.origin_currency)) return false;
     if (filters.beneficiary && !filters.beneficiary.includes(asset.beneficiary)) return false;
+    if (filters.cash_equivalent && !filters.cash_equivalent.includes(!!asset.is_cash_equivalent)) return false;
     
     // Exclude filters - asset must NOT match any if specified
     if (filters.exclude_class && filters.exclude_class.includes(asset.class)) return false;
@@ -167,6 +195,7 @@ export function filterAssetsByFilters(assets: Asset[], filters: FilterCriteria):
     if (filters.exclude_account_bank && filters.exclude_account_bank.includes(asset.account_bank)) return false;
     if (filters.exclude_origin_currency && filters.exclude_origin_currency.includes(asset.origin_currency)) return false;
     if (filters.exclude_beneficiary && filters.exclude_beneficiary.includes(asset.beneficiary)) return false;
+    if (filters.exclude_cash_equivalent && filters.exclude_cash_equivalent.includes(!!asset.is_cash_equivalent)) return false;
     
     // For maturity date filters, exclude assets without maturity dates
     if (filters.maturity_date_from || filters.maturity_date_to) {

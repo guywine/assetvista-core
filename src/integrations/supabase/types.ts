@@ -68,6 +68,7 @@ export type Database = {
           created_at: string
           factor: number | null
           id: string
+          is_cash_equivalent: boolean
           isin: string | null
           maturity_date: string | null
           name: string
@@ -88,6 +89,7 @@ export type Database = {
           created_at?: string
           factor?: number | null
           id?: string
+          is_cash_equivalent?: boolean
           isin?: string | null
           maturity_date?: string | null
           name: string
@@ -108,6 +110,7 @@ export type Database = {
           created_at?: string
           factor?: number | null
           id?: string
+          is_cash_equivalent?: boolean
           isin?: string | null
           maturity_date?: string | null
           name?: string

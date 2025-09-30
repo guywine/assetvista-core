@@ -143,6 +143,18 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
       );
     });
 
+    filters.cash_equivalent?.forEach(value => {
+      chips.push(
+        <Badge key={`cash_equivalent-${value}`} className="gap-1 bg-green-100 text-green-800 border-green-200 hover:bg-green-200">
+          Include Cash & Equivalents: {value ? 'Yes' : 'No'}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('cash_equivalent', value)}
+          />
+        </Badge>
+      );
+    });
+
     // Exclude filters (red)
     filters.exclude_class?.forEach(value => {
       chips.push(
@@ -211,6 +223,18 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
           <X 
             className="h-3 w-3 cursor-pointer hover:text-destructive" 
             onClick={() => removeFilter('exclude_beneficiary', value)}
+          />
+        </Badge>
+      );
+    });
+
+    filters.exclude_cash_equivalent?.forEach(value => {
+      chips.push(
+        <Badge key={`exclude_cash_equivalent-${value}`} className="gap-1 bg-red-100 text-red-800 border-red-200 hover:bg-red-200">
+          Exclude Cash & Equivalents: {value ? 'Yes' : 'No'}
+          <X 
+            className="h-3 w-3 cursor-pointer hover:text-destructive" 
+            onClick={() => removeFilter('exclude_cash_equivalent', value)}
           />
         </Badge>
       );
@@ -290,6 +314,7 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                   <SelectItem value="account_bank">Bank Account</SelectItem>
                   <SelectItem value="beneficiary">Beneficiary</SelectItem>
                   <SelectItem value="origin_currency">Currency</SelectItem>
+                  <SelectItem value="cash_equivalent">Cash & Equivalents</SelectItem>
                   <SelectItem value="maturity_date_from">Maturity Date From</SelectItem>
                   <SelectItem value="maturity_date_to">Maturity Date To</SelectItem>
                 </SelectContent>
@@ -454,6 +479,31 @@ export function PortfolioFilters({ filters, onFiltersChange }: PortfolioFiltersP
                         disabled={isDisabled}
                       >
                         {beneficiary}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {newFilterCategory === 'cash_equivalent' && (
+              <div className="space-y-2">
+                <Label>{newFilterAction === 'include' ? 'Include' : 'Exclude'} Cash & Equivalents</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[true, false].map(value => {
+                    const isDisabled = newFilterAction === 'include'
+                      ? filters.cash_equivalent?.includes(value)
+                      : filters.exclude_cash_equivalent?.includes(value);
+                    
+                    return (
+                      <Button
+                        key={value.toString()}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => addFilter('cash_equivalent', newFilterAction, value)}
+                        disabled={isDisabled}
+                      >
+                        {value ? 'Yes' : 'No'}
                       </Button>
                     );
                   })}

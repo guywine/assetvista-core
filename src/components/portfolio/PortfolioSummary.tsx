@@ -35,22 +35,14 @@ export function PortfolioSummary({
     return sum + (calc?.display_value || 0);
   }, 0);
 
-  // Cash & Equivalents calculation
+  // Cash & Equivalents calculation - now using the is_cash_equivalent field
   const cashEquivalentsValue = assets.reduce((sum, asset) => {
     const calc = calculations.get(asset.id);
     const value = calc?.display_value || 0;
     
-    // Include all Cash assets
-    if (asset.class === 'Cash') {
+    // Use the pre-calculated is_cash_equivalent field
+    if (asset.is_cash_equivalent) {
       return sum + value;
-    }
-    
-    // Include specific Fixed Income sub-classes and assets maturing within 365 days
-    if (asset.class === 'Fixed Income') {
-      if (['Money Market', 'Bank Deposit'].includes(asset.sub_class) || 
-          isMaturityWithinYear(asset.maturity_date)) {
-        return sum + value;
-      }
     }
     
     return sum;
