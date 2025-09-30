@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Asset } from '@/types/portfolio';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Edit2, Check, X } from 'lucide-react';
+import { Edit2, Check, X, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,11 +26,58 @@ export function PricingTable({
   onUpdateAsset 
 }: PricingTableProps) {
   const [editingAsset, setEditingAsset] = useState<EditingAsset | null>(null);
+  const [sortBy, setSortBy] = useState<'name' | 'sub_class' | 'updated_at'>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
   const priceInputRef = useRef<HTMLInputElement>(null);
   const ytwInputRef = useRef<HTMLInputElement>(null);
 
   const allAssets = [...groupAAssets, ...groupBAssets];
+
+  // Sort assets based on current sort settings
+  const sortedAssets = useMemo(() => {
+    const sorted = [...allAssets].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'sub_class':
+          comparison = a.sub_class.localeCompare(b.sub_class);
+          if (comparison === 0) {
+            comparison = a.name.localeCompare(b.name);
+          }
+          break;
+        case 'updated_at':
+          comparison = new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+          break;
+        case 'name':
+        default:
+          comparison = a.name.localeCompare(b.name);
+          break;
+      }
+      
+      return sortDirection === 'desc' ? -comparison : comparison;
+    });
+    
+    return sorted;
+  }, [allAssets, sortBy, sortDirection]);
+
+  const handleSort = (column: 'name' | 'sub_class' | 'updated_at') => {
+    if (sortBy === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ column }: { column: 'name' | 'sub_class' | 'updated_at' }) => {
+    if (sortBy !== column) {
+      return <ChevronsUpDown className="h-3 w-3 opacity-40" />;
+    }
+    return sortDirection === 'asc' ? 
+      <ChevronUp className="h-3 w-3" /> : 
+      <ChevronDown className="h-3 w-3" />;
+  };
 
   // Auto-focus input when entering edit mode
   useEffect(() => {
@@ -148,15 +195,40 @@ export function PricingTable({
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-background border-b z-10">
               <tr className="text-left">
-                <th className="p-2 font-medium text-muted-foreground">Asset Name</th>
+                <th 
+                  className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+                  onClick={() => handleSort('name')}
+                >
+                  <div className="flex items-center gap-1">
+                    Asset Name
+                    <SortIcon column="name" />
+                  </div>
+                </th>
+                <th 
+                  className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+                  onClick={() => handleSort('sub_class')}
+                >
+                  <div className="flex items-center gap-1">
+                    Sub Class
+                    <SortIcon column="sub_class" />
+                  </div>
+                </th>
                 <th className="p-2 font-medium text-muted-foreground text-right">Price</th>
                 <th className="p-2 font-medium text-muted-foreground text-right">YTW</th>
-                <th className="p-2 font-medium text-muted-foreground">Last Updated</th>
+                <th 
+                  className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+                  onClick={() => handleSort('updated_at')}
+                >
+                  <div className="flex items-center gap-1">
+                    Last Updated
+                    <SortIcon column="updated_at" />
+                  </div>
+                </th>
                 <th className="p-2 font-medium text-muted-foreground w-16">Edit</th>
               </tr>
             </thead>
             <tbody>
-              {allAssets.map((asset, index) => {
+              {sortedAssets.map((asset, index) => {
                 const isEditing = editingAsset?.id === asset.id;
                 const showYTW = isGroupB(asset);
                 const isEven = index % 2 === 0;
@@ -170,6 +242,9 @@ export function PricingTable({
                   >
                     <td className="p-2 py-1.5 font-medium max-w-[200px] truncate">
                       {asset.name}
+                    </td>
+                    <td className="p-2 py-1.5 text-xs text-muted-foreground">
+                      {asset.sub_class}
                     </td>
                     <td className="p-2 py-1.5 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -286,7 +361,7 @@ export function PricingTable({
             </tbody>
           </table>
           
-          {allAssets.length === 0 && (
+          {sortedAssets.length === 0 && (
             <div className="p-8 text-center text-muted-foreground">
               No assets found that require regular pricing updates.
             </div>
