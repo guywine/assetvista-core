@@ -166,6 +166,44 @@ export function useFXRates() {
     }
   };
 
+  // Refresh rates from API
+  const refreshFromAPI = async () => {
+    setIsLoading(true);
+    try {
+      toast({
+        title: "Fetching rates from API...",
+        description: "Updating all FX rates",
+      });
+
+      const { data, error } = await supabase.functions.invoke('update-fx-rates', {
+        body: {},
+      });
+
+      if (error) throw error;
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to update rates');
+      }
+
+      // Reload rates from database
+      await loadFXRates();
+
+      toast({
+        title: "Rates updated successfully",
+        description: `Updated ${data.updated_count} currencies from API`,
+      });
+    } catch (error) {
+      console.error('Error refreshing rates from API:', error);
+      toast({
+        title: "Failed to update rates",
+        description: error?.message || "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Load rates on mount
   useEffect(() => {
     loadFXRates();
@@ -177,5 +215,6 @@ export function useFXRates() {
     isLoading,
     updateManualRate,
     refreshRates: loadFXRates,
+    refreshFromAPI,
   };
 }

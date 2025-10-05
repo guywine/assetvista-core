@@ -32,6 +32,7 @@ export function PortfolioDashboard() {
     lastUpdated,
     isLoading: fxLoading,
     updateManualRate,
+    refreshFromAPI,
   } = useFXRates();
   const [filters, setFilters] = useState<FilterCriteria>({});
   const [groupByFields, setGroupByFields] = useState<GroupByField[]>([]);
@@ -231,6 +232,8 @@ export function PortfolioDashboard() {
             lastUpdated={lastUpdated}
             onRatesChange={() => {}} // Legacy prop, not used anymore
             onManualRateChange={updateManualRate}
+            onRefreshFromAPI={refreshFromAPI}
+            isRefreshing={fxLoading}
           />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
