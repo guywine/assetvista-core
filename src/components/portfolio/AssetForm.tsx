@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAssetLookup } from '@/hooks/useAssetLookup';
+import { validateNumericInput } from '@/lib/utils';
 
 type FormMode = 'NEW' | 'EXISTING_HOLDING' | 'DUPLICATE' | 'EDIT';
 
@@ -52,6 +53,13 @@ export function AssetForm({
     pe_holding_percentage: undefined,
   });
   
+  // String states for numeric inputs to preserve decimal point during typing
+  const [quantityStr, setQuantityStr] = useState<string>('0');
+  const [priceStr, setPriceStr] = useState<string>('1');
+  const [factorStr, setFactorStr] = useState<string>('1.0');
+  const [peCompanyValueStr, setPeCompanyValueStr] = useState<string>('');
+  const [peHoldingPercentageStr, setPeHoldingPercentageStr] = useState<string>('');
+  
   const [usePECalculation, setUsePECalculation] = useState(false);
   
   const [errors, setErrors] = useState<string[]>([]);
@@ -64,6 +72,13 @@ export function AssetForm({
     setCurrentMode(mode);
     if (asset) {
       setFormData(asset);
+      // Sync string states with asset values
+      setQuantityStr(asset.quantity?.toString() || '0');
+      setPriceStr(asset.price?.toString() || '1');
+      setFactorStr(asset.factor?.toString() || '1.0');
+      setPeCompanyValueStr(asset.pe_company_value?.toString() || '');
+      setPeHoldingPercentageStr(asset.pe_holding_percentage?.toString() || '');
+      
       // Set PE calculation mode based on existing data
       setUsePECalculation(asset.class === 'Private Equity' && asset.pe_company_value !== undefined && asset.pe_holding_percentage !== undefined);
       if (mode === 'DUPLICATE') {
@@ -76,6 +91,7 @@ export function AssetForm({
           beneficiary: 'Kids' as any,
           quantity: 0
         }));
+        setQuantityStr('0');
       }
     } else {
       setFormData({
@@ -95,6 +111,11 @@ export function AssetForm({
         pe_company_value: undefined,
         pe_holding_percentage: undefined,
       });
+      setQuantityStr('0');
+      setPriceStr('1');
+      setFactorStr('1.0');
+      setPeCompanyValueStr('');
+      setPeHoldingPercentageStr('');
       setUsePECalculation(false);
     }
     setErrors([]);
@@ -158,25 +179,34 @@ export function AssetForm({
         formData.pe_company_value && formData.pe_holding_percentage && formData.quantity) {
       const calculatedPrice = calculatePEPrice(formData.pe_company_value, formData.pe_holding_percentage, formData.quantity);
       setFormData(prev => ({ ...prev, price: calculatedPrice }));
+      setPriceStr(calculatedPrice.toString());
     }
   }, [formData.pe_company_value, formData.pe_holding_percentage, formData.quantity, usePECalculation, formData.class]);
 
   const handleSave = () => {
+    // Parse string values to numbers
+    const quantity = parseFloat(quantityStr) || 0;
+    const price = parseFloat(priceStr) || 0;
+    const factor = parseFloat(factorStr) || 1.0;
+    const peCompanyValue = peCompanyValueStr ? parseFloat(peCompanyValueStr) : undefined;
+    const peHoldingPercentage = peHoldingPercentageStr ? parseFloat(peHoldingPercentageStr) : undefined;
+    
     // For cash assets, name is optional - if not provided, use currency as name
     const assetName = formData.name?.trim() || (formData.class === 'Cash' ? `${formData.sub_class} Cash` : '');
     
-    const calculatedPrice = getPECalculatedPrice();
-    
-    // Factor is always a direct user input, never calculated
+    const calculatedPrice = formData.class === 'Private Equity' && usePECalculation && 
+        peCompanyValue && peHoldingPercentage && quantity 
+        ? calculatePEPrice(peCompanyValue, peHoldingPercentage, quantity) 
+        : price;
     
     const assetData: Asset = {
       id: formData.id || crypto.randomUUID(),
       name: assetName,
       class: formData.class || "Public Equity",
       sub_class: formData.sub_class || "other",
-      quantity: formData.quantity || 0,
+      quantity,
       price: calculatedPrice,
-      factor: formData.factor || 1.0,
+      factor,
       account_entity: formData.account_entity || "Roy",
       account_bank: formData.account_bank || "Poalim",
       beneficiary: getBeneficiaryFromEntity(formData.account_entity || "Roy"),
@@ -184,8 +214,8 @@ export function AssetForm({
       ISIN: formData.ISIN,
       maturity_date: formData.maturity_date,
       ytw: formData.ytw,
-      pe_company_value: usePECalculation ? formData.pe_company_value : undefined,
-      pe_holding_percentage: usePECalculation ? formData.pe_holding_percentage : undefined,
+      pe_company_value: usePECalculation ? peCompanyValue : undefined,
+      pe_holding_percentage: usePECalculation ? peHoldingPercentage : undefined,
       created_at: asset?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -503,8 +533,12 @@ export function AssetForm({
                 id="quantity"
                 type="text"
                 inputMode="decimal"
-                value={formData.quantity}
-                onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseFloat(e.target.value) || 0 }))}
+                value={quantityStr}
+                onChange={(e) => {
+                  const validated = validateNumericInput(e.target.value);
+                  setQuantityStr(validated);
+                  setFormData(prev => ({ ...prev, quantity: parseFloat(validated) || 0 }));
+                }}
                 placeholder="0"
                 className="border-border/50 focus:border-financial-primary"
               />
@@ -531,8 +565,12 @@ export function AssetForm({
                     id="price"
                     type="text"
                     inputMode="decimal"
-                    value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
+                    value={priceStr}
+                    onChange={(e) => {
+                      const validated = validateNumericInput(e.target.value);
+                      setPriceStr(validated);
+                      setFormData(prev => ({ ...prev, price: parseFloat(validated) || 0 }));
+                    }}
                     placeholder="0.00"
                     className="border-border/50 focus:border-financial-primary"
                      disabled={isPriceFieldLocked}
@@ -550,8 +588,12 @@ export function AssetForm({
                   id="factor"
                   type="text"
                   inputMode="decimal"
-                  value={formData.factor}
-                  onChange={(e) => setFormData(prev => ({ ...prev, factor: parseFloat(e.target.value) || 1.0 }))}
+                  value={factorStr}
+                  onChange={(e) => {
+                    const validated = validateNumericInput(e.target.value);
+                    setFactorStr(validated);
+                    setFormData(prev => ({ ...prev, factor: parseFloat(validated) || 1.0 }));
+                  }}
                   placeholder="1.0"
                   className="border-border/50 focus:border-financial-primary"
                   disabled={isSharedFieldsLocked}
@@ -592,8 +634,12 @@ export function AssetForm({
                         id="company_value"
                         type="text"
                         inputMode="decimal"
-                        value={formData.pe_company_value || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, pe_company_value: parseFloat(e.target.value) || undefined }))}
+                        value={peCompanyValueStr}
+                        onChange={(e) => {
+                          const validated = validateNumericInput(e.target.value);
+                          setPeCompanyValueStr(validated);
+                          setFormData(prev => ({ ...prev, pe_company_value: parseFloat(validated) || undefined }));
+                        }}
                         placeholder="10000000"
                         className="border-border/50 focus:border-financial-primary"
                         disabled={isSharedFieldsLocked}
@@ -606,8 +652,12 @@ export function AssetForm({
                         id="holding_percentage"
                         type="text"
                         inputMode="decimal"
-                        value={formData.pe_holding_percentage || ''}
-                        onChange={(e) => setFormData(prev => ({ ...prev, pe_holding_percentage: parseFloat(e.target.value) || undefined }))}
+                        value={peHoldingPercentageStr}
+                        onChange={(e) => {
+                          const validated = validateNumericInput(e.target.value);
+                          setPeHoldingPercentageStr(validated);
+                          setFormData(prev => ({ ...prev, pe_holding_percentage: parseFloat(validated) || undefined }));
+                        }}
                         placeholder="5.00"
                         className="border-border/50 focus:border-financial-primary"
                         disabled={isPEHoldingPercentageLocked}

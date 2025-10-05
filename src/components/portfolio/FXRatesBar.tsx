@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Edit2, Check, X, Clock } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { validateNumericInput } from '@/lib/utils';
 
 interface FXRatesBarProps {
   fxRates: FXRates;
@@ -52,7 +53,8 @@ export function FXRatesBar({
     currencies.forEach(currency => {
       if (currency !== 'ILS') {
         const originalRate = fxRates[currency]?.to_ILS || 0;
-        const newRate = editingRates[currency]?.to_ILS || 0;
+        const newRateStr = editingRates[currency]?.to_ILS;
+        const newRate = typeof newRateStr === 'string' ? parseFloat(newRateStr) || 0 : newRateStr || 0;
         if (Math.abs(originalRate - newRate) > 0.001) {
           onManualRateChange(currency, newRate);
         }
@@ -76,12 +78,12 @@ export function FXRatesBar({
   };
 
   const handleRateChange = (currency: Currency, field: 'to_USD' | 'to_ILS', value: string) => {
-    const numValue = parseFloat(value) || 0;
+    const validated = validateNumericInput(value);
     setEditingRates(prev => ({
       ...prev,
       [currency]: {
         ...prev[currency],
-        [field]: numValue,
+        [field]: validated,
         last_updated: new Date().toISOString(),
       }
     }));
@@ -137,9 +139,9 @@ export function FXRatesBar({
                       {isEditing ? (
                         <Input
                           ref={editingCurrency === currency ? inputRef : null}
-                          type="number"
-                          step="0.001"
-                          value={displayRates[currency]?.to_ILS || 0}
+                          type="text"
+                          inputMode="decimal"
+                          value={displayRates[currency]?.to_ILS || ''}
                           onChange={(e) => handleRateChange(currency, 'to_ILS', e.target.value)}
                           onKeyDown={handleKeyDown}
                           className="w-16 h-6 text-xs p-1 text-center"
@@ -149,7 +151,9 @@ export function FXRatesBar({
                           className="text-sm font-semibold cursor-pointer hover:text-primary transition-colors"
                           onDoubleClick={() => handleDoubleClick(currency)}
                         >
-                          {displayRates[currency]?.to_ILS?.toFixed(3) || '0.000'}
+                          {typeof displayRates[currency]?.to_ILS === 'number' 
+                            ? displayRates[currency]?.to_ILS?.toFixed(3) 
+                            : parseFloat(displayRates[currency]?.to_ILS || '0').toFixed(3)}
                         </span>
                       )}
                       <span className="text-xs text-muted-foreground">ILS</span>

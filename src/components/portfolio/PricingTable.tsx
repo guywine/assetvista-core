@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Edit2, Check, X, ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { validateNumericInput } from '@/lib/utils';
 
 interface PricingTableProps {
   groupAAssets: Asset[];
@@ -290,7 +291,7 @@ export function PricingTable({
                               inputMode="decimal"
                               value={editingAsset.price}
                               onChange={(e) => setEditingAsset(prev => 
-                                prev ? { ...prev, price: e.target.value } : null
+                                prev ? { ...prev, price: validateNumericInput(e.target.value) } : null
                               )}
                               onKeyDown={handleKeyDown}
                               className="w-20 h-7 text-xs text-right"
@@ -326,7 +327,7 @@ export function PricingTable({
                                 inputMode="decimal"
                                 value={editingAsset.ytw}
                                 onChange={(e) => setEditingAsset(prev => 
-                                  prev ? { ...prev, ytw: e.target.value } : null
+                                  prev ? { ...prev, ytw: validateNumericInput(e.target.value) } : null
                                 )}
                                 onKeyDown={handleKeyDown}
                                 className="w-16 h-7 text-xs text-right"
