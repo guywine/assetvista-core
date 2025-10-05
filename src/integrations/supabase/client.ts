@@ -33,10 +33,20 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
   global: {
     fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-      const token = getSessionToken();
-      const headers = new Headers(init?.headers || {});
-      if (token) headers.set('X-Session-Token', token);
-      return fetch(input, { ...init, headers });
+      // Check if this is an edge function call
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      const isEdgeFunction = url.includes('/functions/v1/');
+      
+      // Only add session token for non-edge-function requests
+      if (!isEdgeFunction) {
+        const token = getSessionToken();
+        const headers = new Headers(init?.headers || {});
+        if (token) headers.set('X-Session-Token', token);
+        return fetch(input, { ...init, headers });
+      }
+      
+      // For edge functions, use default fetch without modification
+      return fetch(input, init);
     }
   }
 });
