@@ -294,30 +294,32 @@ export function PortfolioSummary({
           </div>
 
           {/* Breakdown by subcategory */}
-          <div className="mt-6 space-y-3 pt-4 border-t border-accent/20">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Cash</span>
-              <span className="font-mono font-semibold text-foreground">
-                {formatCurrency(cashEquivalentsBreakdown.cash, viewCurrency)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Money Market Funds</span>
-              <span className="font-mono font-semibold text-foreground">
-                {formatCurrency(cashEquivalentsBreakdown.moneyMarket, viewCurrency)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Bank Deposits</span>
-              <span className="font-mono font-semibold text-foreground">
-                {formatCurrency(cashEquivalentsBreakdown.bankDeposits, viewCurrency)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-muted-foreground">Notes Maturing Within 365 Days</span>
-              <span className="font-mono font-semibold text-foreground">
-                {formatCurrency(cashEquivalentsBreakdown.maturingNotes, viewCurrency)}
-              </span>
+          <div className="mt-6 pt-4 border-t border-accent/20">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">Cash</div>
+                <div className="font-mono font-semibold text-sm">
+                  {formatCurrency(cashEquivalentsBreakdown.cash, viewCurrency)}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">Money Market Funds</div>
+                <div className="font-mono font-semibold text-sm">
+                  {formatCurrency(cashEquivalentsBreakdown.moneyMarket, viewCurrency)}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">Bank Deposits</div>
+                <div className="font-mono font-semibold text-sm">
+                  {formatCurrency(cashEquivalentsBreakdown.bankDeposits, viewCurrency)}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-xs text-muted-foreground mb-1">Notes Maturing Within 365 Days</div>
+                <div className="font-mono font-semibold text-sm">
+                  {formatCurrency(cashEquivalentsBreakdown.maturingNotes, viewCurrency)}
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>
