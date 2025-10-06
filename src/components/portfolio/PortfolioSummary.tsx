@@ -295,7 +295,7 @@ export function PortfolioSummary({
 
           {/* Breakdown by subcategory */}
           <div className="mt-6 pt-4 border-t border-accent/20">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-xs text-muted-foreground mb-1">Cash</div>
                 <div className="font-mono font-semibold text-sm">
