@@ -50,6 +50,38 @@ export function PortfolioSummary({
     return sum;
   }, 0);
 
+  // Cash & Equivalents breakdown by subcategory
+  const cashEquivalentsBreakdown = {
+    cash: 0,
+    moneyMarket: 0,
+    bankDeposits: 0,
+    maturingNotes: 0
+  };
+
+  assets.forEach(asset => {
+    if (!asset.is_cash_equivalent) return;
+    
+    const calc = calculations.get(asset.id);
+    const value = calc?.display_value || 0;
+
+    // 1) Cash
+    if (asset.class === 'Cash') {
+      cashEquivalentsBreakdown.cash += value;
+    }
+    // 2) Money Market funds
+    else if (asset.class === 'Fixed Income' && asset.sub_class === 'Money Market') {
+      cashEquivalentsBreakdown.moneyMarket += value;
+    }
+    // 3) Bank Deposits
+    else if (asset.class === 'Fixed Income' && asset.sub_class === 'Bank Deposit') {
+      cashEquivalentsBreakdown.bankDeposits += value;
+    }
+    // 4) Notes maturing within 365 days (Fixed Income but not Money Market or Bank Deposit)
+    else if (asset.class === 'Fixed Income' && isMaturityWithinYear(asset.maturity_date)) {
+      cashEquivalentsBreakdown.maturingNotes += value;
+    }
+  });
+
   // Holdings by Class
   const holdingsByClass = assets.reduce((acc, asset) => {
     const calc = calculations.get(asset.id);
@@ -259,6 +291,34 @@ export function PortfolioSummary({
           </div>
           <div className="text-sm text-muted-foreground mt-1">
             {(cashEquivalentsValue / totalValue * 100).toFixed(1)}% of total portfolio
+          </div>
+
+          {/* Breakdown by subcategory */}
+          <div className="mt-6 space-y-3 pt-4 border-t border-accent/20">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Cash</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatCurrency(cashEquivalentsBreakdown.cash, viewCurrency)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Money Market Funds</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatCurrency(cashEquivalentsBreakdown.moneyMarket, viewCurrency)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Bank Deposits</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatCurrency(cashEquivalentsBreakdown.bankDeposits, viewCurrency)}
+              </span>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">Notes Maturing Within 365 Days</span>
+              <span className="font-mono font-semibold text-foreground">
+                {formatCurrency(cashEquivalentsBreakdown.maturingNotes, viewCurrency)}
+              </span>
+            </div>
           </div>
         </CardContent>
       </Card>
