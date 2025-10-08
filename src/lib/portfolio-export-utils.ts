@@ -642,9 +642,14 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
       const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
       const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
       
-      totals[className].usd += calcUSD.converted_value;
-      totals[className].ils += calcILS.converted_value;
-      grandTotal += calcUSD.converted_value;
+      // Apply factor for Private Equity and Real Estate
+      const factor = (asset.class === 'Private Equity' || asset.class === 'Real Estate') 
+        ? (asset.factor || 1) 
+        : 1;
+      
+      totals[className].usd += calcUSD.converted_value * factor;
+      totals[className].ils += calcILS.converted_value * factor;
+      grandTotal += calcUSD.converted_value * factor;
     });
     
     return { totals, grandTotal };
