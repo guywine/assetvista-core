@@ -625,7 +625,7 @@ export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidatio
 }
 
 // Build chart data tables
-export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [sheetName: string]: any[] } {
+export function buildChartDataSheets(assets: Asset[], fxRates: FXRates, viewCurrency: 'USD' | 'ILS' = 'USD'): { [sheetName: string]: any[] } {
   const sheets: { [sheetName: string]: any[] } = {};
   
   // Helper to calculate totals by class
@@ -748,7 +748,7 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
     ['Total', currencyGrandTotalUSD, currencyGrandTotalILS, '100.00%']
   ];
   
-  // 4. Fixed Income Sub-Classes
+  // 4. Fixed Income Sub-Classes with YTW
   const fixedIncomeAssets = assets.filter(a => a.class === 'Fixed Income');
   const fixedIncomeTotal = fixedIncomeAssets.reduce((sum, a) => 
     sum + calculateAssetValue(a, fxRates, 'USD').converted_value, 0
@@ -757,11 +757,11 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
     sum + calculateAssetValue(a, fxRates, 'ILS').converted_value, 0
   );
   
-  const fixedIncomeSubClasses: { [subClass: string]: { usd: number, ils: number } } = {};
+  const fixedIncomeSubClasses: { [subClass: string]: { usd: number, ils: number, totalValue: number, weightedYTW: number } } = {};
   fixedIncomeAssets.forEach(asset => {
     const subClass = asset.sub_class;
     if (!fixedIncomeSubClasses[subClass]) {
-      fixedIncomeSubClasses[subClass] = { usd: 0, ils: 0 };
+      fixedIncomeSubClasses[subClass] = { usd: 0, ils: 0, totalValue: 0, weightedYTW: 0 };
     }
     
     const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
@@ -769,17 +769,55 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
     
     fixedIncomeSubClasses[subClass].usd += calcUSD.converted_value;
     fixedIncomeSubClasses[subClass].ils += calcILS.converted_value;
+    
+    // For YTW calculation, use the display value
+    const displayValue = viewCurrency === 'USD' ? calcUSD.converted_value : calcILS.converted_value;
+    fixedIncomeSubClasses[subClass].totalValue += displayValue;
+    if (asset.ytw !== undefined && asset.ytw !== null) {
+      fixedIncomeSubClasses[subClass].weightedYTW += asset.ytw * displayValue;
+    }
   });
   
+  // Calculate average YTW for each sub-class
+  const fixedIncomeWithYTW = Object.entries(fixedIncomeSubClasses).map(([subClass, values]) => ({
+    subClass,
+    usd: values.usd,
+    ils: values.ils,
+    ytw: values.totalValue > 0 ? values.weightedYTW / values.totalValue : 0
+  }));
+  
+  // Calculate total YTW (all fixed income)
+  const totalFixedIncomeValue = fixedIncomeWithYTW.reduce((sum, item) => 
+    sum + (viewCurrency === 'USD' ? item.usd : item.ils), 0);
+  const totalWeightedYTW = fixedIncomeWithYTW.reduce((sum, item) => 
+    sum + item.ytw * (viewCurrency === 'USD' ? item.usd : item.ils), 0);
+  const avgYTWAll = totalFixedIncomeValue > 0 ? totalWeightedYTW / totalFixedIncomeValue : 0;
+  
+  // Calculate YTW excluding Bank Deposits and Money Market
+  const excludedSubClasses = ['Bank Deposit', 'Money Market'];
+  const fixedIncomeExcluding = fixedIncomeWithYTW.filter(item => !excludedSubClasses.includes(item.subClass));
+  const totalValueExcluding = fixedIncomeExcluding.reduce((sum, item) => 
+    sum + (viewCurrency === 'USD' ? item.usd : item.ils), 0);
+  const totalWeightedYTWExcluding = fixedIncomeExcluding.reduce((sum, item) => 
+    sum + item.ytw * (viewCurrency === 'USD' ? item.usd : item.ils), 0);
+  const avgYTWExcluding = totalValueExcluding > 0 ? totalWeightedYTWExcluding / totalValueExcluding : 0;
+  
   sheets['Fixed Income Sub-Classes'] = [
-    ['Sub-Class', 'Value (USD)', 'Value (ILS)', 'Percentage'],
-    ...Object.entries(fixedIncomeSubClasses).map(([subClass, values]) => [
-      subClass,
-      values.usd,
-      values.ils,
-      (values.usd / fixedIncomeTotal * 100).toFixed(2) + '%'
+    ['Sub-Class', 'Value (USD)', 'Value (ILS)', 'Percentage', 'YTW (%)'],
+    ...fixedIncomeWithYTW.map(item => [
+      item.subClass,
+      item.usd,
+      item.ils,
+      (item.usd / fixedIncomeTotal * 100).toFixed(2) + '%',
+      item.ytw
     ]),
-    ['Total', fixedIncomeTotal, fixedIncomeTotalILS, '100.00%']
+    ['Total', fixedIncomeTotal, fixedIncomeTotalILS, '100.00%', avgYTWAll],
+    ['Total (excl. Bank Deposits & Money Market)', 
+      fixedIncomeExcluding.reduce((sum, item) => sum + item.usd, 0),
+      fixedIncomeExcluding.reduce((sum, item) => sum + item.ils, 0),
+      '', // No percentage for this row
+      avgYTWExcluding
+    ]
   ];
   
   // 5. Public Equity Sub-Classes

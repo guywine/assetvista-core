@@ -515,8 +515,8 @@ export function PortfolioHistory() {
 
     XLSX.utils.book_append_sheet(workbook, peSheet, 'Private Equity Summary');
 
-    // Chart Data sheets
-    const chartDataSheets = buildChartDataSheets(snapshot.assets, snapshot.fx_rates);
+    // Chart Data sheets - use 'USD' as default since view_currency is not stored in snapshots
+    const chartDataSheets = buildChartDataSheets(snapshot.assets, snapshot.fx_rates, 'USD');
     
     Object.entries(chartDataSheets).forEach(([sheetName, data]) => {
       const sheet = XLSX.utils.aoa_to_sheet(data);
