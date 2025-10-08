@@ -565,10 +565,12 @@ export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidatio
       const factor = firstAsset.factor || 1;
       
       let totalFactoredUSD = 0;
+      let totalHoldingValuation = 0;
       
       groupAssets.forEach(asset => {
         const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
         totalFactoredUSD += calcUSD.converted_value * (asset.factor || 1);
+        totalHoldingValuation += asset.price || 0;
       });
       
       return {
@@ -576,7 +578,8 @@ export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidatio
         firstAsset,
         liquidationYear,
         factor,
-        totalFactoredUSD
+        totalFactoredUSD,
+        totalHoldingValuation
       };
     });
     
@@ -584,10 +587,10 @@ export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidatio
     groupsWithTotals.sort((a, b) => b.totalFactoredUSD - a.totalFactoredUSD);
     
     // Add row for each company
-    groupsWithTotals.forEach(({ companyName, firstAsset, liquidationYear, factor, totalFactoredUSD }) => {
+    groupsWithTotals.forEach(({ companyName, firstAsset, liquidationYear, factor, totalFactoredUSD, totalHoldingValuation }) => {
       const row = [
         companyName,
-        firstAsset.price,
+        totalHoldingValuation,
         factor,
         liquidationYear,
         totalFactoredUSD
