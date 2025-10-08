@@ -657,6 +657,8 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
   
   // 1. Asset Class Distribution
   const { totals: classTotals, grandTotal } = getClassTotals();
+  const grandTotalILS = Object.values(classTotals).reduce((sum, values) => sum + values.ils, 0);
+  
   sheets['Asset Class Distribution'] = [
     ['Asset Class', 'Value (USD)', 'Value (ILS)', 'Percentage'],
     ...Object.entries(classTotals).map(([className, values]) => [
@@ -664,11 +666,15 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
       values.usd,
       values.ils,
       (values.usd / grandTotal * 100).toFixed(2) + '%'
-    ])
+    ]),
+    ['Total', grandTotal, grandTotalILS, '100.00%']
   ];
   
   // 2. Beneficiaries Breakdown
   const beneficiaryTotals: { [beneficiary: string]: { usd: number, ils: number } } = {};
+  let beneficiaryGrandTotalUSD = 0;
+  let beneficiaryGrandTotalILS = 0;
+  
   assets.forEach(asset => {
     const beneficiary = asset.beneficiary;
     if (!beneficiaryTotals[beneficiary]) {
@@ -678,8 +684,18 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
     const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
     const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
     
-    beneficiaryTotals[beneficiary].usd += calcUSD.converted_value;
-    beneficiaryTotals[beneficiary].ils += calcILS.converted_value;
+    // Apply factor for Private Equity and Real Estate
+    const factor = (asset.class === 'Private Equity' || asset.class === 'Real Estate') 
+      ? (asset.factor || 1) 
+      : 1;
+    
+    const factoredUSD = calcUSD.converted_value * factor;
+    const factoredILS = calcILS.converted_value * factor;
+    
+    beneficiaryTotals[beneficiary].usd += factoredUSD;
+    beneficiaryTotals[beneficiary].ils += factoredILS;
+    beneficiaryGrandTotalUSD += factoredUSD;
+    beneficiaryGrandTotalILS += factoredILS;
   });
   
   sheets['Beneficiaries Breakdown'] = [
@@ -688,12 +704,16 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
       beneficiary,
       values.usd,
       values.ils,
-      (values.usd / grandTotal * 100).toFixed(2) + '%'
-    ])
+      (values.usd / beneficiaryGrandTotalUSD * 100).toFixed(2) + '%'
+    ]),
+    ['Total', beneficiaryGrandTotalUSD, beneficiaryGrandTotalILS, '100.00%']
   ];
   
   // 3. Currency Exposure
   const currencyTotals: { [currency: string]: { usd: number, ils: number } } = {};
+  let currencyGrandTotalUSD = 0;
+  let currencyGrandTotalILS = 0;
+  
   assets.forEach(asset => {
     const currency = asset.origin_currency;
     if (!currencyTotals[currency]) {
@@ -703,8 +723,18 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
     const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
     const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
     
-    currencyTotals[currency].usd += calcUSD.converted_value;
-    currencyTotals[currency].ils += calcILS.converted_value;
+    // Apply factor for Private Equity and Real Estate
+    const factor = (asset.class === 'Private Equity' || asset.class === 'Real Estate') 
+      ? (asset.factor || 1) 
+      : 1;
+    
+    const factoredUSD = calcUSD.converted_value * factor;
+    const factoredILS = calcILS.converted_value * factor;
+    
+    currencyTotals[currency].usd += factoredUSD;
+    currencyTotals[currency].ils += factoredILS;
+    currencyGrandTotalUSD += factoredUSD;
+    currencyGrandTotalILS += factoredILS;
   });
   
   sheets['Currency Exposure'] = [
@@ -713,14 +743,18 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
       currency,
       values.usd,
       values.ils,
-      (values.usd / grandTotal * 100).toFixed(2) + '%'
-    ])
+      (values.usd / currencyGrandTotalUSD * 100).toFixed(2) + '%'
+    ]),
+    ['Total', currencyGrandTotalUSD, currencyGrandTotalILS, '100.00%']
   ];
   
   // 4. Fixed Income Sub-Classes
   const fixedIncomeAssets = assets.filter(a => a.class === 'Fixed Income');
   const fixedIncomeTotal = fixedIncomeAssets.reduce((sum, a) => 
     sum + calculateAssetValue(a, fxRates, 'USD').converted_value, 0
+  );
+  const fixedIncomeTotalILS = fixedIncomeAssets.reduce((sum, a) => 
+    sum + calculateAssetValue(a, fxRates, 'ILS').converted_value, 0
   );
   
   const fixedIncomeSubClasses: { [subClass: string]: { usd: number, ils: number } } = {};
@@ -744,13 +778,17 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
       values.usd,
       values.ils,
       (values.usd / fixedIncomeTotal * 100).toFixed(2) + '%'
-    ])
+    ]),
+    ['Total', fixedIncomeTotal, fixedIncomeTotalILS, '100.00%']
   ];
   
   // 5. Public Equity Sub-Classes
   const publicEquityAssets = assets.filter(a => a.class === 'Public Equity');
   const publicEquityTotal = publicEquityAssets.reduce((sum, a) => 
     sum + calculateAssetValue(a, fxRates, 'USD').converted_value, 0
+  );
+  const publicEquityTotalILS = publicEquityAssets.reduce((sum, a) => 
+    sum + calculateAssetValue(a, fxRates, 'ILS').converted_value, 0
   );
   
   const publicEquitySubClasses: { [subClass: string]: { usd: number, ils: number } } = {};
@@ -774,68 +812,85 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
       values.usd,
       values.ils,
       (values.usd / publicEquityTotal * 100).toFixed(2) + '%'
-    ])
+    ]),
+    ['Total', publicEquityTotal, publicEquityTotalILS, '100.00%']
   ];
   
-  // 6. Top 10 Public Equity Holdings
-  const publicEquityHoldings: { [name: string]: number } = {};
+  // 6. Top 10 Public Equity Holdings (with Bitcoin consolidation)
+  // Helper function to detect Bitcoin-related assets
+  const isBitcoinAsset = (assetName: string): boolean => {
+    const name = assetName.toLowerCase();
+    return name.includes('bitcoin') || name.includes('btc');
+  };
+  
+  const publicEquityHoldings: { [name: string]: { usd: number, ils: number } } = {};
   publicEquityAssets.forEach(asset => {
-    const name = asset.name;
-    publicEquityHoldings[name] = (publicEquityHoldings[name] || 0) + 
-      calculateAssetValue(asset, fxRates, 'USD').converted_value;
+    // Group all Bitcoin-related assets under one name
+    const groupName = isBitcoinAsset(asset.name) ? 'Bitcoin (All)' : asset.name;
+    
+    if (!publicEquityHoldings[groupName]) {
+      publicEquityHoldings[groupName] = { usd: 0, ils: 0 };
+    }
+    
+    const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
+    const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
+    
+    publicEquityHoldings[groupName].usd += calcUSD.converted_value;
+    publicEquityHoldings[groupName].ils += calcILS.converted_value;
   });
   
   const topPublicEquity = Object.entries(publicEquityHoldings)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1].usd - a[1].usd)
     .slice(0, 10);
   
   sheets['Top 10 Public Equity'] = [
     ['Asset Name', 'Value (USD)', 'Value (ILS)', '% of Public Equity'],
-    ...topPublicEquity.map(([name, valueUSD]) => {
-      const assetILS = publicEquityAssets
-        .filter(a => a.name === name)
-        .reduce((sum, a) => sum + calculateAssetValue(a, fxRates, 'ILS').converted_value, 0);
-      
-      return [
-        name,
-        valueUSD,
-        assetILS,
-        (valueUSD / publicEquityTotal * 100).toFixed(2) + '%'
-      ];
-    })
+    ...topPublicEquity.map(([name, values]) => [
+      name,
+      values.usd,
+      values.ils,
+      (values.usd / publicEquityTotal * 100).toFixed(2) + '%'
+    ])
   ];
   
-  // 7. Top 10 Private Equity Holdings
+  // 7. Top 10 Private Equity Holdings (with factored values)
   const privateEquityAssets = assets.filter(a => a.class === 'Private Equity');
-  const privateEquityTotal = privateEquityAssets.reduce((sum, a) => 
-    sum + calculateAssetValue(a, fxRates, 'USD').converted_value, 0
-  );
   
-  const privateEquityHoldings: { [name: string]: number } = {};
+  const privateEquityHoldings: { [name: string]: { usd: number, ils: number } } = {};
+  let privateEquityTotal = 0;
+  let privateEquityTotalILS = 0;
+  
   privateEquityAssets.forEach(asset => {
     const name = asset.name;
-    privateEquityHoldings[name] = (privateEquityHoldings[name] || 0) + 
-      calculateAssetValue(asset, fxRates, 'USD').converted_value;
+    if (!privateEquityHoldings[name]) {
+      privateEquityHoldings[name] = { usd: 0, ils: 0 };
+    }
+    
+    const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
+    const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
+    const factor = asset.factor || 1;
+    
+    const factoredUSD = calcUSD.converted_value * factor;
+    const factoredILS = calcILS.converted_value * factor;
+    
+    privateEquityHoldings[name].usd += factoredUSD;
+    privateEquityHoldings[name].ils += factoredILS;
+    privateEquityTotal += factoredUSD;
+    privateEquityTotalILS += factoredILS;
   });
   
   const topPrivateEquity = Object.entries(privateEquityHoldings)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => b[1].usd - a[1].usd)
     .slice(0, 10);
   
   sheets['Top 10 Private Equity'] = [
     ['Asset Name', 'Value (USD)', 'Value (ILS)', '% of Private Equity'],
-    ...topPrivateEquity.map(([name, valueUSD]) => {
-      const assetILS = privateEquityAssets
-        .filter(a => a.name === name)
-        .reduce((sum, a) => sum + calculateAssetValue(a, fxRates, 'ILS').converted_value, 0);
-      
-      return [
-        name,
-        valueUSD,
-        assetILS,
-        privateEquityTotal > 0 ? (valueUSD / privateEquityTotal * 100).toFixed(2) + '%' : '0%'
-      ];
-    })
+    ...topPrivateEquity.map(([name, values]) => [
+      name,
+      values.usd,
+      values.ils,
+      privateEquityTotal > 0 ? (values.usd / privateEquityTotal * 100).toFixed(2) + '%' : '0%'
+    ])
   ];
   
   return sheets;
