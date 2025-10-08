@@ -226,7 +226,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
             <thead className="sticky top-0 bg-muted-foreground border-b z-10">
               <tr className="text-left">
                 <th
-                  className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+                  className="p-2 font-medium text-muted cursor-pointer hover:text-foreground transition-colors select-none"
                   onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center gap-1">
@@ -235,7 +235,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                   </div>
                 </th>
                 <th
-                  className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+                  className="p-2 font-medium text-muted cursor-pointer hover:text-foreground transition-colors select-none"
                   onClick={() => handleSort("sub_class")}
                 >
                   <div className="flex items-center gap-1">
@@ -243,10 +243,10 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                     <SortIcon column="sub_class" />
                   </div>
                 </th>
-                <th className="p-2 font-medium text-muted-foreground text-right">Price</th>
-                <th className="p-2 font-medium text-muted-foreground text-right">YTW</th>
+                <th className="p-2 font-medium text-muted text-right">Price</th>
+                <th className="p-2 font-medium text-muted text-right">YTW</th>
                 <th
-                  className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
+                  className="p-2 font-medium text-muted cursor-pointer hover:text-foreground transition-colors select-none"
                   onClick={() => handleSort("updated_at")}
                 >
                   <div className="flex items-center gap-1">
@@ -254,7 +254,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                     <SortIcon column="updated_at" />
                   </div>
                 </th>
-                <th className="p-2 font-medium text-muted-foreground w-16">Edit</th>
+                <th className="p-2 font-medium text-muted w-16">Edit</th>
               </tr>
             </thead>
             <tbody>
