@@ -399,7 +399,7 @@ export function PortfolioHistory() {
     XLSX.utils.book_append_sheet(workbook, smartSummarySheet, 'Smart Summary');
 
     // PE and Real Estate Summary sheet
-    const peReData = buildPEandRESummaryData(snapshot.assets, snapshot.fx_rates);
+    const peReData = buildPEandRESummaryData(snapshot.assets, snapshot.fx_rates, liquidationSettings);
     const peReSheet = XLSX.utils.aoa_to_sheet(peReData);
     
     // Apply styling to PE and RE Summary
@@ -407,12 +407,15 @@ export function PortfolioHistory() {
     
     peReSheet['!cols'] = [
       { wch: 30 }, // Asset Name
+      { wch: 15 }, // Sub-Class
       { wch: 10 }, // Currency
       { wch: 12 }, // Price
+      { wch: 10 }, // Factor
       ...Array(9).fill({ wch: 12 }), // Entity columns
       { wch: 12 }, // Total Qty
       { wch: 15 }, // Total USD
-      { wch: 15 }  // Total ILS
+      { wch: 15 }, // Total ILS
+      { wch: 15 }  // Liquidation Year
     ];
 
     // Style headers

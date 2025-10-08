@@ -342,107 +342,194 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
   return rows;
 }
 
-// Build PE and Real Estate summary
-export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates): any[] {
-  const groups = groupAssetsByName(assets, [], fxRates).filter(g => 
-    g.class === 'Private Equity' || g.class === 'Real Estate'
-  );
+// Build PE and Real Estate summary with subclasses
+export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates, liquidationSettings: { asset_name: string; liquidation_year: string }[]): any[] {
+  const peREAssets = assets.filter(a => a.class === 'Private Equity' || a.class === 'Real Estate');
   
-  if (groups.length === 0) {
+  if (peREAssets.length === 0) {
     return [['No Private Equity or Real Estate holdings']];
   }
   
   const rows: any[] = [];
   
   // Header row
-  const headers = ['Asset Name', 'Currency', 'Price', ...ENTITY_ORDER, 'Total Qty', 'Total USD', 'Total ILS'];
+  const headers = ['Asset Name', 'Sub-Class', 'Currency', 'Price', 'Factor', ...ENTITY_ORDER, 'Total Qty', 'Total USD', 'Total ILS', 'Liquidation Year'];
   rows.push(headers);
   
-  let totalUSD = 0;
-  let totalILS = 0;
-  const entityTotalsUSD: { [entity: string]: number } = {};
-  const entityTotalsILS: { [entity: string]: number } = {};
+  let grandTotalUSD = 0;
+  let grandTotalILS = 0;
+  const grandEntityTotalsUSD: { [entity: string]: number } = {};
+  const grandEntityTotalsILS: { [entity: string]: number } = {};
   
-  // Group by class
+  // Define subclass order for each class
+  const classSubclasses = {
+    'Private Equity': ['Near Future', 'Growth', 'Initial'],
+    'Real Estate': ['Tel Aviv', 'Living', 'Abroad']
+  };
+  
+  // Process each class
   ['Private Equity', 'Real Estate'].forEach(className => {
-    const classGroups = groups.filter(g => g.class === className);
+    const classAssets = peREAssets.filter(a => a.class === className);
     
-    if (classGroups.length === 0) return;
+    if (classAssets.length === 0) return;
     
     let classTotalUSD = 0;
     let classTotalILS = 0;
     const classEntityTotalsUSD: { [entity: string]: number } = {};
     const classEntityTotalsILS: { [entity: string]: number } = {};
     
-    classGroups.forEach(group => {
-      const row = [
-        group.name,
-        group.currency,
-        group.price,
-        ...ENTITY_ORDER.map(entity => group.entityQuantities[entity] || 0),
-        group.totalQuantity,
-        group.totalUSD,
-        group.totalILS
-      ];
-      rows.push(row);
+    const subClasses = classSubclasses[className as keyof typeof classSubclasses];
+    
+    // Process each subclass
+    subClasses.forEach(subClass => {
+      const subClassAssets = classAssets.filter(a => a.sub_class === subClass);
       
-      classTotalUSD += group.totalUSD;
-      classTotalILS += group.totalILS;
+      if (subClassAssets.length === 0) return;
+      
+      let subClassTotalUSD = 0;
+      let subClassTotalILS = 0;
+      const subClassEntityTotalsUSD: { [entity: string]: number } = {};
+      const subClassEntityTotalsILS: { [entity: string]: number } = {};
+      
+      // Group assets by name
+      const assetGroups = new Map<string, Asset[]>();
+      subClassAssets.forEach(asset => {
+        if (!assetGroups.has(asset.name)) {
+          assetGroups.set(asset.name, []);
+        }
+        assetGroups.get(asset.name)!.push(asset);
+      });
+      
+      // Add row for each asset group
+      assetGroups.forEach((groupAssets, assetName) => {
+        const firstAsset = groupAssets[0];
+        const liquidationYear = liquidationSettings.find(s => s.asset_name === assetName)?.liquidation_year || '';
+        
+        let totalQty = 0;
+        let totalUSD = 0;
+        let totalILS = 0;
+        const entityQty: { [entity: string]: number } = {};
+        const entityUSD: { [entity: string]: number } = {};
+        const entityILS: { [entity: string]: number } = {};
+        
+        groupAssets.forEach(asset => {
+          const entity = asset.account_entity;
+          const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
+          const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
+          
+          entityQty[entity] = (entityQty[entity] || 0) + asset.quantity;
+          entityUSD[entity] = (entityUSD[entity] || 0) + calcUSD.converted_value;
+          entityILS[entity] = (entityILS[entity] || 0) + calcILS.converted_value;
+          
+          totalQty += asset.quantity;
+          totalUSD += calcUSD.converted_value;
+          totalILS += calcILS.converted_value;
+        });
+        
+        const row = [
+          assetName,
+          subClass,
+          firstAsset.origin_currency,
+          firstAsset.price,
+          firstAsset.factor || '',
+          ...ENTITY_ORDER.map(entity => entityQty[entity] || 0),
+          totalQty,
+          totalUSD,
+          totalILS,
+          liquidationYear
+        ];
+        rows.push(row);
+        
+        subClassTotalUSD += totalUSD;
+        subClassTotalILS += totalILS;
+        
+        ENTITY_ORDER.forEach(entity => {
+          if (entityUSD[entity]) {
+            subClassEntityTotalsUSD[entity] = (subClassEntityTotalsUSD[entity] || 0) + entityUSD[entity];
+            subClassEntityTotalsILS[entity] = (subClassEntityTotalsILS[entity] || 0) + entityILS[entity];
+          }
+        });
+      });
+      
+      // Add sub-class total rows
+      rows.push([
+        `Total ${subClass} USD`,
+        '', '', '', '',
+        ...ENTITY_ORDER.map(entity => subClassEntityTotalsUSD[entity] || 0),
+        '',
+        subClassTotalUSD,
+        '',
+        ''
+      ]);
+      
+      rows.push([
+        `Total ${subClass} ILS`,
+        '', '', '', '',
+        ...ENTITY_ORDER.map(entity => subClassEntityTotalsILS[entity] || 0),
+        '',
+        '',
+        subClassTotalILS,
+        ''
+      ]);
+      
+      classTotalUSD += subClassTotalUSD;
+      classTotalILS += subClassTotalILS;
       
       ENTITY_ORDER.forEach(entity => {
-        if (group.entityQuantities[entity]) {
-          const entityAssets = assets.filter(a => a.name === group.name && a.account_entity === entity);
-          const entityUSD = entityAssets.reduce((sum, a) => sum + calculateAssetValue(a, fxRates, 'USD').converted_value, 0);
-          const entityILS = entityAssets.reduce((sum, a) => sum + calculateAssetValue(a, fxRates, 'ILS').converted_value, 0);
-          
-          classEntityTotalsUSD[entity] = (classEntityTotalsUSD[entity] || 0) + entityUSD;
-          classEntityTotalsILS[entity] = (classEntityTotalsILS[entity] || 0) + entityILS;
-          entityTotalsUSD[entity] = (entityTotalsUSD[entity] || 0) + entityUSD;
-          entityTotalsILS[entity] = (entityTotalsILS[entity] || 0) + entityILS;
-        }
+        classEntityTotalsUSD[entity] = (classEntityTotalsUSD[entity] || 0) + (subClassEntityTotalsUSD[entity] || 0);
+        classEntityTotalsILS[entity] = (classEntityTotalsILS[entity] || 0) + (subClassEntityTotalsILS[entity] || 0);
       });
     });
     
     // Add class total rows
     rows.push([
       `Total ${className} USD`,
-      '', '',
+      '', '', '', '',
       ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
       '',
       classTotalUSD,
+      '',
       ''
     ]);
     
     rows.push([
       `Total ${className} ILS`,
-      '', '',
+      '', '', '', '',
       ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
       '',
       '',
-      classTotalILS
+      classTotalILS,
+      ''
     ]);
     
-    totalUSD += classTotalUSD;
-    totalILS += classTotalILS;
+    grandTotalUSD += classTotalUSD;
+    grandTotalILS += classTotalILS;
+    
+    ENTITY_ORDER.forEach(entity => {
+      grandEntityTotalsUSD[entity] = (grandEntityTotalsUSD[entity] || 0) + (classEntityTotalsUSD[entity] || 0);
+      grandEntityTotalsILS[entity] = (grandEntityTotalsILS[entity] || 0) + (classEntityTotalsILS[entity] || 0);
+    });
   });
   
   // Add grand total rows
   rows.push([
     'Grand Total USD',
-    '', '',
-    ...ENTITY_ORDER.map(entity => entityTotalsUSD[entity] || 0),
+    '', '', '', '',
+    ...ENTITY_ORDER.map(entity => grandEntityTotalsUSD[entity] || 0),
     '',
-    totalUSD,
+    grandTotalUSD,
+    '',
     ''
   ]);
   
   rows.push([
     'Grand Total ILS',
-    '', '',
-    ...ENTITY_ORDER.map(entity => entityTotalsILS[entity] || 0),
+    '', '', '', '',
+    ...ENTITY_ORDER.map(entity => grandEntityTotalsILS[entity] || 0),
     '',
     '',
-    totalILS
+    grandTotalILS,
+    ''
   ]);
   
   return rows;
