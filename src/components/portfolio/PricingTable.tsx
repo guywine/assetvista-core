@@ -223,7 +223,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
       <CardContent>
         <div className="rounded-md border max-h-[600px] overflow-y-auto">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-secondary border-b z-10">
+            <thead className="sticky top-0 bg-popover border-b z-10">
               <tr className="text-left">
                 <th
                   className="p-2 font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors select-none"
