@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Edit, Trash2, ChevronRight, ChevronDown, Plus } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown, MoreHorizontal, Edit, Trash2, ChevronRight, ChevronDown, Plus, Copy } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { GroupByField } from './PortfolioGrouping';
 import { format } from 'date-fns';
@@ -339,7 +339,8 @@ export function AssetTable({
                                    Edit
                                  </DropdownMenuItem>
                                  <DropdownMenuItem onClick={() => onDuplicateAsset(asset)}>
-                                   Duplicate Holding
+                                   <Copy className="mr-2 h-4 w-4" />
+                                   Add Holding
                                  </DropdownMenuItem>
                                  <DropdownMenuItem 
                                    onClick={() => setDeletingAsset(asset)}
@@ -395,7 +396,8 @@ export function AssetTable({
                                Edit
                              </DropdownMenuItem>
                              <DropdownMenuItem onClick={() => onDuplicateAsset(asset)}>
-                               Duplicate Holding
+                               <Copy className="mr-2 h-4 w-4" />
+                               Add Holding
                              </DropdownMenuItem>
                              <DropdownMenuItem 
                                onClick={() => setDeletingAsset(asset)}
