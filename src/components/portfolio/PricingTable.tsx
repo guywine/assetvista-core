@@ -266,7 +266,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                 return (
                   <tr
                     key={asset.id}
-                    className={`hover:bg-chart-8/50 transition-colors ${isEven ? "bg-muted/20" : "bg-background"}`}
+                    className={`hover:bg-financial-success/50 transition-colors ${isEven ? "bg-muted/20" : "bg-background"}`}
                   >
                     <td className="p-2 py-1.5 font-medium max-w-[200px] truncate">{asset.name}</td>
                     <td className="p-2 py-1.5 text-xs text-muted-foreground">{asset.sub_class}</td>
