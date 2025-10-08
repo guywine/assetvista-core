@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Download, Calendar, Trash2 } from 'lucide-react';
 import { PortfolioSnapshot } from '@/types/portfolio';
-import { formatCurrency } from '@/lib/portfolio-utils';
+import { formatCurrency, calculateAssetValue } from '@/lib/portfolio-utils';
 import { 
   buildSmartSummaryData, 
   buildPESummaryData, 
@@ -135,23 +135,36 @@ export function PortfolioHistory() {
       numFmt: '#,##0.0000'
     };
 
-    // Assets sheet
-    const assetsData = snapshot.assets.map(asset => ({
-      Name: asset.name,
-      Class: asset.class,
-      'Sub Class': asset.sub_class,
-      ISIN: asset.ISIN || '',
-      'Account Entity': asset.account_entity,
-      'Account Bank': asset.account_bank,
-      Quantity: asset.quantity,
-      Price: asset.price,
-      Factor: asset.factor || '',
-      'Origin Currency': asset.origin_currency,
-      'Maturity Date': asset.maturity_date && asset.maturity_date !== 'none' && !isNaN(Date.parse(asset.maturity_date)) ? format(new Date(asset.maturity_date), 'yyyy-MM-dd') : '',
-      YTW: asset.ytw ?? '',
-      'Company Market Value': asset.pe_company_value || '',
-      'Percentage of Holding': asset.pe_holding_percentage || ''
-    }));
+    // Assets sheet - Calculate total value first
+    const totalPortfolioValue = snapshot.assets.reduce((sum, asset) => {
+      const calc = calculateAssetValue(asset, snapshot.fx_rates, 'USD');
+      return sum + calc.converted_value;
+    }, 0);
+    
+    const assetsData = snapshot.assets.map(asset => {
+      const calc = calculateAssetValue(asset, snapshot.fx_rates, 'USD');
+      const valueUSD = calc.converted_value;
+      const percentageOfTotal = totalPortfolioValue > 0 ? (valueUSD / totalPortfolioValue * 100) : 0;
+      
+      return {
+        Name: asset.name,
+        Class: asset.class,
+        'Sub Class': asset.sub_class,
+        ISIN: asset.ISIN || '',
+        'Account Entity': asset.account_entity,
+        'Account Bank': asset.account_bank,
+        Quantity: asset.quantity,
+        Price: asset.price,
+        Factor: asset.factor || '',
+        'Origin Currency': asset.origin_currency,
+        'Maturity Date': asset.maturity_date && asset.maturity_date !== 'none' && !isNaN(Date.parse(asset.maturity_date)) ? format(new Date(asset.maturity_date), 'yyyy-MM-dd') : '',
+        YTW: asset.ytw ?? '',
+        'Company Market Value': asset.pe_company_value || '',
+        'Percentage of Holding': asset.pe_holding_percentage || '',
+        'Value (USD)': valueUSD,
+        '% of Total': percentageOfTotal
+      };
+    });
 
     const assetsSheet = XLSX.utils.json_to_sheet(assetsData);
     
@@ -173,7 +186,9 @@ export function PortfolioHistory() {
       { wch: 15 }, // Maturity Date
       { wch: 10 }, // YTW
       { wch: 20 }, // Company Market Value
-      { wch: 20 }  // Percentage of Holding
+      { wch: 20 }, // Percentage of Holding
+      { wch: 18 }, // Value (USD)
+      { wch: 12 }  // % of Total
     ];
 
     // Style headers and data
@@ -189,8 +204,11 @@ export function PortfolioHistory() {
         const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
         if (assetsSheet[cellAddr]) {
           const isAlternateRow = R % 2 === 0;
-          if (C === 7) { // Price column
-            assetsSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), ...currencyStyle };
+          // Apply currency style to Price and Value (USD) columns
+          if (C === 7 || C === 14) {
+            assetsSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), numFmt: '$#,##0.00' };
+          } else if (C === 15) { // % of Total column
+            assetsSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), numFmt: '0.00"%"' };
           } else {
             assetsSheet[cellAddr].s = isAlternateRow ? alternateRowStyle : dataStyle;
           }
