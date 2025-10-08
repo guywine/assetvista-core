@@ -558,8 +558,8 @@ export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidatio
       assetGroups.get(asset.name)!.push(asset);
     });
     
-    // Add row for each company
-    assetGroups.forEach((groupAssets, companyName) => {
+    // Calculate totals for sorting
+    const groupsWithTotals = Array.from(assetGroups.entries()).map(([companyName, groupAssets]) => {
       const firstAsset = groupAssets[0];
       const liquidationYear = liquidationSettings.find(s => s.asset_name === companyName)?.liquidation_year || '';
       const factor = firstAsset.factor || 1;
@@ -571,6 +571,20 @@ export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidatio
         totalFactoredUSD += calcUSD.converted_value * (asset.factor || 1);
       });
       
+      return {
+        companyName,
+        firstAsset,
+        liquidationYear,
+        factor,
+        totalFactoredUSD
+      };
+    });
+    
+    // Sort by factored USD value (largest to smallest)
+    groupsWithTotals.sort((a, b) => b.totalFactoredUSD - a.totalFactoredUSD);
+    
+    // Add row for each company
+    groupsWithTotals.forEach(({ companyName, firstAsset, liquidationYear, factor, totalFactoredUSD }) => {
       const row = [
         companyName,
         firstAsset.price,
