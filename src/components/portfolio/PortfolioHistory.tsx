@@ -9,7 +9,7 @@ import { PortfolioSnapshot } from '@/types/portfolio';
 import { formatCurrency } from '@/lib/portfolio-utils';
 import { 
   buildSmartSummaryData, 
-  buildPEandRESummaryData, 
+  buildPESummaryData, 
   buildChartDataSheets,
   applySheetStyling,
   HEADER_STYLE,
@@ -148,7 +148,9 @@ export function PortfolioHistory() {
       Factor: asset.factor || '',
       'Origin Currency': asset.origin_currency,
       'Maturity Date': asset.maturity_date && asset.maturity_date !== 'none' && !isNaN(Date.parse(asset.maturity_date)) ? format(new Date(asset.maturity_date), 'yyyy-MM-dd') : '',
-      YTW: asset.ytw ?? ''
+      YTW: asset.ytw ?? '',
+      'Company Market Value': asset.pe_company_value || '',
+      'Percentage of Holding': asset.pe_holding_percentage || ''
     }));
 
     const assetsSheet = XLSX.utils.json_to_sheet(assetsData);
@@ -169,7 +171,9 @@ export function PortfolioHistory() {
       { wch: 10 }, // Factor
       { wch: 15 }, // Origin Currency
       { wch: 15 }, // Maturity Date
-      { wch: 10 }  // YTW
+      { wch: 10 }, // YTW
+      { wch: 20 }, // Company Market Value
+      { wch: 20 }  // Percentage of Holding
     ];
 
     // Style headers and data
@@ -367,7 +371,7 @@ export function PortfolioHistory() {
       }
     }
 
-    // Style data rows and apply special styling for total rows
+    // Style data rows and apply special styling for total rows and header rows
     for (let R = 1; R <= smartSummaryRange.e.r; ++R) {
       const firstCell = smartSummarySheet[XLSX.utils.encode_cell({ r: R, c: 0 })];
       const cellValue = firstCell?.v?.toString() || '';
@@ -375,15 +379,29 @@ export function PortfolioHistory() {
       const isSubtotalRow = cellValue.includes('Total ') && !cellValue.startsWith('Grand Total');
       const isAlternate = R % 2 === 0;
       
+      // Check if this is a header row (class or subclass name with empty cells)
+      const secondCell = smartSummarySheet[XLSX.utils.encode_cell({ r: R, c: 1 })];
+      const isHeaderRow = cellValue && 
+        !isTotalRow && 
+        (!secondCell || secondCell.v === '' || secondCell.v === null || secondCell.v === undefined);
+      
       for (let C = smartSummaryRange.s.c; C <= smartSummaryRange.e.c; ++C) {
         const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
         if (smartSummarySheet[cellAddr]) {
-          let style: any = isAlternate && !isTotalRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
+          let style: any = isAlternate && !isTotalRow && !isHeaderRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
           
           if (cellValue.startsWith('Grand Total')) {
             style = TOTAL_ROW_STYLE;
           } else if (isTotalRow || isSubtotalRow) {
             style = SUBTOTAL_ROW_STYLE;
+          } else if (isHeaderRow) {
+            // Header row style (class/subclass name)
+            style = {
+              ...DATA_STYLE,
+              font: { name: 'Arial', sz: 11, bold: true },
+              fill: { fgColor: { rgb: 'E7E6E6' } },
+              alignment: { horizontal: 'center', vertical: 'center' }
+            };
           }
           
           // Apply number formatting for numeric columns
@@ -394,67 +412,90 @@ export function PortfolioHistory() {
           smartSummarySheet[cellAddr].s = style;
         }
       }
+      
+      // Merge cells for header rows
+      if (isHeaderRow) {
+        const mergeRange = { s: { r: R, c: 0 }, e: { r: R, c: smartSummaryRange.e.c } };
+        if (!smartSummarySheet['!merges']) smartSummarySheet['!merges'] = [];
+        smartSummarySheet['!merges'].push(mergeRange);
+      }
     }
 
     XLSX.utils.book_append_sheet(workbook, smartSummarySheet, 'Smart Summary');
 
-    // PE and Real Estate Summary sheet
-    const peReData = buildPEandRESummaryData(snapshot.assets, snapshot.fx_rates, liquidationSettings);
-    const peReSheet = XLSX.utils.aoa_to_sheet(peReData);
+    // Private Equity Summary sheet
+    const peData = buildPESummaryData(snapshot.assets, snapshot.fx_rates, liquidationSettings);
+    const peSheet = XLSX.utils.aoa_to_sheet(peData);
     
-    // Apply styling to PE and RE Summary
-    const peReRange = XLSX.utils.decode_range(peReSheet['!ref'] || 'A1');
+    // Apply styling to PE Summary
+    const peRange = XLSX.utils.decode_range(peSheet['!ref'] || 'A1');
     
-    peReSheet['!cols'] = [
-      { wch: 30 }, // Asset Name
-      { wch: 15 }, // Sub-Class
-      { wch: 10 }, // Currency
-      { wch: 12 }, // Price
+    peSheet['!cols'] = [
+      { wch: 30 }, // Company
+      { wch: 20 }, // Holding Valuation (Price)
       { wch: 10 }, // Factor
-      ...Array(9).fill({ wch: 12 }), // Entity columns
-      { wch: 12 }, // Total Qty
-      { wch: 15 }, // Total USD
-      { wch: 15 }, // Total ILS
-      { wch: 15 }  // Liquidation Year
+      { wch: 15 }, // Liquidation Year
+      { wch: 20 }  // Total USD (Factored)
     ];
 
     // Style headers
-    for (let C = peReRange.s.c; C <= peReRange.e.c; ++C) {
+    for (let C = peRange.s.c; C <= peRange.e.c; ++C) {
       const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
-      if (peReSheet[headerAddr]) {
-        peReSheet[headerAddr].s = HEADER_STYLE;
+      if (peSheet[headerAddr]) {
+        peSheet[headerAddr].s = HEADER_STYLE;
       }
     }
 
     // Style data rows
-    for (let R = 1; R <= peReRange.e.r; ++R) {
-      const firstCell = peReSheet[XLSX.utils.encode_cell({ r: R, c: 0 })];
+    for (let R = 1; R <= peRange.e.r; ++R) {
+      const firstCell = peSheet[XLSX.utils.encode_cell({ r: R, c: 0 })];
       const cellValue = firstCell?.v?.toString() || '';
       const isTotalRow = cellValue.startsWith('Total ') || cellValue.startsWith('Grand Total');
       const isAlternate = R % 2 === 0;
       
-      for (let C = peReRange.s.c; C <= peReRange.e.c; ++C) {
+      // Check if this is a header row (subclass name)
+      const secondCell = peSheet[XLSX.utils.encode_cell({ r: R, c: 1 })];
+      const isHeaderRow = cellValue && 
+        !isTotalRow && 
+        (!secondCell || secondCell.v === '' || secondCell.v === null || secondCell.v === undefined);
+      
+      for (let C = peRange.s.c; C <= peRange.e.c; ++C) {
         const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
-        if (peReSheet[cellAddr]) {
-          let style: any = isAlternate && !isTotalRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
+        if (peSheet[cellAddr]) {
+          let style: any = isAlternate && !isTotalRow && !isHeaderRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
           
           if (cellValue.startsWith('Grand Total')) {
             style = TOTAL_ROW_STYLE;
           } else if (isTotalRow) {
             style = SUBTOTAL_ROW_STYLE;
+          } else if (isHeaderRow) {
+            // Header row style (subclass name)
+            style = {
+              ...DATA_STYLE,
+              font: { name: 'Arial', sz: 11, bold: true },
+              fill: { fgColor: { rgb: 'E7E6E6' } },
+              alignment: { horizontal: 'center', vertical: 'center' }
+            };
           }
           
           // Apply number formatting for numeric columns
-          if (peReSheet[cellAddr].t === 'n') {
+          if (peSheet[cellAddr].t === 'n') {
             style = { ...style, numFmt: '#,##0.00' };
           }
           
-          peReSheet[cellAddr].s = style;
+          peSheet[cellAddr].s = style;
         }
+      }
+      
+      // Merge cells for header rows
+      if (isHeaderRow) {
+        const mergeRange = { s: { r: R, c: 0 }, e: { r: R, c: peRange.e.c } };
+        if (!peSheet['!merges']) peSheet['!merges'] = [];
+        peSheet['!merges'].push(mergeRange);
       }
     }
 
-    XLSX.utils.book_append_sheet(workbook, peReSheet, 'PE & Real Estate Summary');
+    XLSX.utils.book_append_sheet(workbook, peSheet, 'Private Equity Summary');
 
     // Chart Data sheets
     const chartDataSheets = buildChartDataSheets(snapshot.assets, snapshot.fx_rates);

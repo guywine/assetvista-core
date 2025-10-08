@@ -19,6 +19,10 @@ const CLASS_ORDER = [
   { 
     class: 'Commodities & more', 
     subClasses: ['Cryptocurrency', 'Commodities']
+  },
+  {
+    class: 'Real Estate',
+    subClasses: ['Tel Aviv', 'Living', 'Abroad']
   }
 ];
 
@@ -116,7 +120,7 @@ function groupAssetsByName(assets: Asset[], excludeClasses: string[], fxRates: F
 
 // Build smart summary data with subtotals and totals
 export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] {
-  const groups = groupAssetsByName(assets, ['Private Equity', 'Real Estate'], fxRates);
+  const groups = groupAssetsByName(assets, ['Private Equity'], fxRates);
   const rows: any[] = [];
   
   // Header row
@@ -132,6 +136,9 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     let classTotalILS = 0;
     const classEntityTotalsUSD: { [entity: string]: number } = {};
     const classEntityTotalsILS: { [entity: string]: number } = {};
+    
+    // Add class header row
+    rows.push([className, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
     
     // Special handling for Cash class - group by currency
     if (className === 'Cash') {
@@ -223,6 +230,9 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       
       if (subClassGroups.length === 0) return;
       
+      // Add sub-class header row
+      rows.push([subClass, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
+      
       let subClassTotalUSD = 0;
       let subClassTotalILS = 0;
       const subClassEntityTotalsUSD: { [entity: string]: number } = {};
@@ -307,9 +317,9 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     }
   });
   
-  // Add grand total rows
+  // Add grand total rows (excluding Real Estate)
   rows.push([
-    'Grand Total USD',
+    'Grand Total USD (Excl. Real Estate)',
     '', '',
     ...ENTITY_ORDER.map(entity => grandEntityTotals[entity] || 0),
     '',
@@ -317,7 +327,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     ''
   ]);
   
-  // Calculate grand entity totals in ILS
+  // Calculate grand entity totals in ILS (excluding Real Estate)
   const grandEntityTotalsILS: { [entity: string]: number } = {};
   ENTITY_ORDER.forEach(entity => {
     const entityAssets = assets.filter(a => 
@@ -331,7 +341,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
   });
   
   rows.push([
-    'Grand Total ILS',
+    'Grand Total ILS (Excl. Real Estate)',
     '', '',
     ...ENTITY_ORDER.map(entity => grandEntityTotalsILS[entity] || 0),
     '',
@@ -339,59 +349,33 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     grandTotalILS
   ]);
   
-  return rows;
-}
-
-// Build PE and Real Estate summary with subclasses
-export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates, liquidationSettings: { asset_name: string; liquidation_year: string }[]): any[] {
-  const peREAssets = assets.filter(a => a.class === 'Private Equity' || a.class === 'Real Estate');
-  
-  if (peREAssets.length === 0) {
-    return [['No Private Equity or Real Estate holdings']];
-  }
-  
-  const rows: any[] = [];
-  
-  // Header row
-  const headers = ['Asset Name', 'Sub-Class', 'Currency', 'Price', 'Factor', ...ENTITY_ORDER, 'Total Qty', 'Total USD', 'Total ILS', 'Liquidation Year'];
-  rows.push(headers);
-  
-  let grandTotalUSD = 0;
-  let grandTotalILS = 0;
-  const grandEntityTotalsUSD: { [entity: string]: number } = {};
-  const grandEntityTotalsILS: { [entity: string]: number } = {};
-  
-  // Define subclass order for each class
-  const classSubclasses = {
-    'Private Equity': ['Near Future', 'Growth', 'Initial'],
-    'Real Estate': ['Tel Aviv', 'Living', 'Abroad']
-  };
-  
-  // Process each class
-  ['Private Equity', 'Real Estate'].forEach(className => {
-    const classAssets = peREAssets.filter(a => a.class === className);
+  // Now add Real Estate at the end
+  const reClassOrder = CLASS_ORDER.find(c => c.class === 'Real Estate');
+  if (reClassOrder) {
+    const { class: className, subClasses } = reClassOrder;
     
-    if (classAssets.length === 0) return;
+    // Add Real Estate class header
+    rows.push([className, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
     
     let classTotalUSD = 0;
     let classTotalILS = 0;
     const classEntityTotalsUSD: { [entity: string]: number } = {};
     const classEntityTotalsILS: { [entity: string]: number } = {};
     
-    const subClasses = classSubclasses[className as keyof typeof classSubclasses];
-    
-    // Process each subclass
     subClasses.forEach(subClass => {
-      const subClassAssets = classAssets.filter(a => a.sub_class === subClass);
+      const subClassAssets = assets.filter(a => a.class === 'Real Estate' && a.sub_class === subClass);
       
       if (subClassAssets.length === 0) return;
+      
+      // Add sub-class header
+      rows.push([subClass, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
       
       let subClassTotalUSD = 0;
       let subClassTotalILS = 0;
       const subClassEntityTotalsUSD: { [entity: string]: number } = {};
       const subClassEntityTotalsILS: { [entity: string]: number } = {};
       
-      // Group assets by name
+      // Group Real Estate assets by name
       const assetGroups = new Map<string, Asset[]>();
       subClassAssets.forEach(asset => {
         if (!assetGroups.has(asset.name)) {
@@ -400,11 +384,9 @@ export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates, liqui
         assetGroups.get(asset.name)!.push(asset);
       });
       
-      // Add row for each asset group
+      // Add row for each Real Estate asset group
       assetGroups.forEach((groupAssets, assetName) => {
         const firstAsset = groupAssets[0];
-        const liquidationYear = liquidationSettings.find(s => s.asset_name === assetName)?.liquidation_year || '';
-        
         let totalQty = 0;
         let totalUSD = 0;
         let totalILS = 0;
@@ -414,29 +396,30 @@ export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates, liqui
         
         groupAssets.forEach(asset => {
           const entity = asset.account_entity;
+          const factor = asset.factor || 1;
           const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
           const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
           
+          const factoredUSD = calcUSD.converted_value * factor;
+          const factoredILS = calcILS.converted_value * factor;
+          
           entityQty[entity] = (entityQty[entity] || 0) + asset.quantity;
-          entityUSD[entity] = (entityUSD[entity] || 0) + calcUSD.converted_value;
-          entityILS[entity] = (entityILS[entity] || 0) + calcILS.converted_value;
+          entityUSD[entity] = (entityUSD[entity] || 0) + factoredUSD;
+          entityILS[entity] = (entityILS[entity] || 0) + factoredILS;
           
           totalQty += asset.quantity;
-          totalUSD += calcUSD.converted_value;
-          totalILS += calcILS.converted_value;
+          totalUSD += factoredUSD;
+          totalILS += factoredILS;
         });
         
         const row = [
           assetName,
-          subClass,
           firstAsset.origin_currency,
           firstAsset.price,
-          firstAsset.factor || '',
           ...ENTITY_ORDER.map(entity => entityQty[entity] || 0),
           totalQty,
           totalUSD,
-          totalILS,
-          liquidationYear
+          totalILS
         ];
         rows.push(row);
         
@@ -454,22 +437,20 @@ export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates, liqui
       // Add sub-class total rows
       rows.push([
         `Total ${subClass} USD`,
-        '', '', '', '',
+        '', '',
         ...ENTITY_ORDER.map(entity => subClassEntityTotalsUSD[entity] || 0),
         '',
         subClassTotalUSD,
-        '',
         ''
       ]);
       
       rows.push([
         `Total ${subClass} ILS`,
-        '', '', '', '',
+        '', '',
         ...ENTITY_ORDER.map(entity => subClassEntityTotalsILS[entity] || 0),
         '',
         '',
-        subClassTotalILS,
-        ''
+        subClassTotalILS
       ]);
       
       classTotalUSD += subClassTotalUSD;
@@ -481,55 +462,143 @@ export function buildPEandRESummaryData(assets: Asset[], fxRates: FXRates, liqui
       });
     });
     
-    // Add class total rows
-    rows.push([
-      `Total ${className} USD`,
-      '', '', '', '',
-      ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
-      '',
-      classTotalUSD,
-      '',
-      ''
-    ]);
+    // Add Real Estate class total rows
+    if (classTotalUSD > 0 || classTotalILS > 0) {
+      rows.push([
+        'Total Real Estate USD',
+        '', '',
+        ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
+        '',
+        classTotalUSD,
+        ''
+      ]);
+      
+      rows.push([
+        'Total Real Estate ILS',
+        '', '',
+        ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
+        '',
+        '',
+        classTotalILS
+      ]);
+      
+      // Add final grand total including Real Estate
+      const finalGrandTotalUSD = grandTotalUSD + classTotalUSD;
+      const finalGrandTotalILS = grandTotalILS + classTotalILS;
+      const finalGrandEntityTotalsUSD: { [entity: string]: number } = {};
+      const finalGrandEntityTotalsILS: { [entity: string]: number } = {};
+      
+      ENTITY_ORDER.forEach(entity => {
+        finalGrandEntityTotalsUSD[entity] = (grandEntityTotals[entity] || 0) + (classEntityTotalsUSD[entity] || 0);
+        finalGrandEntityTotalsILS[entity] = (grandEntityTotalsILS[entity] || 0) + (classEntityTotalsILS[entity] || 0);
+      });
+      
+      rows.push([
+        'Grand Total USD (Incl. Real Estate)',
+        '', '',
+        ...ENTITY_ORDER.map(entity => finalGrandEntityTotalsUSD[entity] || 0),
+        '',
+        finalGrandTotalUSD,
+        ''
+      ]);
+      
+      rows.push([
+        'Grand Total ILS (Incl. Real Estate)',
+        '', '',
+        ...ENTITY_ORDER.map(entity => finalGrandEntityTotalsILS[entity] || 0),
+        '',
+        '',
+        finalGrandTotalILS
+      ]);
+    }
+  }
+  
+  return rows;
+}
+
+// Build PE summary with subclasses
+export function buildPESummaryData(assets: Asset[], fxRates: FXRates, liquidationSettings: { asset_name: string; liquidation_year: string }[]): any[] {
+  const peAssets = assets.filter(a => a.class === 'Private Equity');
+  
+  if (peAssets.length === 0) {
+    return [['No Private Equity holdings']];
+  }
+  
+  const rows: any[] = [];
+  
+  // Header row
+  const headers = ['Company', 'Holding Valuation (Price)', 'Factor', 'Liquidation Year', 'Total USD (Factored)'];
+  rows.push(headers);
+  
+  // Define subclass order
+  const subClasses = ['Near Future', 'Growth', 'Initial'];
+  
+  let grandTotalUSD = 0;
+  
+  // Process each subclass
+  subClasses.forEach(subClass => {
+    const subClassAssets = peAssets.filter(a => a.sub_class === subClass);
     
-    rows.push([
-      `Total ${className} ILS`,
-      '', '', '', '',
-      ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
-      '',
-      '',
-      classTotalILS,
-      ''
-    ]);
+    if (subClassAssets.length === 0) return;
     
-    grandTotalUSD += classTotalUSD;
-    grandTotalILS += classTotalILS;
+    // Add sub-class header
+    rows.push([subClass, '', '', '', '']);
     
-    ENTITY_ORDER.forEach(entity => {
-      grandEntityTotalsUSD[entity] = (grandEntityTotalsUSD[entity] || 0) + (classEntityTotalsUSD[entity] || 0);
-      grandEntityTotalsILS[entity] = (grandEntityTotalsILS[entity] || 0) + (classEntityTotalsILS[entity] || 0);
+    let subClassTotalUSD = 0;
+    
+    // Group assets by name (company)
+    const assetGroups = new Map<string, Asset[]>();
+    subClassAssets.forEach(asset => {
+      if (!assetGroups.has(asset.name)) {
+        assetGroups.set(asset.name, []);
+      }
+      assetGroups.get(asset.name)!.push(asset);
     });
+    
+    // Add row for each company
+    assetGroups.forEach((groupAssets, companyName) => {
+      const firstAsset = groupAssets[0];
+      const liquidationYear = liquidationSettings.find(s => s.asset_name === companyName)?.liquidation_year || '';
+      const factor = firstAsset.factor || 1;
+      
+      let totalFactoredUSD = 0;
+      
+      groupAssets.forEach(asset => {
+        const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
+        totalFactoredUSD += calcUSD.converted_value * (asset.factor || 1);
+      });
+      
+      const row = [
+        companyName,
+        firstAsset.price,
+        factor,
+        liquidationYear,
+        totalFactoredUSD
+      ];
+      rows.push(row);
+      
+      subClassTotalUSD += totalFactoredUSD;
+    });
+    
+    // Add sub-class total
+    rows.push([
+      `Total ${subClass}`,
+      '',
+      '',
+      '',
+      subClassTotalUSD
+    ]);
+    
+    grandTotalUSD += subClassTotalUSD;
   });
   
-  // Add grand total rows
+  // Add grand total
   rows.push([
-    'Grand Total USD',
-    '', '', '', '',
-    ...ENTITY_ORDER.map(entity => grandEntityTotalsUSD[entity] || 0),
-    '',
-    grandTotalUSD,
-    '',
-    ''
-  ]);
-  
-  rows.push([
-    'Grand Total ILS',
-    '', '', '', '',
-    ...ENTITY_ORDER.map(entity => grandEntityTotalsILS[entity] || 0),
+    'Grand Total Private Equity',
     '',
     '',
-    grandTotalILS,
-    ''
+    '',
+    grandTotalUSD
   ]);
   
   return rows;
@@ -747,8 +816,14 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates): { [shee
   return sheets;
 }
 
-// Apply styling to a data sheet
-export function applySheetStyling(sheet: XLSX.WorkSheet, rowCount: number, isTotalRow: (row: number) => boolean, isSubtotalRow: (row: number) => boolean) {
+// Apply styling to a data sheet with header rows support
+export function applySheetStyling(
+  sheet: XLSX.WorkSheet, 
+  rowCount: number, 
+  isTotalRow: (row: number) => boolean, 
+  isSubtotalRow: (row: number) => boolean,
+  isHeaderRow?: (row: number) => boolean
+) {
   const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
   
   // Style headers
@@ -763,6 +838,7 @@ export function applySheetStyling(sheet: XLSX.WorkSheet, rowCount: number, isTot
   for (let R = 1; R <= range.e.r; ++R) {
     const isTotal = isTotalRow(R);
     const isSubtotal = isSubtotalRow(R);
+    const isHeader = isHeaderRow ? isHeaderRow(R) : false;
     const isAlternate = R % 2 === 0;
     
     for (let C = range.s.c; C <= range.e.c; ++C) {
@@ -774,6 +850,14 @@ export function applySheetStyling(sheet: XLSX.WorkSheet, rowCount: number, isTot
           style = TOTAL_ROW_STYLE;
         } else if (isSubtotal) {
           style = SUBTOTAL_ROW_STYLE;
+        } else if (isHeader) {
+          // Header row style (merged cell with class/subclass name)
+          style = {
+            ...DATA_STYLE,
+            font: { name: 'Arial', sz: 11, bold: true },
+            fill: { fgColor: { rgb: 'E7E6E6' } },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
         }
         
         // Apply number formatting for numeric columns
