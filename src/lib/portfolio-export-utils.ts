@@ -133,6 +133,91 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     const classEntityTotalsUSD: { [entity: string]: number } = {};
     const classEntityTotalsILS: { [entity: string]: number } = {};
     
+    // Special handling for Cash class - group by currency
+    if (className === 'Cash') {
+      const currencies = ['USD', 'ILS', 'EUR', 'CHF', 'CAD', 'HKD', 'GBP'];
+      
+      currencies.forEach(currency => {
+        const cashAssets = assets.filter(a => 
+          a.class === 'Cash' && 
+          a.origin_currency === currency &&
+          !['Private Equity', 'Real Estate'].includes(a.class)
+        );
+        
+        if (cashAssets.length === 0) return;
+        
+        let currencyTotalUSD = 0;
+        let currencyTotalILS = 0;
+        let currencyTotalQty = 0;
+        const currencyEntityQty: { [entity: string]: number } = {};
+        const currencyEntityUSD: { [entity: string]: number } = {};
+        const currencyEntityILS: { [entity: string]: number } = {};
+        
+        cashAssets.forEach(asset => {
+          const entity = asset.account_entity;
+          const calcUSD = calculateAssetValue(asset, fxRates, 'USD');
+          const calcILS = calculateAssetValue(asset, fxRates, 'ILS');
+          
+          currencyEntityQty[entity] = (currencyEntityQty[entity] || 0) + asset.quantity;
+          currencyEntityUSD[entity] = (currencyEntityUSD[entity] || 0) + calcUSD.converted_value;
+          currencyEntityILS[entity] = (currencyEntityILS[entity] || 0) + calcILS.converted_value;
+          
+          currencyTotalQty += asset.quantity;
+          currencyTotalUSD += calcUSD.converted_value;
+          currencyTotalILS += calcILS.converted_value;
+        });
+        
+        // Add currency row
+        const row = [
+          currency,
+          currency,
+          1, // Price is 1 for cash
+          ...ENTITY_ORDER.map(entity => currencyEntityQty[entity] || 0),
+          currencyTotalQty,
+          currencyTotalUSD,
+          currencyTotalILS
+        ];
+        rows.push(row);
+        
+        classTotalUSD += currencyTotalUSD;
+        classTotalILS += currencyTotalILS;
+        
+        ENTITY_ORDER.forEach(entity => {
+          if (currencyEntityUSD[entity]) {
+            classEntityTotalsUSD[entity] = (classEntityTotalsUSD[entity] || 0) + currencyEntityUSD[entity];
+            classEntityTotalsILS[entity] = (classEntityTotalsILS[entity] || 0) + currencyEntityILS[entity];
+            grandEntityTotals[entity] = (grandEntityTotals[entity] || 0) + currencyEntityUSD[entity];
+          }
+        });
+      });
+      
+      // Add Cash class total rows
+      if (classTotalUSD > 0 || classTotalILS > 0) {
+        rows.push([
+          'Total Cash USD',
+          '', '',
+          ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
+          '',
+          classTotalUSD,
+          ''
+        ]);
+        
+        rows.push([
+          'Total Cash ILS',
+          '', '',
+          ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
+          '',
+          '',
+          classTotalILS
+        ]);
+        
+        grandTotalUSD += classTotalUSD;
+        grandTotalILS += classTotalILS;
+      }
+      
+      return; // Skip the normal subclass processing for Cash
+    }
+    
     subClasses.forEach(subClass => {
       const subClassGroups = groups.filter(g => g.class === className && g.subClass === subClass);
       
