@@ -132,6 +132,9 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
   const grandEntityTotals: { [entity: string]: number } = {};
   
   CLASS_ORDER.forEach(({ class: className, subClasses }) => {
+    // Skip Real Estate in the main loop - we'll handle it separately at the end
+    if (className === 'Real Estate') return;
+    
     let classTotalUSD = 0;
     let classTotalILS = 0;
     const classEntityTotalsUSD: { [entity: string]: number } = {};
