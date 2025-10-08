@@ -7,6 +7,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Download, Calendar, Trash2 } from 'lucide-react';
 import { PortfolioSnapshot } from '@/types/portfolio';
 import { formatCurrency } from '@/lib/portfolio-utils';
+import { 
+  buildSmartSummaryData, 
+  buildPEandRESummaryData, 
+  buildChartDataSheets,
+  applySheetStyling,
+  HEADER_STYLE,
+  DATA_STYLE,
+  ALTERNATE_ROW_STYLE,
+  TOTAL_ROW_STYLE,
+  SUBTOTAL_ROW_STYLE
+} from '@/lib/portfolio-export-utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import * as XLSX from 'xlsx-js-style';
@@ -70,8 +81,20 @@ export function PortfolioHistory() {
     }
   };
 
-  const downloadSnapshot = (snapshot: PortfolioSnapshot) => {
+  const downloadSnapshot = async (snapshot: PortfolioSnapshot) => {
     const workbook = XLSX.utils.book_new();
+    
+    // Fetch liquidation settings
+    let liquidationSettings: any[] = [];
+    try {
+      const { data } = await supabase
+        .from('asset_liquidation_settings')
+        .select('*')
+        .order('asset_name');
+      liquidationSettings = data || [];
+    } catch (error) {
+      console.error('Error fetching liquidation settings:', error);
+    }
 
     // Define styling constants
     const headerStyle = {
@@ -281,6 +304,199 @@ export function PortfolioHistory() {
     }
 
     XLSX.utils.book_append_sheet(workbook, summarySheet, 'Summary');
+
+    // Asset Liquidation Settings sheet
+    const liquidationData = liquidationSettings.map(setting => ({
+      'Asset Name': setting.asset_name,
+      'Liquidation Year': setting.liquidation_year
+    }));
+
+    const liquidationSheet = XLSX.utils.json_to_sheet(liquidationData);
+    
+    // Apply styling to Liquidation Settings sheet
+    const liquidationRange = XLSX.utils.decode_range(liquidationSheet['!ref'] || 'A1');
+    
+    liquidationSheet['!cols'] = [
+      { wch: 25 }, // Asset Name
+      { wch: 20 }  // Liquidation Year
+    ];
+
+    // Style headers
+    for (let C = liquidationRange.s.c; C <= liquidationRange.e.c; ++C) {
+      const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (liquidationSheet[headerAddr]) {
+        liquidationSheet[headerAddr].s = HEADER_STYLE;
+      }
+    }
+
+    // Style data rows
+    for (let R = 1; R <= liquidationRange.e.r; ++R) {
+      for (let C = liquidationRange.s.c; C <= liquidationRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (liquidationSheet[cellAddr]) {
+          const isAlternateRow = R % 2 === 0;
+          liquidationSheet[cellAddr].s = isAlternateRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(workbook, liquidationSheet, 'Asset Liquidation Settings');
+
+    // Smart Summary sheet
+    const smartSummaryData = buildSmartSummaryData(snapshot.assets, snapshot.fx_rates);
+    const smartSummarySheet = XLSX.utils.aoa_to_sheet(smartSummaryData);
+    
+    // Apply styling to Smart Summary
+    const smartSummaryRange = XLSX.utils.decode_range(smartSummarySheet['!ref'] || 'A1');
+    
+    smartSummarySheet['!cols'] = [
+      { wch: 30 }, // Asset Name
+      { wch: 10 }, // Currency
+      { wch: 12 }, // Price
+      ...Array(9).fill({ wch: 12 }), // Entity columns
+      { wch: 12 }, // Total Qty
+      { wch: 15 }, // Total USD
+      { wch: 15 }  // Total ILS
+    ];
+
+    // Style headers
+    for (let C = smartSummaryRange.s.c; C <= smartSummaryRange.e.c; ++C) {
+      const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (smartSummarySheet[headerAddr]) {
+        smartSummarySheet[headerAddr].s = HEADER_STYLE;
+      }
+    }
+
+    // Style data rows and apply special styling for total rows
+    for (let R = 1; R <= smartSummaryRange.e.r; ++R) {
+      const firstCell = smartSummarySheet[XLSX.utils.encode_cell({ r: R, c: 0 })];
+      const cellValue = firstCell?.v?.toString() || '';
+      const isTotalRow = cellValue.startsWith('Total ') || cellValue.startsWith('Grand Total');
+      const isSubtotalRow = cellValue.includes('Total ') && !cellValue.startsWith('Grand Total');
+      const isAlternate = R % 2 === 0;
+      
+      for (let C = smartSummaryRange.s.c; C <= smartSummaryRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (smartSummarySheet[cellAddr]) {
+          let style: any = isAlternate && !isTotalRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
+          
+          if (cellValue.startsWith('Grand Total')) {
+            style = TOTAL_ROW_STYLE;
+          } else if (isTotalRow || isSubtotalRow) {
+            style = SUBTOTAL_ROW_STYLE;
+          }
+          
+          // Apply number formatting for numeric columns
+          if (smartSummarySheet[cellAddr].t === 'n') {
+            style = { ...style, numFmt: '#,##0.00' };
+          }
+          
+          smartSummarySheet[cellAddr].s = style;
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(workbook, smartSummarySheet, 'Smart Summary');
+
+    // PE and Real Estate Summary sheet
+    const peReData = buildPEandRESummaryData(snapshot.assets, snapshot.fx_rates);
+    const peReSheet = XLSX.utils.aoa_to_sheet(peReData);
+    
+    // Apply styling to PE and RE Summary
+    const peReRange = XLSX.utils.decode_range(peReSheet['!ref'] || 'A1');
+    
+    peReSheet['!cols'] = [
+      { wch: 30 }, // Asset Name
+      { wch: 10 }, // Currency
+      { wch: 12 }, // Price
+      ...Array(9).fill({ wch: 12 }), // Entity columns
+      { wch: 12 }, // Total Qty
+      { wch: 15 }, // Total USD
+      { wch: 15 }  // Total ILS
+    ];
+
+    // Style headers
+    for (let C = peReRange.s.c; C <= peReRange.e.c; ++C) {
+      const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (peReSheet[headerAddr]) {
+        peReSheet[headerAddr].s = HEADER_STYLE;
+      }
+    }
+
+    // Style data rows
+    for (let R = 1; R <= peReRange.e.r; ++R) {
+      const firstCell = peReSheet[XLSX.utils.encode_cell({ r: R, c: 0 })];
+      const cellValue = firstCell?.v?.toString() || '';
+      const isTotalRow = cellValue.startsWith('Total ') || cellValue.startsWith('Grand Total');
+      const isAlternate = R % 2 === 0;
+      
+      for (let C = peReRange.s.c; C <= peReRange.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+        if (peReSheet[cellAddr]) {
+          let style: any = isAlternate && !isTotalRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
+          
+          if (cellValue.startsWith('Grand Total')) {
+            style = TOTAL_ROW_STYLE;
+          } else if (isTotalRow) {
+            style = SUBTOTAL_ROW_STYLE;
+          }
+          
+          // Apply number formatting for numeric columns
+          if (peReSheet[cellAddr].t === 'n') {
+            style = { ...style, numFmt: '#,##0.00' };
+          }
+          
+          peReSheet[cellAddr].s = style;
+        }
+      }
+    }
+
+    XLSX.utils.book_append_sheet(workbook, peReSheet, 'PE & Real Estate Summary');
+
+    // Chart Data sheets
+    const chartDataSheets = buildChartDataSheets(snapshot.assets, snapshot.fx_rates);
+    
+    Object.entries(chartDataSheets).forEach(([sheetName, data]) => {
+      const sheet = XLSX.utils.aoa_to_sheet(data);
+      
+      // Apply styling
+      const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+      
+      sheet['!cols'] = [
+        { wch: 25 }, // First column (name/category)
+        { wch: 18 }, // Value USD
+        { wch: 18 }, // Value ILS
+        { wch: 15 }  // Percentage
+      ];
+
+      // Style headers
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const headerAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+        if (sheet[headerAddr]) {
+          sheet[headerAddr].s = HEADER_STYLE;
+        }
+      }
+
+      // Style data rows
+      for (let R = 1; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
+          if (sheet[cellAddr]) {
+            const isAlternateRow = R % 2 === 0;
+            let style: any = isAlternateRow ? ALTERNATE_ROW_STYLE : DATA_STYLE;
+            
+            // Apply number formatting for numeric columns (USD and ILS)
+            if (sheet[cellAddr].t === 'n' && C >= 1 && C <= 2) {
+              style = { ...style, numFmt: '#,##0.00' };
+            }
+            
+            sheet[cellAddr].s = style;
+          }
+        }
+      }
+      
+      XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
+    });
 
     // Download
     const fileName = `${snapshot.name.replace(/[^a-zA-Z0-9-_]/g, '_')}.xlsx`;
