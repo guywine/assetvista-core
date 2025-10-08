@@ -22,7 +22,7 @@ const CLASS_ORDER = [
   },
   {
     class: 'Real Estate',
-    subClasses: ['Tel Aviv', 'Living', 'Abroad']
+    subClasses: ['Tel-Aviv', 'Living', 'Abroad']
   }
 ];
 
