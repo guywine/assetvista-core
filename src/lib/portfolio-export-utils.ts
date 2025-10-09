@@ -123,8 +123,44 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
   const groups = groupAssetsByName(assets, ['Private Equity'], fxRates);
   const rows: any[] = [];
   
+  // Calculate total values for percentage calculations
+  const totalValueInclRE = assets.reduce((sum, a) => {
+    const calc = calculateAssetValue(a, fxRates, 'USD');
+    const factor = (a.class === 'Private Equity' || a.class === 'Real Estate') ? (a.factor || 1) : 1;
+    return sum + (calc.converted_value * factor);
+  }, 0);
+  
+  const totalValueExclREAndPE = assets
+    .filter(a => !['Private Equity', 'Real Estate'].includes(a.class))
+    .reduce((sum, a) => {
+      const calc = calculateAssetValue(a, fxRates, 'USD');
+      return sum + calc.converted_value;
+    }, 0);
+  
+  // Calculate class totals for "% of [Class]" calculation
+  const classTotals: { [className: string]: number } = {};
+  assets.forEach(a => {
+    if (!classTotals[a.class]) {
+      classTotals[a.class] = 0;
+    }
+    const calc = calculateAssetValue(a, fxRates, 'USD');
+    const factor = (a.class === 'Private Equity' || a.class === 'Real Estate') ? (a.factor || 1) : 1;
+    classTotals[a.class] += calc.converted_value * factor;
+  });
+  
   // Header row
-  const headers = ['Asset Name', 'Currency', 'Price', ...ENTITY_ORDER, 'Total Qty', 'Total USD', 'Total ILS'];
+  const headers = [
+    'Asset Name', 
+    'Currency', 
+    'Price', 
+    ...ENTITY_ORDER, 
+    'Total Qty', 
+    'Total USD', 
+    'Total ILS',
+    '% of [Class]',
+    '% of Total (excl. Real Estate and PE)',
+    '% of Total (incl. Real Estate)'
+  ];
   rows.push(headers);
   
   let grandTotalUSD = 0;
@@ -141,7 +177,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     const classEntityTotalsILS: { [entity: string]: number } = {};
     
     // Add class header row
-    rows.push([className, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
+    rows.push([className, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '', '', '', '']);
     
     // Special handling for Cash class - group by currency
     if (className === 'Cash') {
@@ -178,6 +214,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         });
         
         // Add currency row
+        const pctOfClass = classTotals[className] > 0 ? (currencyTotalUSD / classTotals[className] * 100).toFixed(2) + '%' : '0%';
+        const pctExclREPE = totalValueExclREAndPE > 0 ? (currencyTotalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
+        const pctInclRE = totalValueInclRE > 0 ? (currencyTotalUSD / totalValueInclRE * 100).toFixed(2) + '%' : '0%';
+        
         const row = [
           currency,
           currency,
@@ -185,7 +225,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           ...ENTITY_ORDER.map(entity => currencyEntityQty[entity] || 0),
           currencyTotalQty,
           currencyTotalUSD,
-          currencyTotalILS
+          currencyTotalILS,
+          pctOfClass,
+          pctExclREPE,
+          pctInclRE
         ];
         rows.push(row);
         
@@ -209,7 +252,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
           '',
           classTotalUSD,
-          ''
+          '',
+          '', '', '' // Empty percentage columns for totals
         ]);
         
         rows.push([
@@ -218,7 +262,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
           '',
           '',
-          classTotalILS
+          classTotalILS,
+          '', '', '' // Empty percentage columns for totals
         ]);
         
         grandTotalUSD += classTotalUSD;
@@ -234,7 +279,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       if (subClassGroups.length === 0) return;
       
       // Add sub-class header row
-      rows.push([subClass, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
+      rows.push([subClass, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '', '', '', '']);
       
       let subClassTotalUSD = 0;
       let subClassTotalILS = 0;
@@ -243,6 +288,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       
       // Add asset rows for this sub-class
       subClassGroups.forEach(group => {
+        const pctOfClass = classTotals[className] > 0 ? (group.totalUSD / classTotals[className] * 100).toFixed(2) + '%' : '0%';
+        const pctExclREPE = totalValueExclREAndPE > 0 ? (group.totalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
+        const pctInclRE = totalValueInclRE > 0 ? (group.totalUSD / totalValueInclRE * 100).toFixed(2) + '%' : '0%';
+        
         const row = [
           group.name,
           group.currency,
@@ -250,7 +299,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           ...ENTITY_ORDER.map(entity => group.entityQuantities[entity] || 0),
           group.totalQuantity,
           group.totalUSD,
-          group.totalILS
+          group.totalILS,
+          pctOfClass,
+          pctExclREPE,
+          pctInclRE
         ];
         rows.push(row);
         
@@ -279,7 +331,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => subClassEntityTotalsUSD[entity] || 0),
         '',
         subClassTotalUSD,
-        ''
+        '',
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       rows.push([
@@ -288,7 +341,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => subClassEntityTotalsILS[entity] || 0),
         '',
         '',
-        subClassTotalILS
+        subClassTotalILS,
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       classTotalUSD += subClassTotalUSD;
@@ -303,7 +357,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
         '',
         classTotalUSD,
-        ''
+        '',
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       rows.push([
@@ -312,7 +367,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
         '',
         '',
-        classTotalILS
+        classTotalILS,
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       grandTotalUSD += classTotalUSD;
@@ -327,7 +383,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     ...ENTITY_ORDER.map(entity => grandEntityTotals[entity] || 0),
     '',
     grandTotalUSD,
-    ''
+    '',
+    '', '', '' // Empty percentage columns for totals
   ]);
   
   // Calculate grand entity totals in ILS (excluding Real Estate)
@@ -349,7 +406,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     ...ENTITY_ORDER.map(entity => grandEntityTotalsILS[entity] || 0),
     '',
     '',
-    grandTotalILS
+    grandTotalILS,
+    '', '', '' // Empty percentage columns for totals
   ]);
   
   // Now add Real Estate at the end
@@ -358,7 +416,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     const { class: className, subClasses } = reClassOrder;
     
     // Add Real Estate class header
-    rows.push([className, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
+    rows.push([className, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '', '', '', '']);
     
     let classTotalUSD = 0;
     let classTotalILS = 0;
@@ -371,7 +429,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       if (subClassAssets.length === 0) return;
       
       // Add sub-class header
-      rows.push([subClass, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '']);
+      rows.push([subClass, '', '', ...ENTITY_ORDER.map(() => ''), '', '', '', '', '', '']);
       
       let subClassTotalUSD = 0;
       let subClassTotalILS = 0;
@@ -415,6 +473,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           totalILS += factoredILS;
         });
         
+        const pctOfClass = classTotals['Real Estate'] > 0 ? (totalUSD / classTotals['Real Estate'] * 100).toFixed(2) + '%' : '0%';
+        const pctExclREPE = ''; // Real Estate is excluded from this calculation
+        const pctInclRE = totalValueInclRE > 0 ? (totalUSD / totalValueInclRE * 100).toFixed(2) + '%' : '0%';
+        
         const row = [
           assetName,
           firstAsset.origin_currency,
@@ -422,7 +484,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           ...ENTITY_ORDER.map(entity => entityQty[entity] || 0),
           totalQty,
           totalUSD,
-          totalILS
+          totalILS,
+          pctOfClass,
+          pctExclREPE,
+          pctInclRE
         ];
         rows.push(row);
         
@@ -444,7 +509,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => subClassEntityTotalsUSD[entity] || 0),
         '',
         subClassTotalUSD,
-        ''
+        '',
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       rows.push([
@@ -453,7 +519,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => subClassEntityTotalsILS[entity] || 0),
         '',
         '',
-        subClassTotalILS
+        subClassTotalILS,
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       classTotalUSD += subClassTotalUSD;
@@ -473,7 +540,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => classEntityTotalsUSD[entity] || 0),
         '',
         classTotalUSD,
-        ''
+        '',
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       rows.push([
@@ -482,7 +550,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => classEntityTotalsILS[entity] || 0),
         '',
         '',
-        classTotalILS
+        classTotalILS,
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       // Add final grand total including Real Estate
@@ -502,7 +571,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => finalGrandEntityTotalsUSD[entity] || 0),
         '',
         finalGrandTotalUSD,
-        ''
+        '',
+        '', '', '' // Empty percentage columns for totals
       ]);
       
       rows.push([
@@ -511,7 +581,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         ...ENTITY_ORDER.map(entity => finalGrandEntityTotalsILS[entity] || 0),
         '',
         '',
-        finalGrandTotalILS
+        finalGrandTotalILS,
+        '', '', '' // Empty percentage columns for totals
       ]);
     }
   }

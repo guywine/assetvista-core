@@ -165,6 +165,26 @@ export function PortfolioHistory() {
         '% of Total': percentageOfTotal
       };
     });
+    
+    // Add grand total row
+    assetsData.push({
+      Name: 'GRAND TOTAL',
+      Class: '' as any,
+      'Sub Class': '' as any,
+      ISIN: '',
+      'Account Entity': '' as any,
+      'Account Bank': '' as any,
+      Quantity: '' as any,
+      Price: '' as any,
+      Factor: '',
+      'Origin Currency': '' as any,
+      'Maturity Date': '',
+      YTW: '',
+      'Company Market Value': '',
+      'Percentage of Holding': '',
+      'Value (USD)': totalPortfolioValue,
+      '% of Total': 100
+    });
 
     const assetsSheet = XLSX.utils.json_to_sheet(assetsData);
     
@@ -199,18 +219,28 @@ export function PortfolioHistory() {
       }
     }
 
+    const assetsTotalRowStyle = {
+      ...dataStyle,
+      font: { name: 'Arial', sz: 11, bold: true },
+      fill: { fgColor: { rgb: 'FFE699' } }
+    };
+    
     for (let R = 1; R <= assetsRange.e.r; ++R) {
+      const isTotalRow = R === assetsRange.e.r; // Last row is the grand total
+      
       for (let C = assetsRange.s.c; C <= assetsRange.e.c; ++C) {
         const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
         if (assetsSheet[cellAddr]) {
           const isAlternateRow = R % 2 === 0;
+          let baseStyle = isTotalRow ? assetsTotalRowStyle : (isAlternateRow ? alternateRowStyle : dataStyle);
+          
           // Apply currency style to Price and Value (USD) columns
           if (C === 7 || C === 14) {
-            assetsSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), numFmt: '$#,##0.00' };
+            assetsSheet[cellAddr].s = { ...baseStyle, numFmt: '$#,##0.00' };
           } else if (C === 15) { // % of Total column
-            assetsSheet[cellAddr].s = { ...(isAlternateRow ? alternateRowStyle : dataStyle), numFmt: '0.00"%"' };
+            assetsSheet[cellAddr].s = { ...baseStyle, numFmt: '0.00"%"' };
           } else {
-            assetsSheet[cellAddr].s = isAlternateRow ? alternateRowStyle : dataStyle;
+            assetsSheet[cellAddr].s = baseStyle;
           }
         }
       }
