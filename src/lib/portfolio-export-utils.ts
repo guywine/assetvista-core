@@ -124,11 +124,14 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
   const rows: any[] = [];
   
   // Calculate total values for percentage calculations
-  const totalValueInclRE = assets.reduce((sum, a) => {
-    const calc = calculateAssetValue(a, fxRates, 'USD');
-    const factor = (a.class === 'Private Equity' || a.class === 'Real Estate') ? (a.factor || 1) : 1;
-    return sum + (calc.converted_value * factor);
-  }, 0);
+  // Total excluding Private Equity (but including Real Estate with factor)
+  const totalValueExclPE = assets
+    .filter(a => a.class !== 'Private Equity')
+    .reduce((sum, a) => {
+      const calc = calculateAssetValue(a, fxRates, 'USD');
+      const factor = a.class === 'Real Estate' ? (a.factor || 1) : 1;
+      return sum + (calc.converted_value * factor);
+    }, 0);
   
   const totalValueExclREAndPE = assets
     .filter(a => !['Private Equity', 'Real Estate'].includes(a.class))
@@ -216,7 +219,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         // Add currency row
         const pctOfClass = classTotals[className] > 0 ? (currencyTotalUSD / classTotals[className] * 100).toFixed(2) + '%' : '0%';
         const pctExclREPE = totalValueExclREAndPE > 0 ? (currencyTotalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
-        const pctInclRE = totalValueInclRE > 0 ? (currencyTotalUSD / totalValueInclRE * 100).toFixed(2) + '%' : '0%';
+        const pctInclRE = totalValueExclPE > 0 ? (currencyTotalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
         
         const row = [
           currency,
@@ -246,6 +249,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       
       // Add Cash class total rows
       if (classTotalUSD > 0 || classTotalILS > 0) {
+        const classPctOfClass = '100.00%';
+        const classPctExclREPE = totalValueExclREAndPE > 0 ? (classTotalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
+        const classPctInclRE = totalValueExclPE > 0 ? (classTotalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
+        
         rows.push([
           'Total Cash USD',
           '', '',
@@ -253,7 +260,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           '',
           classTotalUSD,
           '',
-          '', '', '' // Empty percentage columns for totals
+          classPctOfClass, classPctExclREPE, classPctInclRE
         ]);
         
         rows.push([
@@ -290,7 +297,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       subClassGroups.forEach(group => {
         const pctOfClass = classTotals[className] > 0 ? (group.totalUSD / classTotals[className] * 100).toFixed(2) + '%' : '0%';
         const pctExclREPE = totalValueExclREAndPE > 0 ? (group.totalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
-        const pctInclRE = totalValueInclRE > 0 ? (group.totalUSD / totalValueInclRE * 100).toFixed(2) + '%' : '0%';
+        const pctInclRE = totalValueExclPE > 0 ? (group.totalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
         
         const row = [
           group.name,
@@ -325,6 +332,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       });
       
       // Add sub-class total rows (USD then ILS)
+      const subClassPctOfClass = classTotals[className] > 0 ? (subClassTotalUSD / classTotals[className] * 100).toFixed(2) + '%' : '0%';
+      const subClassPctExclREPE = totalValueExclREAndPE > 0 ? (subClassTotalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
+      const subClassPctInclRE = totalValueExclPE > 0 ? (subClassTotalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
+      
       rows.push([
         `Total ${subClass} USD`,
         '', '',
@@ -332,7 +343,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         '',
         subClassTotalUSD,
         '',
-        '', '', '' // Empty percentage columns for totals
+        subClassPctOfClass, subClassPctExclREPE, subClassPctInclRE
       ]);
       
       rows.push([
@@ -351,6 +362,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     
     // Add class total rows if there were any assets in this class
     if (classTotalUSD > 0 || classTotalILS > 0) {
+      const classPctOfClass = '100.00%';
+      const classPctExclREPE = totalValueExclREAndPE > 0 ? (classTotalUSD / totalValueExclREAndPE * 100).toFixed(2) + '%' : '0%';
+      const classPctInclRE = totalValueExclPE > 0 ? (classTotalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
+      
       rows.push([
         `Total ${className} USD`,
         '', '',
@@ -358,7 +373,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         '',
         classTotalUSD,
         '',
-        '', '', '' // Empty percentage columns for totals
+        classPctOfClass, classPctExclREPE, classPctInclRE
       ]);
       
       rows.push([
@@ -475,7 +490,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         
         const pctOfClass = classTotals['Real Estate'] > 0 ? (totalUSD / classTotals['Real Estate'] * 100).toFixed(2) + '%' : '0%';
         const pctExclREPE = ''; // Real Estate is excluded from this calculation
-        const pctInclRE = totalValueInclRE > 0 ? (totalUSD / totalValueInclRE * 100).toFixed(2) + '%' : '0%';
+        const pctInclRE = totalValueExclPE > 0 ? (totalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
         
         const row = [
           assetName,
@@ -503,6 +518,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
       });
       
       // Add sub-class total rows
+      const subClassPctOfClass = classTotals['Real Estate'] > 0 ? (subClassTotalUSD / classTotals['Real Estate'] * 100).toFixed(2) + '%' : '0%';
+      const subClassPctExclREPE = ''; // Real Estate is excluded from this calculation
+      const subClassPctInclRE = totalValueExclPE > 0 ? (subClassTotalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
+      
       rows.push([
         `Total ${subClass} USD`,
         '', '',
@@ -510,7 +529,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         '',
         subClassTotalUSD,
         '',
-        '', '', '' // Empty percentage columns for totals
+        subClassPctOfClass, subClassPctExclREPE, subClassPctInclRE
       ]);
       
       rows.push([
@@ -534,6 +553,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     
     // Add Real Estate class total rows
     if (classTotalUSD > 0 || classTotalILS > 0) {
+      const classPctOfClass = '100.00%';
+      const classPctExclREPE = ''; // Real Estate is excluded from this calculation
+      const classPctInclRE = totalValueExclPE > 0 ? (classTotalUSD / totalValueExclPE * 100).toFixed(2) + '%' : '0%';
+      
       rows.push([
         'Total Real Estate USD',
         '', '',
@@ -541,7 +564,7 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         '',
         classTotalUSD,
         '',
-        '', '', '' // Empty percentage columns for totals
+        classPctOfClass, classPctExclREPE, classPctInclRE
       ]);
       
       rows.push([
