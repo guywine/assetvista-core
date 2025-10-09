@@ -146,6 +146,10 @@ export function PortfolioHistory() {
       const valueUSD = calc.converted_value;
       const percentageOfTotal = totalPortfolioValue > 0 ? (valueUSD / totalPortfolioValue * 100) : 0;
       
+      // For PE and Real Estate, show factored price
+      const isPEorRE = asset.class === 'Private Equity' || asset.class === 'Real Estate';
+      const displayPrice = isPEorRE && asset.factor ? asset.price * asset.factor : asset.price;
+      
       return {
         Name: asset.name,
         Class: asset.class,
@@ -154,7 +158,7 @@ export function PortfolioHistory() {
         'Account Entity': asset.account_entity,
         'Account Bank': asset.account_bank,
         Quantity: asset.quantity,
-        Price: asset.price,
+        Price: displayPrice,
         Factor: asset.factor || '',
         'Origin Currency': asset.origin_currency,
         'Maturity Date': asset.maturity_date && asset.maturity_date !== 'none' && !isNaN(Date.parse(asset.maturity_date)) ? format(new Date(asset.maturity_date), 'yyyy-MM-dd') : '',
