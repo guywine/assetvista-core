@@ -328,6 +328,39 @@ export function useAssets() {
           updatedAssets = (data || []).map(convertFromDb);
           specificUpdatedAsset = updatedAssets.find(a => a.id === asset.id) || asset;
 
+          // For PE assets, recalculate and update price for all holdings
+          if (asset.class === 'Private Equity' && asset.pe_company_value !== undefined) {
+            for (const holding of updatedAssets) {
+              if (holding.pe_holding_percentage !== undefined && holding.quantity !== undefined) {
+                const recalculatedPrice = calculatePEPrice(
+                  asset.pe_company_value,
+                  holding.pe_holding_percentage,
+                  holding.quantity
+                );
+                
+                const { error: priceError } = await supabase
+                  .from('assets')
+                  .update({ price: recalculatedPrice })
+                  .eq('id', holding.id);
+
+                if (priceError) {
+                  console.error('Error updating PE price:', priceError);
+                }
+              }
+            }
+
+            // Reload to get updated prices
+            const { data: reloadedData } = await supabase
+              .from('assets')
+              .select('*')
+              .eq('name', asset.name);
+
+            if (reloadedData) {
+              updatedAssets = reloadedData.map(convertFromDb);
+              specificUpdatedAsset = updatedAssets.find(a => a.id === asset.id) || asset;
+            }
+          }
+
           setAssets(prev => 
             prev.map(a => {
               const updated = updatedAssets.find(u => u.id === a.id);
@@ -446,6 +479,30 @@ export function useAssets() {
               return originalAsset;
             }
             throw error;
+          }
+
+          const batchUpdatedAssets = (data || []).map(convertFromDb);
+
+          // For PE assets, recalculate and update price for all holdings
+          if (asset.class === 'Private Equity' && asset.pe_company_value !== undefined) {
+            for (const holding of batchUpdatedAssets) {
+              if (holding.pe_holding_percentage !== undefined && holding.quantity !== undefined) {
+                const recalculatedPrice = calculatePEPrice(
+                  asset.pe_company_value,
+                  holding.pe_holding_percentage,
+                  holding.quantity
+                );
+                
+                const { error: priceError } = await supabase
+                  .from('assets')
+                  .update({ price: recalculatedPrice })
+                  .eq('id', holding.id);
+
+                if (priceError) {
+                  console.error('Error updating PE price:', priceError);
+                }
+              }
+            }
           }
 
           // Then update specific asset's account properties
