@@ -135,10 +135,10 @@ export function PortfolioHistory() {
       numFmt: '#,##0.0000'
     };
 
-    // Assets sheet - Calculate total value first
+    // Assets sheet - Calculate total value first (using display_value which includes factor)
     const totalPortfolioValue = snapshot.assets.reduce((sum, asset) => {
       const calc = calculateAssetValue(asset, snapshot.fx_rates, 'USD');
-      return sum + calc.converted_value;
+      return sum + calc.display_value; // Use display_value to include factor for PE/RE
     }, 0);
     
     const assetsData = snapshot.assets.map(asset => {
@@ -187,6 +187,9 @@ export function PortfolioHistory() {
     });
 
     const assetsSheet = XLSX.utils.json_to_sheet(assetsData);
+    
+    // Freeze the header row (row 1)
+    assetsSheet['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
     
     // Apply styling to Assets sheet
     const assetsRange = XLSX.utils.decode_range(assetsSheet['!ref'] || 'A1');
