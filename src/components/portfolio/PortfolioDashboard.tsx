@@ -306,8 +306,8 @@ export function PortfolioDashboard() {
                 />
               </div>
             </div>
-            <AssetTable
-              assets={assets}
+              <AssetTable
+                assets={filteredAssets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
               filters={filters}

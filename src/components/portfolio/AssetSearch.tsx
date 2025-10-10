@@ -4,11 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Asset } from "@/types/portfolio";
 import { useAssetLookup } from "@/hooks/useAssetLookup";
 
@@ -54,34 +49,34 @@ export function AssetSearch({ assets, onSearchChange, currentSearchTerm }: Asset
   return (
     <Card className="p-4">
       <div className="flex items-center gap-2">
-        <div className="flex-1">
-          <Popover open={isOpen && suggestions.length > 0} onOpenChange={setIsOpen}>
-            <PopoverTrigger asChild>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  value={inputValue}
-                  onChange={(e) => {
-                    setInputValue(e.target.value);
-                    setIsOpen(true);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search assets by name..."
-                  className="pl-9 pr-9"
-                />
-                {inputValue && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClear}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
-              </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-2" align="start">
+        <div className="flex-1 relative">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setIsOpen(true);
+              }}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setIsOpen(true)}
+              onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+              placeholder="Search assets by name..."
+              className="pl-9 pr-9"
+            />
+            {inputValue && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClear}
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {isOpen && suggestions.length > 0 && (
+            <div className="absolute z-50 w-full mt-1 rounded-md border bg-popover p-2 shadow-md">
               <div className="space-y-1">
                 {suggestions.map((name) => (
                   <button
@@ -93,8 +88,8 @@ export function AssetSearch({ assets, onSearchChange, currentSearchTerm }: Asset
                   </button>
                 ))}
               </div>
-            </PopoverContent>
-          </Popover>
+            </div>
+          )}
         </div>
         <Button onClick={handleSearch}>
           <Search className="h-4 w-4 mr-2" />
