@@ -18,6 +18,7 @@ import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
 import { PortfolioPredictions } from './PortfolioPredictions';
 import { PricingTable } from './PricingTable';
 import { FXRatesBar } from './FXRatesBar';
+import { AssetSearch } from './AssetSearch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
@@ -37,6 +38,7 @@ export function PortfolioDashboard() {
   const [filters, setFilters] = useState<FilterCriteria>({});
   const [groupByFields, setGroupByFields] = useState<GroupByField[]>([]);
   const [groupSortBy, setGroupSortBy] = useState<'value' | 'alphabetical'>('value');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [isAssetFormOpen, setIsAssetFormOpen] = useState(false);
   const [editingAsset, setEditingAsset] = useState<Asset | undefined>();
   const [assetFormMode, setAssetFormMode] = useState<'NEW' | 'EXISTING_HOLDING' | 'DUPLICATE' | 'EDIT'>('NEW');
@@ -46,10 +48,16 @@ export function PortfolioDashboard() {
   
   console.log('saveSnapshot function:', saveSnapshot); // Debug log
 
-  // Filter assets based on current filters
+  // Filter assets based on current filters and search term
   const filteredAssets = useMemo(() => {
-    return filterAssetsByFilters(assets, filters);
-  }, [assets, filters]);
+    let filtered = filterAssetsByFilters(assets, filters);
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(asset => 
+        asset.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    return filtered;
+  }, [assets, filters, searchTerm]);
 
   // Get pricing assets for Group A (price only) and Group B (price + YTW)
   const pricingGroupAAssets = useMemo(() => {
@@ -271,6 +279,11 @@ export function PortfolioDashboard() {
           </TabsList>
 
           <TabsContent value="assets" className="space-y-6">
+            <AssetSearch 
+              assets={assets}
+              onSearchChange={setSearchTerm}
+              currentSearchTerm={searchTerm}
+            />
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <PortfolioFilters
