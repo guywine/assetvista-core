@@ -903,14 +903,14 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates, viewCurr
       item.usd,
       item.ils,
       (item.usd / fixedIncomeTotal * 100).toFixed(2) + '%',
-      item.ytw
+      item.ytw * 100
     ]),
-    ['Total', fixedIncomeTotal, fixedIncomeTotalILS, '100.00%', avgYTWAll],
+    ['Total', fixedIncomeTotal, fixedIncomeTotalILS, '100.00%', avgYTWAll * 100],
     ['Total (excl. Bank Deposits & Money Market)', 
       fixedIncomeExcluding.reduce((sum, item) => sum + item.usd, 0),
       fixedIncomeExcluding.reduce((sum, item) => sum + item.ils, 0),
       '', // No percentage for this row
-      avgYTWExcluding
+      avgYTWExcluding * 100
     ]
   ];
   

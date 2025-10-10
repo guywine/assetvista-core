@@ -158,7 +158,7 @@ export function PortfolioHistory() {
         Factor: asset.factor || '',
         'Origin Currency': asset.origin_currency,
         'Maturity Date': asset.maturity_date && asset.maturity_date !== 'none' && !isNaN(Date.parse(asset.maturity_date)) ? format(new Date(asset.maturity_date), 'yyyy-MM-dd') : '',
-        YTW: asset.ytw ?? '',
+        YTW: asset.ytw ? asset.ytw * 100 : '',
         'Company Market Value': asset.pe_company_value || '',
         'Percentage of Holding': asset.pe_holding_percentage || '',
         'Value (USD)': valueUSD,
