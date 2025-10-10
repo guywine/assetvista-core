@@ -1048,7 +1048,7 @@ export function buildChartDataSheets(
     .sort((a, b) => b[1].usd - a[1].usd)
     .slice(0, 10);
 
-  sheets["Top 10 Public Equity and Commodities"] = [
+  sheets["Top 10 Positions"] = [
     ["Asset Name", "Value (USD)", "Value (ILS)", "% of Public Equity & Commodities"],
     ...topPublicEquity.map(([name, values]) => [
       name,
