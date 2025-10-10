@@ -915,7 +915,7 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates, viewCurr
   ];
   
   // 5. Public Equity Sub-Classes
-  const publicEquityAssets = assets.filter(a => a.class === 'Public Equity');
+  const publicEquityAssets = assets.filter(a => a.class === 'Public Equity' || a.class === 'Commodities & more');
   const publicEquityTotal = publicEquityAssets.reduce((sum, a) => 
     sum + calculateAssetValue(a, fxRates, 'USD').converted_value, 0
   );
@@ -975,8 +975,8 @@ export function buildChartDataSheets(assets: Asset[], fxRates: FXRates, viewCurr
     .sort((a, b) => b[1].usd - a[1].usd)
     .slice(0, 10);
   
-  sheets['Top 10 Public Equity'] = [
-    ['Asset Name', 'Value (USD)', 'Value (ILS)', '% of Public Equity'],
+  sheets['Top 10 Public Equity & Commodities'] = [
+    ['Asset Name', 'Value (USD)', 'Value (ILS)', '% of Public Equity & Commodities'],
     ...topPublicEquity.map(([name, values]) => [
       name,
       values.usd,
