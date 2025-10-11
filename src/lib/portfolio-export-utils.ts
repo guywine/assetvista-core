@@ -66,7 +66,7 @@ export const ALTERNATE_ROW_STYLE = {
 
 export const TOTAL_ROW_STYLE = {
   ...DATA_STYLE,
-  font: { name: "Arial", sz: 13, bold: true },
+  font: { name: "Arial", sz: 11, bold: true },
   fill: { fgColor: { rgb: "FFE699" } },
 };
 
@@ -293,9 +293,6 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           "", // Empty percentage columns for totals
         ]);
 
-        // Add empty row after Cash class total (which acts as subclass total for Cash)
-        rows.push(["", "", "", ...ENTITY_ORDER.map(() => ""), "", "", "", "", "", ""]);
-
         grandTotalUSD += classTotalUSD;
         grandTotalILS += classTotalILS;
       }
@@ -395,9 +392,6 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         "",
         "", // Empty percentage columns for totals
       ]);
-
-      // Add empty row after subclass total
-      rows.push(["", "", "", ...ENTITY_ORDER.map(() => ""), "", "", "", "", "", ""]);
 
       classTotalUSD += subClassTotalUSD;
       classTotalILS += subClassTotalILS;
@@ -1054,7 +1048,7 @@ export function buildChartDataSheets(
     .sort((a, b) => b[1].usd - a[1].usd)
     .slice(0, 10);
 
-  sheets["Top 10 Public Equity and Commodities"] = [
+  sheets["Top 10 Public Equity"] = [
     ["Asset Name", "Value (USD)", "Value (ILS)", "% of Public Equity & Commodities"],
     ...topPublicEquity.map(([name, values]) => [
       name,
