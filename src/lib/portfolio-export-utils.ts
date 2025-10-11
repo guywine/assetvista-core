@@ -293,7 +293,8 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         "", // Empty percentage columns for totals
       ]);
 
-      rows.push([]); // Empty row after Cash total
+      rows.push([]);
+      rows.push([]); // Two empty rows after Cash total
 
       grandTotalUSD += classTotalUSD;
       grandTotalILS += classTotalILS;
@@ -433,6 +434,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         "",
         "", // Empty percentage columns for totals
       ]);
+
+      // Add spacing after Class totals
+      rows.push([]);
+      rows.push([]);
 
       grandTotalUSD += classTotalUSD;
       grandTotalILS += classTotalILS;
@@ -648,6 +653,10 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         "",
         "", // Empty percentage columns for totals
       ]);
+
+      // Add spacing after Real Estate class totals
+      rows.push([]);
+      rows.push([]);
 
       // Add final grand total including Real Estate
       const finalGrandTotalUSD = grandTotalUSD + classTotalUSD;

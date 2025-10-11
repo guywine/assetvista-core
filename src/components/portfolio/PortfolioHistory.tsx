@@ -414,6 +414,9 @@ export function PortfolioHistory() {
     const smartSummaryData = buildSmartSummaryData(snapshot.assets, snapshot.fx_rates);
     const smartSummarySheet = XLSX.utils.aoa_to_sheet(smartSummaryData);
 
+    // Freeze the header row (row 1)
+    smartSummarySheet["!freeze"] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" };
+
     // Apply styling to Smart Summary
     const smartSummaryRange = XLSX.utils.decode_range(smartSummarySheet["!ref"] || "A1");
 
