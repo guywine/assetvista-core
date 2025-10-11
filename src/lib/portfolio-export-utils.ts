@@ -483,6 +483,11 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
     "", // Empty percentage columns for totals
   ]);
 
+  // Add 3 empty rows after Grand Total ILS (Excl. Real Estate)
+  rows.push([]);
+  rows.push([]);
+  rows.push([]);
+
   // Now add Real Estate at the end
   const reClassOrder = CLASS_ORDER.find((c) => c.class === "Real Estate");
   if (reClassOrder) {

@@ -197,7 +197,8 @@ export function PortfolioHistory() {
 
     const assetsSheet = XLSX.utils.json_to_sheet(assetsData);
 
-    // Freeze the header row (row 1)
+    // Freeze the header row (row 1) for Assets sheet
+    assetsSheet["!freeze"] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" };
     assetsSheet["!freeze"] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" };
 
     // Apply styling to Assets sheet
@@ -531,6 +532,9 @@ export function PortfolioHistory() {
     const peData = buildPESummaryData(snapshot.assets, snapshot.fx_rates, liquidationSettings);
     const peSheet = XLSX.utils.aoa_to_sheet(peData);
 
+    // Freeze the header row (row 1) for PE Summary sheet
+    peSheet["!freeze"] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" };
+
     // Apply styling to PE Summary
     const peRange = XLSX.utils.decode_range(peSheet["!ref"] || "A1");
 
@@ -647,9 +651,9 @@ export function PortfolioHistory() {
       XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
     });
 
-    // Download
+    // Download - use writeFileXLSX for better freeze pane support
     const fileName = `${snapshot.name.replace(/[^a-zA-Z0-9-_]/g, "_")}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+    XLSX.writeFileXLSX(workbook, fileName);
 
     toast({
       title: "Downloaded",
