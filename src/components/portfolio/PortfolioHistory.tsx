@@ -436,6 +436,26 @@ export function PortfolioHistory() {
         !isTotalRow && 
         (!secondCell || secondCell.v === '' || secondCell.v === null || secondCell.v === undefined);
       
+      // Determine if it's a class header or subclass header based on context
+      const isClassHeader = isHeaderRow && (
+        cellValue === 'Cash' || 
+        cellValue === 'Fixed Income' || 
+        cellValue === 'Public Equity' || 
+        cellValue === 'Commodities & more' || 
+        cellValue === 'Real Estate'
+      );
+      const isSubclassHeader = isHeaderRow && !isClassHeader;
+      
+      // Determine if it's a class total or subclass total
+      const isClassTotal = isTotalRow && (
+        cellValue.includes('Total Cash') ||
+        cellValue.includes('Total Fixed Income') ||
+        cellValue.includes('Total Public Equity') ||
+        cellValue.includes('Total Commodities & more') ||
+        cellValue.includes('Total Real Estate')
+      );
+      const isSubclassTotal = isTotalRow && !isClassTotal && !cellValue.startsWith('Grand Total');
+      
       for (let C = smartSummaryRange.s.c; C <= smartSummaryRange.e.c; ++C) {
         const cellAddr = XLSX.utils.encode_cell({ r: R, c: C });
         if (smartSummarySheet[cellAddr]) {
@@ -443,10 +463,26 @@ export function PortfolioHistory() {
           
           if (cellValue.startsWith('Grand Total')) {
             style = TOTAL_ROW_STYLE;
-          } else if (isTotalRow || isSubtotalRow) {
-            style = SUBTOTAL_ROW_STYLE;
-          } else if (isHeaderRow) {
-            // Header row style (class/subclass name)
+          } else if (isClassTotal) {
+            style = {
+              ...DATA_STYLE,
+              font: { name: 'Arial', sz: 11, bold: true },
+              fill: { fgColor: { rgb: 'B4C7E7' } }
+            };
+          } else if (isSubclassTotal) {
+            style = {
+              ...DATA_STYLE,
+              font: { name: 'Arial', sz: 10, bold: true },
+              fill: { fgColor: { rgb: 'D9D9D9' } }
+            };
+          } else if (isClassHeader) {
+            style = {
+              ...DATA_STYLE,
+              font: { name: 'Arial', sz: 13, bold: true },
+              fill: { fgColor: { rgb: 'D9E2F3' } },
+              alignment: { horizontal: 'center', vertical: 'center' }
+            };
+          } else if (isSubclassHeader) {
             style = {
               ...DATA_STYLE,
               font: { name: 'Arial', sz: 11, bold: true },

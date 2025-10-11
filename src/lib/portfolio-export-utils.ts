@@ -76,6 +76,32 @@ export const SUBTOTAL_ROW_STYLE = {
   fill: { fgColor: { rgb: "FFF2CC" } },
 };
 
+export const CLASS_HEADER_STYLE = {
+  ...DATA_STYLE,
+  font: { name: "Arial", sz: 13, bold: true },
+  fill: { fgColor: { rgb: "D9E2F3" } },
+  alignment: { horizontal: "center", vertical: "center" }
+};
+
+export const SUBCLASS_HEADER_STYLE = {
+  ...DATA_STYLE,
+  font: { name: "Arial", sz: 11, bold: true },
+  fill: { fgColor: { rgb: "E7E6E6" } },
+  alignment: { horizontal: "center", vertical: "center" }
+};
+
+export const CLASS_TOTAL_STYLE = {
+  ...DATA_STYLE,
+  font: { name: "Arial", sz: 11, bold: true },
+  fill: { fgColor: { rgb: "B4C7E7" } },
+};
+
+export const SUBCLASS_TOTAL_STYLE = {
+  ...DATA_STYLE,
+  font: { name: "Arial", sz: 10, bold: true },
+  fill: { fgColor: { rgb: "D9D9D9" } },
+};
+
 interface AssetGroup {
   name: string;
   currency: string;
