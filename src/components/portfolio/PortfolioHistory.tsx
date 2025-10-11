@@ -651,9 +651,9 @@ export function PortfolioHistory() {
       XLSX.utils.book_append_sheet(workbook, sheet, sheetName);
     });
 
-    // Download - use writeFileXLSX for better freeze pane support
+    // Download
     const fileName = `${snapshot.name.replace(/[^a-zA-Z0-9-_]/g, "_")}.xlsx`;
-    XLSX.writeFileXLSX(workbook, fileName);
+    XLSX.writeFile(workbook, fileName);
 
     toast({
       title: "Downloaded",
