@@ -416,7 +416,13 @@ export function PortfolioHistory() {
     const smartSummarySheet = XLSX.utils.aoa_to_sheet(smartSummaryData);
 
     // Freeze the header row (row 1)
-    smartSummarySheet["!freeze"] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activePane: "bottomLeft", state: "frozen" };
+    smartSummarySheet["!freeze"] = {
+      xSplit: 0,
+      ySplit: 1,
+      topLeftCell: "A2",
+      activePane: "bottomLeft",
+      state: "frozen",
+    };
 
     // Apply styling to Smart Summary
     const smartSummaryRange = XLSX.utils.decode_range(smartSummarySheet["!ref"] || "A1");
@@ -503,7 +509,7 @@ export function PortfolioHistory() {
           } else if (isSubclassHeader) {
             style = {
               ...DATA_STYLE,
-              font: { name: "Arial", sz: 11, bold: true },
+              font: { name: "Arial", sz: 12, bold: true },
               fill: { fgColor: { rgb: "808080" } },
               alignment: { horizontal: "center", vertical: "center" },
             };
