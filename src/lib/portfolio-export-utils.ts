@@ -293,6 +293,9 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
           "", // Empty percentage columns for totals
         ]);
 
+        // Add empty row after Cash class total (which acts as subclass total for Cash)
+        rows.push(["", "", "", ...ENTITY_ORDER.map(() => ""), "", "", "", "", "", ""]);
+
         grandTotalUSD += classTotalUSD;
         grandTotalILS += classTotalILS;
       }
@@ -392,6 +395,9 @@ export function buildSmartSummaryData(assets: Asset[], fxRates: FXRates): any[] 
         "",
         "", // Empty percentage columns for totals
       ]);
+
+      // Add empty row after subclass total
+      rows.push(["", "", "", ...ENTITY_ORDER.map(() => ""), "", "", "", "", "", ""]);
 
       classTotalUSD += subClassTotalUSD;
       classTotalILS += subClassTotalILS;
