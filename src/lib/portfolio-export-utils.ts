@@ -66,7 +66,7 @@ export const ALTERNATE_ROW_STYLE = {
 
 export const TOTAL_ROW_STYLE = {
   ...DATA_STYLE,
-  font: { name: "Arial", sz: 11, bold: true },
+  font: { name: "Arial", sz: 13, bold: true },
   fill: { fgColor: { rgb: "FFE699" } },
 };
 
@@ -74,32 +74,6 @@ export const SUBTOTAL_ROW_STYLE = {
   ...DATA_STYLE,
   font: { name: "Arial", sz: 10, bold: true },
   fill: { fgColor: { rgb: "FFF2CC" } },
-};
-
-export const CLASS_HEADER_STYLE = {
-  ...DATA_STYLE,
-  font: { name: "Arial", sz: 13, bold: true },
-  fill: { fgColor: { rgb: "D9E2F3" } },
-  alignment: { horizontal: "center", vertical: "center" }
-};
-
-export const SUBCLASS_HEADER_STYLE = {
-  ...DATA_STYLE,
-  font: { name: "Arial", sz: 11, bold: true },
-  fill: { fgColor: { rgb: "E7E6E6" } },
-  alignment: { horizontal: "center", vertical: "center" }
-};
-
-export const CLASS_TOTAL_STYLE = {
-  ...DATA_STYLE,
-  font: { name: "Arial", sz: 11, bold: true },
-  fill: { fgColor: { rgb: "B4C7E7" } },
-};
-
-export const SUBCLASS_TOTAL_STYLE = {
-  ...DATA_STYLE,
-  font: { name: "Arial", sz: 10, bold: true },
-  fill: { fgColor: { rgb: "D9D9D9" } },
 };
 
 interface AssetGroup {
@@ -1074,7 +1048,7 @@ export function buildChartDataSheets(
     .sort((a, b) => b[1].usd - a[1].usd)
     .slice(0, 10);
 
-  sheets["Top 10 Positions"] = [
+  sheets["Top 10 Public Equity and Commodities"] = [
     ["Asset Name", "Value (USD)", "Value (ILS)", "% of Public Equity & Commodities"],
     ...topPublicEquity.map(([name, values]) => [
       name,
