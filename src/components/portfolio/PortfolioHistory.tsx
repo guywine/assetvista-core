@@ -517,7 +517,13 @@ export function PortfolioHistory() {
 
           // Apply number formatting for numeric columns
           if (smartSummarySheet[cellAddr].t === "n") {
-            style = { ...style, numFmt: "#,##0.00" };
+            // Columns 3-12 are quantity columns (entities + Total Qty) - use integer formatting
+            // Column 2 is Price, columns 13-14 are Total USD/ILS - use decimal formatting
+            if (C >= 3 && C <= 12) {
+              style = { ...style, numFmt: "#,##0" };
+            } else {
+              style = { ...style, numFmt: "#,##0.00" };
+            }
           }
 
           smartSummarySheet[cellAddr].s = style;
