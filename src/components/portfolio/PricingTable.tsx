@@ -197,7 +197,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
 
   const isGroupB = (asset: Asset) => {
     return (
-      asset.class === "Fixed Income" && ["Corporate", "Gov long", "Gov 1-2", "CPI linked"].includes(asset.sub_class)
+      asset.class === "Fixed Income" && ["Corporate", "Gov long", "Gov 1-2", "CPI linked", "REIT stock"].includes(asset.sub_class)
     );
   };
 

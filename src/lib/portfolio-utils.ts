@@ -240,9 +240,10 @@ export function isMaturityWithinYear(maturityDate: string | undefined): boolean 
 
 export function getPricingGroupAAssets(assets: Asset[]): Asset[] {
   return assets.filter(asset => {
-    // Group A: Public Equity (all sub-classes) + Fixed Income REIT stock
+    // Group A: Public Equity (all sub-classes) + Fixed Income REIT stock + Commodities & more (all sub-classes)
     return asset.class === 'Public Equity' || 
-           (asset.class === 'Fixed Income' && asset.sub_class === 'REIT stock');
+           (asset.class === 'Fixed Income' && asset.sub_class === 'REIT stock') ||
+           asset.class === 'Commodities & more';
   });
 }
 
