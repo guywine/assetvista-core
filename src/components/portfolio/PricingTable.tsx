@@ -234,6 +234,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                     <SortIcon column="name" />
                   </div>
                 </th>
+                <th className="p-2 font-medium text-muted">ISIN</th>
                 <th
                   className="p-2 font-medium text-muted cursor-pointer hover:text-foreground transition-colors select-none"
                   onClick={() => handleSort("sub_class")}
@@ -269,6 +270,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                     className={`hover:bg-financial-success/50 transition-colors ${isEven ? "bg-muted/20" : "bg-background"}`}
                   >
                     <td className="p-2 py-1.5 font-medium max-w-[200px] truncate">{asset.name}</td>
+                    <td className="p-2 py-1.5 text-xs text-muted-foreground">{asset.ISIN || '-'}</td>
                     <td className="p-2 py-1.5 text-xs text-muted-foreground">{asset.sub_class}</td>
                     <td className="p-2 py-1.5 text-right">
                       <div className="flex items-center justify-end gap-1">
