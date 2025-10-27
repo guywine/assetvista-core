@@ -158,6 +158,13 @@ export function AssetForm({
       quantity: currentMode === 'DUPLICATE' ? prev.quantity || 0 : 0
     }));
     
+    // Sync string states with the existing asset values
+    setPriceStr(existingAsset.price?.toString() || '1');
+    setFactorStr(existingAsset.factor?.toString() || '1.0');
+    setPeCompanyValueStr(existingAsset.pe_company_value?.toString() || '');
+    setPeHoldingPercentageStr(existingAsset.pe_holding_percentage?.toString() || '');
+    // Note: quantityStr remains at '0' for new holdings
+    
     // Set PE calculation mode based on existing data
     setUsePECalculation(existingAsset.class === 'Private Equity' && 
                        existingAsset.pe_company_value !== undefined && 
