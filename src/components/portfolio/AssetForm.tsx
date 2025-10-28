@@ -59,6 +59,7 @@ export function AssetForm({
   const [factorStr, setFactorStr] = useState<string>('1.0');
   const [peCompanyValueStr, setPeCompanyValueStr] = useState<string>('');
   const [peHoldingPercentageStr, setPeHoldingPercentageStr] = useState<string>('');
+  const [ytwStr, setYtwStr] = useState<string>('0');
   
   const [usePECalculation, setUsePECalculation] = useState(false);
   
@@ -78,6 +79,7 @@ export function AssetForm({
       setFactorStr(asset.factor?.toString() || '1.0');
       setPeCompanyValueStr(asset.pe_company_value?.toString() || '');
       setPeHoldingPercentageStr(asset.pe_holding_percentage?.toString() || '');
+      setYtwStr(asset.ytw !== undefined ? (asset.ytw * 100).toFixed(2) : '0');
       
       // Set PE calculation mode based on existing data
       setUsePECalculation(asset.class === 'Private Equity' && asset.pe_company_value !== undefined && asset.pe_holding_percentage !== undefined);
@@ -116,6 +118,7 @@ export function AssetForm({
       setFactorStr('1.0');
       setPeCompanyValueStr('');
       setPeHoldingPercentageStr('');
+      setYtwStr('0');
       setUsePECalculation(false);
     }
     setErrors([]);
@@ -163,6 +166,7 @@ export function AssetForm({
     setFactorStr(existingAsset.factor?.toString() || '1.0');
     setPeCompanyValueStr(existingAsset.pe_company_value?.toString() || '');
     setPeHoldingPercentageStr(existingAsset.pe_holding_percentage?.toString() || '');
+    setYtwStr(existingAsset.ytw !== undefined ? (existingAsset.ytw * 100).toFixed(2) : '0');
     // Note: quantityStr remains at '0' for new holdings
     
     // Set PE calculation mode based on existing data
@@ -220,7 +224,7 @@ export function AssetForm({
       origin_currency: formData.origin_currency || "USD",
       ISIN: formData.ISIN,
       maturity_date: formData.maturity_date,
-      ytw: formData.ytw,
+      ytw: parseFloat(ytwStr) / 100 || 0,
       pe_company_value: usePECalculation ? peCompanyValue : undefined,
       pe_holding_percentage: usePECalculation ? peHoldingPercentage : undefined,
       created_at: asset?.created_at || new Date().toISOString(),
@@ -718,11 +722,10 @@ export function AssetForm({
                   id="ytw"
                   type="text"
                   inputMode="decimal"
-                  value={formData.ytw !== undefined ? (formData.ytw * 100).toFixed(2) : ''}
+                  value={ytwStr}
                   onChange={(e) => {
-                    const percentValue = parseFloat(e.target.value) || 0;
-                    const decimalValue = percentValue / 100;
-                    setFormData(prev => ({ ...prev, ytw: decimalValue }));
+                    const validated = validateNumericInput(e.target.value);
+                    setYtwStr(validated);
                   }}
                   placeholder="0.00"
                   className="border-border/50 focus:border-financial-primary"
