@@ -105,7 +105,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
     } else if (editingAsset?.field === "ytw" && ytwInputRef.current) {
       ytwInputRef.current.focus();
     }
-  }, [editingAsset]);
+  }, [editingAsset?.id, editingAsset?.field]);
 
   const handleStartEdit = (asset: Asset, field?: "price" | "ytw") => {
     setEditingAsset({
