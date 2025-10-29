@@ -688,22 +688,22 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             }));
             return chartData.length > 0 ? (
               <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mb-6">
-                <CardHeader>
+                <CardHeader className="py-3 px-4 md:py-6">
                   <CardTitle className="text-lg font-bold text-financial-primary">
                     Top 10 Public Equity Positions
                   </CardTitle>
                   <p className="text-sm text-muted-foreground">Public Equity & Commodities combined by asset name</p>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-80 p-1">
+                <CardContent className="py-3 px-4 md:py-6">
+                  <div className="h-[450px] md:h-80 p-1">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={chartData}
                       margin={{
                         top: 20,
-                        right: 30,
-                        left: 10,
-                        bottom: 80,
+                        right: 10,
+                        left: 5,
+                        bottom: 100,
                       }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
