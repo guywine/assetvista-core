@@ -245,7 +245,7 @@ export function PortfolioDashboard() {
           />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 max-w-2xl bg-muted/50 p-1 pb-3 md:pb-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto md:h-10 gap-y-2 max-w-2xl bg-muted/50 p-1 pb-3 md:pb-1">
             <TabsTrigger 
               value="assets" 
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
