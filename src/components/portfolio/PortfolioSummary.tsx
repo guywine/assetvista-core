@@ -950,14 +950,14 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 {/* Overall Fixed Income YTW - Side by Side */}
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">All Fixed Income</p>
+                    <p className="text-sm text-muted-foreground mb-1 min-h-[2.5rem]">All Fixed Income</p>
                     <p className="text-2xl font-bold text-financial-success">
                       {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
                     </p>
                   </div>
 
                   <div className="p-3 bg-muted/50 rounded-lg">
-                    <p className="text-sm text-muted-foreground mb-1">Excl. MM and Deposits</p>
+                    <p className="text-sm text-muted-foreground mb-1 min-h-[2.5rem]">Excl. MM and Deposits</p>
                     <p className="text-2xl font-bold text-financial-success">
                       {(fixedIncomeWeightedYTWExcludingCash * 100).toFixed(2)}%
                     </p>
