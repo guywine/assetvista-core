@@ -695,15 +695,15 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   <p className="text-sm text-muted-foreground">Public Equity & Commodities combined by asset name</p>
                 </CardHeader>
                 <CardContent className="py-3 px-4 md:py-6">
-                  <div className="h-[450px] md:h-80 p-1">
+                  <div className="h-[380px] md:h-80 p-1">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={chartData}
                       margin={{
-                        top: 20,
-                        right: 10,
-                        left: 5,
-                        bottom: 100,
+                        top: 10,
+                        right: 5,
+                        left: 0,
+                        bottom: 90,
                       }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
