@@ -429,11 +429,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </p>
           </CardHeader>
           <CardContent>
-            <div className="h-72 p-2">
+            <div className="h-80 md:h-72 p-2">
               {/* Increased height from h-56 to h-72 and padding */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={pieData} cx="50%" cy="40%" outerRadius={65} fill="#8884d8" dataKey="value">
+                  <Pie data={pieData} cx="50%" cy="35%" outerRadius={50} fill="#8884d8" dataKey="value">
                     {pieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -441,7 +441,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                   <Legend
                     verticalAlign="bottom"
-                    height={50}
+                    height={70}
                     formatter={(value, entry) =>
                       `${value}: ${((entry.payload.value / filteredTotalValue) * 100).toFixed(1)}%`
                     }
@@ -494,11 +494,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-72 p-2">
+            <div className="h-80 md:h-72 p-2">
               {/* Increased height and padding for consistency */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={beneficiariesPieData} cx="50%" cy="40%" outerRadius={65} fill="#8884d8" dataKey="value">
+                  <Pie data={beneficiariesPieData} cx="50%" cy="35%" outerRadius={50} fill="#8884d8" dataKey="value">
                     {beneficiariesPieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -506,7 +506,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                   <Legend
                     verticalAlign="bottom"
-                    height={50}
+                    height={70}
                     formatter={(value, entry) =>
                       `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${((entry.payload.value / beneficiariesTotalValue) * 100).toFixed(1)}%)`
                     }
@@ -548,11 +548,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-72 p-2">
+            <div className="h-80 md:h-72 p-2">
               {/* Increased height and padding for consistency */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={currencyPieData} cx="50%" cy="40%" outerRadius={65} fill="#8884d8" dataKey="value">
+                  <Pie data={currencyPieData} cx="50%" cy="35%" outerRadius={50} fill="#8884d8" dataKey="value">
                     {currencyPieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
@@ -560,7 +560,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                   <Legend
                     verticalAlign="bottom"
-                    height={50}
+                    height={70}
                     formatter={(value, entry) =>
                       `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${((entry.payload.value / currencyTotalValue) * 100).toFixed(1)}%)`
                     }
@@ -735,14 +735,14 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-64 p-1">
+                <div className="h-72 md:h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={subClassPieData["Public Equity"] || []}
                         cx="50%"
-                        cy="50%"
-                        outerRadius={70}
+                        cy="40%"
+                        outerRadius={55}
                         fill="#8884d8"
                         dataKey="value"
                       >
@@ -753,7 +753,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                       <Legend
                         verticalAlign="bottom"
-                        height={36}
+                        height={60}
                         formatter={(value, entry) =>
                           `${value}: ${((entry.payload.value / holdingsByClass["Public Equity"].value) * 100).toFixed(1)}%`
                         }
@@ -776,14 +776,14 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 p-1">
+                  <div className="h-72 md:h-64 p-1">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Pie
                           data={subClassPieData["Commodities & more"] || []}
                           cx="50%"
-                          cy="50%"
-                          outerRadius={70}
+                          cy="40%"
+                          outerRadius={55}
                           fill="#8884d8"
                           dataKey="value"
                         >
@@ -794,7 +794,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                         <Legend
                           verticalAlign="bottom"
-                          height={36}
+                          height={60}
                           formatter={(value, entry) =>
                             `${value}: ${((entry.payload.value / holdingsByClass["Commodities & more"].value) * 100).toFixed(1)}%`
                           }
@@ -838,10 +838,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                     <p className="text-sm text-muted-foreground">Total: {formatCurrency(bigTechTotal, viewCurrency)}</p>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-64 p-1">
+                    <div className="h-72 md:h-64 p-1">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie data={bigTechPieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                          <Pie data={bigTechPieData} cx="50%" cy="40%" outerRadius={55} fill="#8884d8" dataKey="value">
                             {bigTechPieData.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
                             ))}
@@ -849,7 +849,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                           <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                           <Legend
                             verticalAlign="bottom"
-                            height={36}
+                            height={60}
                             formatter={(value, entry) =>
                               `${value}: ${((entry.payload.value / bigTechTotal) * 100).toFixed(1)}%`
                             }
@@ -897,10 +897,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-64 p-1">
+                <div className="h-72 md:h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={fixedIncomePieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                      <Pie data={fixedIncomePieData} cx="50%" cy="40%" outerRadius={55} fill="#8884d8" dataKey="value">
                         {fixedIncomePieData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
                         ))}
@@ -908,7 +908,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                       <Legend
                         verticalAlign="bottom"
-                        height={36}
+                        height={60}
                         formatter={(value, entry) =>
                           `${value}: ${((entry.payload.value / fixedIncomePieTotal) * 100).toFixed(1)}%`
                         }
@@ -980,14 +980,14 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-64 p-1">
+                <div className="h-72 md:h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={subClassPieData["Real Estate"] || []}
                         cx="50%"
-                        cy="50%"
-                        outerRadius={70}
+                        cy="40%"
+                        outerRadius={55}
                         fill="#8884d8"
                         dataKey="value"
                       >
@@ -998,7 +998,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                       <Legend
                         verticalAlign="bottom"
-                        height={36}
+                        height={60}
                         formatter={(value, entry) =>
                           `${value}: ${((entry.payload.value / holdingsByClass["Real Estate"].value) * 100).toFixed(1)}%`
                         }
@@ -1114,14 +1114,14 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-64 p-1">
+                <div className="h-72 md:h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={subClassPieData["Private Equity"] || []}
                         cx="50%"
-                        cy="50%"
-                        outerRadius={70}
+                        cy="40%"
+                        outerRadius={55}
                         fill="#8884d8"
                         dataKey="value"
                       >
@@ -1132,7 +1132,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                       <Legend
                         verticalAlign="bottom"
-                        height={36}
+                        height={60}
                         formatter={(value, entry) =>
                           `${value}: ${((entry.payload.value / holdingsByClass["Private Equity"].value) * 100).toFixed(1)}%`
                         }
@@ -1281,10 +1281,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <p className="text-sm text-muted-foreground">Total: {formatCurrency(classData.value, viewCurrency)}</p>
               </CardHeader>
               <CardContent>
-                <div className="h-64 p-1">
+                <div className="h-72 md:h-64 p-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={pieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                      <Pie data={pieData} cx="50%" cy="40%" outerRadius={55} fill="#8884d8" dataKey="value">
                         {pieData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
                         ))}
@@ -1292,7 +1292,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
                       <Legend
                         verticalAlign="bottom"
-                        height={36}
+                        height={60}
                         formatter={(value, entry) =>
                           `${value}: ${((entry.payload.value / classData.value) * 100).toFixed(1)}%`
                         }
