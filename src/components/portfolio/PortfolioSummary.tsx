@@ -459,8 +459,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </p>
           </CardHeader>
           <CardContent>
-            <div className="md:flex md:items-center md:gap-6">
-              <div className="h-56 md:h-64 lg:h-72 md:flex-1">
+            <div className="lg:flex lg:items-center lg:gap-6">
+              <div className="h-56 lg:h-64 xl:h-72 lg:flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
@@ -472,7 +472,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+              <div className="mt-4 lg:mt-0 md:min-w-[220px] md:max-w-[280px]">
                 <CustomPieLegend items={pieData} colors={COLORS} showValue={false} />
               </div>
             </div>
@@ -521,8 +521,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </div>
           </CardHeader>
           <CardContent>
-            <div className="md:flex md:items-center md:gap-6">
-              <div className="h-56 md:h-64 lg:h-72 md:flex-1">
+            <div className="lg:flex lg:items-center lg:gap-6">
+              <div className="h-56 lg:h-64 xl:h-72 lg:flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={beneficiariesPieData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
@@ -534,7 +534,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+              <div className="mt-4 lg:mt-0 md:min-w-[220px] md:max-w-[280px]">
                 <CustomPieLegend items={beneficiariesPieData} colors={COLORS} showValue={true} />
               </div>
             </div>
@@ -572,8 +572,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </div>
           </CardHeader>
           <CardContent>
-            <div className="md:flex md:items-center md:gap-6">
-              <div className="h-56 md:h-64 lg:h-72 md:flex-1">
+            <div className="lg:flex lg:items-center lg:gap-6">
+              <div className="h-56 lg:h-64 xl:h-72 lg:flex-1">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={currencyPieData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
@@ -585,7 +585,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+              <div className="mt-4 lg:mt-0 md:min-w-[220px] md:max-w-[280px]">
                 <CustomPieLegend items={currencyPieData} colors={COLORS} showValue={true} />
               </div>
             </div>
