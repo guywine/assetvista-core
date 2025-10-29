@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import {
   PieChart,
   Pie,
@@ -696,18 +696,17 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   <p className="text-sm text-muted-foreground">Public Equity & Commodities combined by asset name</p>
                 </CardHeader>
                 <CardContent className="py-3 px-4 md:py-6">
-                  <ScrollArea className="h-[380px] md:h-80">
-                    <div className="min-w-[600px] md:min-w-0 h-full p-1">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                          data={chartData}
+                  <div className="h-[380px] md:h-80 p-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={chartData}
                         margin={{
                           top: 10,
                           right: 5,
-                          left: -5,
+                          left: 0,
                           bottom: 90,
                         }}
-                        >
+                      >
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                         <XAxis
                           dataKey="name"
@@ -747,10 +746,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         />
                         <Bar dataKey="value" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                       </BarChart>
-                    </ResponsiveContainer>
-                    </div>
-                  </ScrollArea>
-                </CardContent>
+                     </ResponsiveContainer>
+                   </div>
+                 </CardContent>
               </Card>
             ) : null;
           })()}
@@ -1036,10 +1034,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <p className="text-sm text-muted-foreground">Grouped by asset name</p>
               </CardHeader>
               <CardContent className="py-3 px-4 md:py-6">
-                <ScrollArea className="h-64">
-                  <div className="min-w-[600px] md:min-w-0 h-full p-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
+                <div className="h-64 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
                         data={(() => {
                           // Filter Real Estate assets
                           const realEstateAssets = assets.filter((asset) => asset.class === "Real Estate");
@@ -1073,7 +1070,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         margin={{
                           top: 10,
                           right: 5,
-                          left: -5,
+                          left: 0,
                           bottom: 60,
                         }}
                       >
@@ -1107,10 +1104,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       />
                       <Bar dataKey="value" fill="hsl(var(--chart-1))" />
                     </BarChart>
-                  </ResponsiveContainer>
-                  </div>
-                </ScrollArea>
-              </CardContent>
+                   </ResponsiveContainer>
+                 </div>
+               </CardContent>
             </Card>
           </div>
         </div>
@@ -1172,10 +1168,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <p className="text-sm text-muted-foreground">Factored vs Full Price comparison</p>
               </CardHeader>
               <CardContent className="py-3 px-4 md:py-6">
-                <ScrollArea className="h-80">
-                  <div className="min-w-[600px] md:min-w-0 h-full p-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
+                <div className="h-80 p-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
                         data={(() => {
                           // Get Private Equity assets
                           const privateEquityAssets = assets.filter((asset) => asset.class === "Private Equity");
@@ -1220,7 +1215,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         margin={{
                           top: 10,
                           right: 5,
-                          left: -5,
+                          left: 0,
                           bottom: 80,
                         }}
                       >
@@ -1268,8 +1263,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                     </BarChart>
                   </ResponsiveContainer>
                   </div>
-                </ScrollArea>
-              </CardContent>
+                </CardContent>
             </Card>
           </div>
         </div>
