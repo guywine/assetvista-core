@@ -364,6 +364,36 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
     "hsl(var(--chart-9))",
     "hsl(var(--chart-10))",
   ];
+
+  // Custom Legend Component
+  const CustomPieLegend = ({
+    items,
+    colors,
+    showValue = false,
+    valueFormatter = (n: number) => formatCurrency(n, viewCurrency),
+  }: {
+    items: Array<{ name: string; value: number; percentage: number }>;
+    colors: string[];
+    showValue?: boolean;
+    valueFormatter?: (n: number) => string;
+  }) => (
+    <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+      {items.map((item, index) => (
+        <li key={item.name} className="inline-flex items-center gap-2">
+          <span
+            className="h-3 w-3 rounded-[3px] flex-shrink-0"
+            style={{ backgroundColor: colors[index % colors.length] }}
+          />
+          <span className="text-muted-foreground">
+            {showValue
+              ? `${item.name}: ${valueFormatter(item.value)} (${item.percentage.toFixed(1)}%)`
+              : `${item.name}: ${item.percentage.toFixed(1)}%`}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <div className="space-y-8">
       {/* Increased spacing between major sections */}
@@ -429,29 +459,26 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </p>
           </CardHeader>
           <CardContent>
-            <div className="h-80 md:h-72 p-2">
-              {/* Increased height from h-56 to h-72 and padding */}
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="35%" outerRadius={50} fill="#8884d8" dataKey="value">
-                    {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={70}
-                    formatter={(value, entry) =>
-                      `${value}: ${((entry.payload.value / filteredTotalValue) * 100).toFixed(1)}%`
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="md:flex md:items-center md:gap-6">
+              <div className="h-56 md:h-64 lg:h-72 md:flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                <CustomPieLegend items={pieData} colors={COLORS} showValue={false} />
+              </div>
             </div>
 
             {/* Asset Class Values Summary with Toggles */}
-            <div className="mt-4 space-y-2">
+            <div className="mt-6 space-y-2">
               {Object.entries(holdingsByClass).map(([className, data]) => (
                 <div key={className} className="flex justify-between items-center py-2 text-sm">
                   <div className="flex items-center gap-3">
@@ -494,29 +521,26 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-80 md:h-72 p-2">
-              {/* Increased height and padding for consistency */}
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={beneficiariesPieData} cx="50%" cy="35%" outerRadius={50} fill="#8884d8" dataKey="value">
-                    {beneficiariesPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={70}
-                    formatter={(value, entry) =>
-                      `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${((entry.payload.value / beneficiariesTotalValue) * 100).toFixed(1)}%)`
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="md:flex md:items-center md:gap-6">
+              <div className="h-56 md:h-64 lg:h-72 md:flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={beneficiariesPieData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
+                      {beneficiariesPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                <CustomPieLegend items={beneficiariesPieData} colors={COLORS} showValue={true} />
+              </div>
             </div>
 
             {/* Beneficiaries Summary */}
-            <div className="mt-4 space-y-2">
+            <div className="mt-6 space-y-2">
               {Object.entries(filteredBeneficiaries).map(([beneficiary, value]) => (
                 <div key={beneficiary} className="flex justify-between items-center py-1 text-sm">
                   <span className="text-foreground">{beneficiary}</span>
@@ -548,29 +572,26 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
             </div>
           </CardHeader>
           <CardContent>
-            <div className="h-80 md:h-72 p-2">
-              {/* Increased height and padding for consistency */}
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={currencyPieData} cx="50%" cy="35%" outerRadius={50} fill="#8884d8" dataKey="value">
-                    {currencyPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                  <Legend
-                    verticalAlign="bottom"
-                    height={70}
-                    formatter={(value, entry) =>
-                      `${value}: ${formatCurrency(entry.payload.value, viewCurrency)} (${((entry.payload.value / currencyTotalValue) * 100).toFixed(1)}%)`
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="md:flex md:items-center md:gap-6">
+              <div className="h-56 md:h-64 lg:h-72 md:flex-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={currencyPieData} cx="50%" cy="50%" outerRadius={80} fill="#8884d8" dataKey="value">
+                      {currencyPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                <CustomPieLegend items={currencyPieData} colors={COLORS} showValue={true} />
+              </div>
             </div>
 
             {/* Currency Summary */}
-            <div className="mt-4 space-y-2">
+            <div className="mt-6 space-y-2">
               {Object.entries(holdingsByCurrency).map(([currency, value]) => (
                 <div key={currency} className="flex justify-between items-center py-1 text-sm">
                   <span className="text-foreground">{currency}</span>
@@ -735,31 +756,29 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-72 md:h-64 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={subClassPieData["Public Equity"] || []}
-                        cx="50%"
-                        cy="40%"
-                        outerRadius={55}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {(subClassPieData["Public Equity"] || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={60}
-                        formatter={(value, entry) =>
-                          `${value}: ${((entry.payload.value / holdingsByClass["Public Equity"].value) * 100).toFixed(1)}%`
-                        }
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="md:flex md:items-center md:gap-6">
+                  <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={subClassPieData["Public Equity"] || []}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {(subClassPieData["Public Equity"] || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                    <CustomPieLegend items={subClassPieData["Public Equity"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -776,31 +795,29 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   </p>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-72 md:h-64 p-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={subClassPieData["Commodities & more"] || []}
-                          cx="50%"
-                          cy="40%"
-                          outerRadius={55}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {(subClassPieData["Commodities & more"] || []).map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                        <Legend
-                          verticalAlign="bottom"
-                          height={60}
-                          formatter={(value, entry) =>
-                            `${value}: ${((entry.payload.value / holdingsByClass["Commodities & more"].value) * 100).toFixed(1)}%`
-                          }
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div className="md:flex md:items-center md:gap-6">
+                    <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={subClassPieData["Commodities & more"] || []}
+                            cx="50%"
+                            cy="50%"
+                            outerRadius={70}
+                            fill="#8884d8"
+                            dataKey="value"
+                          >
+                            {(subClassPieData["Commodities & more"] || []).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                      <CustomPieLegend items={subClassPieData["Commodities & more"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -838,24 +855,22 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                     <p className="text-sm text-muted-foreground">Total: {formatCurrency(bigTechTotal, viewCurrency)}</p>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-72 md:h-64 p-1">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={bigTechPieData} cx="50%" cy="40%" outerRadius={55} fill="#8884d8" dataKey="value">
-                            {bigTechPieData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                          <Legend
-                            verticalAlign="bottom"
-                            height={60}
-                            formatter={(value, entry) =>
-                              `${value}: ${((entry.payload.value / bigTechTotal) * 100).toFixed(1)}%`
-                            }
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                    <div className="md:flex md:items-center md:gap-6">
+                      <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={bigTechPieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                              {bigTechPieData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                        <CustomPieLegend items={bigTechPieData} colors={SUB_CLASS_COLORS} showValue={false} />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -897,24 +912,22 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-72 md:h-64 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={fixedIncomePieData} cx="50%" cy="40%" outerRadius={55} fill="#8884d8" dataKey="value">
-                        {fixedIncomePieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={60}
-                        formatter={(value, entry) =>
-                          `${value}: ${((entry.payload.value / fixedIncomePieTotal) * 100).toFixed(1)}%`
-                        }
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="md:flex md:items-center md:gap-6">
+                  <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={fixedIncomePieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                          {fixedIncomePieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                    <CustomPieLegend items={fixedIncomePieData} colors={SUB_CLASS_COLORS} showValue={false} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -980,31 +993,29 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-72 md:h-64 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={subClassPieData["Real Estate"] || []}
-                        cx="50%"
-                        cy="40%"
-                        outerRadius={55}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {(subClassPieData["Real Estate"] || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={60}
-                        formatter={(value, entry) =>
-                          `${value}: ${((entry.payload.value / holdingsByClass["Real Estate"].value) * 100).toFixed(1)}%`
-                        }
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="md:flex md:items-center md:gap-6">
+                  <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={subClassPieData["Real Estate"] || []}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {(subClassPieData["Real Estate"] || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                    <CustomPieLegend items={subClassPieData["Real Estate"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1114,31 +1125,29 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="h-72 md:h-64 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={subClassPieData["Private Equity"] || []}
-                        cx="50%"
-                        cy="40%"
-                        outerRadius={55}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {(subClassPieData["Private Equity"] || []).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={60}
-                        formatter={(value, entry) =>
-                          `${value}: ${((entry.payload.value / holdingsByClass["Private Equity"].value) * 100).toFixed(1)}%`
-                        }
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="md:flex md:items-center md:gap-6">
+                  <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={subClassPieData["Private Equity"] || []}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {(subClassPieData["Private Equity"] || []).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                    <CustomPieLegend items={subClassPieData["Private Equity"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1281,24 +1290,22 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <p className="text-sm text-muted-foreground">Total: {formatCurrency(classData.value, viewCurrency)}</p>
               </CardHeader>
               <CardContent>
-                <div className="h-72 md:h-64 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={pieData} cx="50%" cy="40%" outerRadius={55} fill="#8884d8" dataKey="value">
-                        {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={60}
-                        formatter={(value, entry) =>
-                          `${value}: ${((entry.payload.value / classData.value) * 100).toFixed(1)}%`
-                        }
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="md:flex md:items-center md:gap-6">
+                  <div className="h-52 md:h-60 lg:h-64 md:flex-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData} cx="50%" cy="50%" outerRadius={70} fill="#8884d8" dataKey="value">
+                          {pieData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={SUB_CLASS_COLORS[index % SUB_CLASS_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [formatCurrency(value, viewCurrency), "Value"]} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
+                    <CustomPieLegend items={pieData} colors={SUB_CLASS_COLORS} showValue={false} />
+                  </div>
                 </div>
               </CardContent>
             </Card>
