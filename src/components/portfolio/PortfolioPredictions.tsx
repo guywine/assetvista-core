@@ -806,7 +806,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                   <YAxis 
                     className="text-muted-foreground"
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                    tickFormatter={(value) => formatMillions(value)}
                     tickCount={10}
                     minTickGap={20}
                   />

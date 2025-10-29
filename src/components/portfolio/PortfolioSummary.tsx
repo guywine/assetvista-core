@@ -42,6 +42,12 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
   // State for excluding Money Market and Bank Deposits from Fixed Income chart
   const [excludeMMAndDeposits, setExcludeMMAndDeposits] = useState<boolean>(true);
 
+  // Helper function to format values in millions for Y-axis
+  const formatMillions = (value: number): string => {
+    const millions = value / 1000000;
+    return `${millions.toFixed(1)}M`;
+  };
+
   // Calculate all asset values
   const calculations = new Map<string, AssetCalculations>();
   assets.forEach((asset) => {
@@ -716,7 +722,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                             fontSize: 12,
                             fill: "#6B7280",
                           }}
-                          tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                          tickFormatter={(value) => formatMillions(value)}
                         />
                         <Tooltip
                           formatter={(value: number, name, props) => [formatCurrency(value, viewCurrency), "Value"]}
@@ -1079,7 +1085,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         }}
                       />
                       <YAxis
-                        tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                        tickFormatter={(value) => formatMillions(value)}
                         tick={{
                           fontSize: 12,
                         }}
@@ -1224,7 +1230,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         }}
                       />
                       <YAxis
-                        tickFormatter={(value) => formatCurrency(value, viewCurrency)}
+                        tickFormatter={(value) => formatMillions(value)}
                         tick={{
                           fontSize: 12,
                         }}
