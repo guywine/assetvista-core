@@ -717,6 +717,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                           angle={-45}
                           textAnchor="end"
                           height={80}
+                          interval={0}
+                          tickMargin={6}
                         />
                         <YAxis
                           tick={{
