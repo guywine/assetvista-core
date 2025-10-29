@@ -948,7 +948,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
               </CardHeader>
               <CardContent className="py-3 px-4 md:py-4 md:px-6">
                 {/* Overall Fixed Income YTW - Side by Side */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground mb-1">All Fixed Income</p>
                     <p className="text-2xl font-bold text-financial-success">
