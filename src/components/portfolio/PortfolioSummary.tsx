@@ -699,12 +699,12 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={chartData}
-                        margin={{
-                          top: 20,
-                          right: 30,
-                          left: 20,
-                          bottom: 80,
-                        }}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 10,
+                        bottom: 80,
+                      }}
                       >
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                         <XAxis
@@ -1069,7 +1069,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       margin={{
                         top: 20,
                         right: 30,
-                        left: 20,
+                        left: 10,
                         bottom: 60,
                       }}
                     >
@@ -1214,7 +1214,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       margin={{
                         top: 20,
                         right: 30,
-                        left: 20,
+                        left: 10,
                         bottom: 80,
                       }}
                     >

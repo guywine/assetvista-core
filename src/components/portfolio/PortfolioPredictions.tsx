@@ -790,7 +790,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[500px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 20, right: 10, left: 100, bottom: 20 }} maxBarSize={80}>
+                <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 20 }} maxBarSize={80}>
                   <CartesianGrid 
                     strokeDasharray="2 2" 
                     stroke="hsl(var(--muted-foreground))"
