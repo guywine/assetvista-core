@@ -116,7 +116,7 @@ export function FXRatesBar({
               {lastUpdated && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70">
+                    <div className="hidden md:flex items-center gap-1 text-xs text-muted-foreground/70">
                       <Clock className="h-3 w-3" />
                       <span>{formatLastUpdated(lastUpdated)}</span>
                     </div>
@@ -214,7 +214,7 @@ export function FXRatesBar({
                       size="sm" 
                       variant="ghost" 
                       onClick={() => handleStartEdit()}
-                      className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+                      className="hidden md:flex h-6 w-6 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
                     >
                       <Edit2 className="h-3 w-3" />
                     </Button>
