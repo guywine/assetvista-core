@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   PieChart,
   Pie,
@@ -695,17 +696,18 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                   <p className="text-sm text-muted-foreground">Public Equity & Commodities combined by asset name</p>
                 </CardHeader>
                 <CardContent className="py-3 px-4 md:py-6">
-                  <div className="h-[380px] md:h-80 p-1">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart
-                        data={chartData}
-                      margin={{
-                        top: 10,
-                        right: 5,
-                        left: 0,
-                        bottom: 90,
-                      }}
-                      >
+                  <ScrollArea className="h-[380px] md:h-80">
+                    <div className="min-w-[600px] md:min-w-0 h-full p-1">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart
+                          data={chartData}
+                        margin={{
+                          top: 10,
+                          right: 5,
+                          left: -5,
+                          bottom: 90,
+                        }}
+                        >
                         <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.3} />
                         <XAxis
                           dataKey="name"
@@ -746,7 +748,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                         <Bar dataKey="value" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
-                  </div>
+                    </div>
+                  </ScrollArea>
                 </CardContent>
               </Card>
             ) : null;
@@ -1032,47 +1035,48 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 <CardTitle className="text-lg font-bold text-financial-primary">All Real Estate Assets</CardTitle>
                 <p className="text-sm text-muted-foreground">Grouped by asset name</p>
               </CardHeader>
-              <CardContent>
-                <div className="h-64 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={(() => {
-                        // Filter Real Estate assets
-                        const realEstateAssets = assets.filter((asset) => asset.class === "Real Estate");
+              <CardContent className="py-3 px-4 md:py-6">
+                <ScrollArea className="h-64">
+                  <div className="min-w-[600px] md:min-w-0 h-full p-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={(() => {
+                          // Filter Real Estate assets
+                          const realEstateAssets = assets.filter((asset) => asset.class === "Real Estate");
 
-                        // Group by asset name and sum their values
-                        const positionsByName = realEstateAssets.reduce(
-                          (acc, asset) => {
-                            const calc = calculations.get(asset.id);
-                            const value = calc?.display_value || 0;
-                            if (!acc[asset.name]) {
-                              acc[asset.name] = {
-                                name: asset.name,
-                                value: 0,
-                              };
-                            }
-                            acc[asset.name].value += value;
-                            return acc;
-                          },
-                          {} as Record<
-                            string,
-                            {
-                              name: string;
-                              value: number;
-                            }
-                          >,
-                        );
+                          // Group by asset name and sum their values
+                          const positionsByName = realEstateAssets.reduce(
+                            (acc, asset) => {
+                              const calc = calculations.get(asset.id);
+                              const value = calc?.display_value || 0;
+                              if (!acc[asset.name]) {
+                                acc[asset.name] = {
+                                  name: asset.name,
+                                  value: 0,
+                                };
+                              }
+                              acc[asset.name].value += value;
+                              return acc;
+                            },
+                            {} as Record<
+                              string,
+                              {
+                                name: string;
+                                value: number;
+                              }
+                            >,
+                          );
 
-                        // Return sorted array by value
-                        return Object.values(positionsByName).sort((a, b) => b.value - a.value);
-                      })()}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 10,
-                        bottom: 60,
-                      }}
-                    >
+                          // Return sorted array by value
+                          return Object.values(positionsByName).sort((a, b) => b.value - a.value);
+                        })()}
+                        margin={{
+                          top: 10,
+                          right: 5,
+                          left: -5,
+                          bottom: 60,
+                        }}
+                      >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
                         dataKey="name"
@@ -1104,7 +1108,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Bar dataKey="value" fill="hsl(var(--chart-1))" />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>
@@ -1166,58 +1171,59 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">Factored vs Full Price comparison</p>
               </CardHeader>
-              <CardContent>
-                <div className="h-80 p-1">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={(() => {
-                        // Get Private Equity assets
-                        const privateEquityAssets = assets.filter((asset) => asset.class === "Private Equity");
+              <CardContent className="py-3 px-4 md:py-6">
+                <ScrollArea className="h-80">
+                  <div className="min-w-[600px] md:min-w-0 h-full p-1">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={(() => {
+                          // Get Private Equity assets
+                          const privateEquityAssets = assets.filter((asset) => asset.class === "Private Equity");
 
-                        // Group by asset name and sum their values
-                        const positionsByName = privateEquityAssets.reduce(
-                          (acc, asset) => {
-                            const calc = calculations.get(asset.id);
-                            const factored_value = calc?.display_value || 0;
-                            const full_price =
-                              asset.quantity *
-                              (asset.price || 0) *
-                              (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
-                            if (!acc[asset.name]) {
-                              acc[asset.name] = {
-                                name: asset.name.length > 15 ? asset.name.substring(0, 15) + "..." : asset.name,
-                                fullName: asset.name,
-                                factored_value: 0,
-                                full_price: 0,
-                              };
-                            }
-                            acc[asset.name].factored_value += factored_value;
-                            acc[asset.name].full_price += full_price;
-                            return acc;
-                          },
-                          {} as Record<
-                            string,
-                            {
-                              name: string;
-                              fullName: string;
-                              factored_value: number;
-                              full_price: number;
-                            }
-                          >,
-                        );
+                          // Group by asset name and sum their values
+                          const positionsByName = privateEquityAssets.reduce(
+                            (acc, asset) => {
+                              const calc = calculations.get(asset.id);
+                              const factored_value = calc?.display_value || 0;
+                              const full_price =
+                                asset.quantity *
+                                (asset.price || 0) *
+                                (fxRates[asset.origin_currency]?.[`to_${viewCurrency}`] || 1);
+                              if (!acc[asset.name]) {
+                                acc[asset.name] = {
+                                  name: asset.name.length > 15 ? asset.name.substring(0, 15) + "..." : asset.name,
+                                  fullName: asset.name,
+                                  factored_value: 0,
+                                  full_price: 0,
+                                };
+                              }
+                              acc[asset.name].factored_value += factored_value;
+                              acc[asset.name].full_price += full_price;
+                              return acc;
+                            },
+                            {} as Record<
+                              string,
+                              {
+                                name: string;
+                                fullName: string;
+                                factored_value: number;
+                                full_price: number;
+                              }
+                            >,
+                          );
 
-                        // Get top 10 positions by factored value
-                        return Object.values(positionsByName)
-                          .sort((a, b) => b.factored_value - a.factored_value)
-                          .slice(0, 10);
-                      })()}
-                      margin={{
-                        top: 20,
-                        right: 30,
-                        left: 10,
-                        bottom: 80,
-                      }}
-                    >
+                          // Get top 10 positions by factored value
+                          return Object.values(positionsByName)
+                            .sort((a, b) => b.factored_value - a.factored_value)
+                            .slice(0, 10);
+                        })()}
+                        margin={{
+                          top: 10,
+                          right: 5,
+                          left: -5,
+                          bottom: 80,
+                        }}
+                      >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
                         dataKey="name"
@@ -1261,7 +1267,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                       <Bar dataKey="factored_value" fill="hsl(var(--chart-2))" name="Factored Value" />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>
