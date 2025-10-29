@@ -943,20 +943,20 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
 
             {/* Fixed Income YTW Summary */}
             <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
-              <CardHeader>
+              <CardHeader className="py-3 px-4 md:py-4 md:px-6">
                 <CardTitle className="text-lg font-bold text-financial-primary">Yield to Worst (YTW)</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="py-3 px-4 md:py-4 md:px-6">
                 {/* Overall Fixed Income YTW - Side by Side */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                  <div className="p-4 bg-muted/50 rounded-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  <div className="p-3 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground mb-2">All Fixed Income</p>
                     <p className="text-2xl font-bold text-financial-success">
                       {(fixedIncomeWeightedYTW * 100).toFixed(2)}%
                     </p>
                   </div>
 
-                  <div className="p-4 bg-muted/50 rounded-lg">
+                  <div className="p-3 bg-muted/50 rounded-lg">
                     <p className="text-sm text-muted-foreground mb-2">Excl. MM and Deposits</p>
                     <p className="text-2xl font-bold text-financial-success">
                       {(fixedIncomeWeightedYTWExcludingCash * 100).toFixed(2)}%
@@ -965,10 +965,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                 </div>
 
                 {/* YTW by Sub-class */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <p className="text-sm font-semibold text-muted-foreground">YTW by Sub-class:</p>
                   {Object.entries(fixedIncomeSubClassAverageYTW).map(([subClass, ytw]) => (
-                    <div key={subClass} className="flex justify-between items-center py-2 border-b border-border/30">
+                    <div key={subClass} className="flex justify-between items-center py-1.5 border-b border-border/30">
                       <Badge variant="outline" className="text-xs">
                         {subClass}
                       </Badge>
