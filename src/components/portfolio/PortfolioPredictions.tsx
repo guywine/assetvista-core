@@ -448,7 +448,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
 
   const formatMillions = (value: number): string => {
     const millions = value / 1000000;
-    return millions.toFixed(1);
+    return `${millions.toFixed(1)}M`;
   };
 
   const renderCustomLabel = (entry: any) => {
