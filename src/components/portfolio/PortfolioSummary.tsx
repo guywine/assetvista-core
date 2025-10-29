@@ -723,7 +723,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
                           labelFormatter={(label, payload) => {
                             if (payload && payload[0]) {
                               const data = payload[0].payload;
-                              return `${data.fullName} (${data.class})`;
+                              return data.fullName;
                             }
                             return label;
                           }}
