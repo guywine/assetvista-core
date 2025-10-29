@@ -128,7 +128,7 @@ export function FXRatesBar({
               )}
             </div>
             
-            {currencies.map((currency, index) => (
+            {currencies.filter(currency => currency !== 'ILS').map((currency, index) => (
               <div key={currency} className="flex items-center gap-2 whitespace-nowrap">
                 {index > 0 && <span className="text-muted-foreground">•</span>}
                 
@@ -136,33 +136,29 @@ export function FXRatesBar({
                   <span className="text-sm font-medium">{currency}</span>
                   <span className="text-muted-foreground">=</span>
                   
-                  {currency === 'ILS' ? (
-                    <span className="text-sm font-semibold">1.00</span>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {isEditing ? (
-                        <Input
-                          ref={editingCurrency === currency ? inputRef : null}
-                          type="text"
-                          inputMode="decimal"
-                          value={displayRates[currency]?.to_ILS || ''}
-                          onChange={(e) => handleRateChange(currency, 'to_ILS', e.target.value)}
-                          onKeyDown={handleKeyDown}
-                          className="w-16 h-6 text-xs p-1 text-center"
-                        />
-                      ) : (
-                        <span 
-                          className="text-sm font-semibold cursor-pointer hover:text-primary transition-colors"
-                          onDoubleClick={() => handleDoubleClick(currency)}
-                        >
-                          {typeof displayRates[currency]?.to_ILS === 'number' 
-                            ? displayRates[currency]?.to_ILS?.toFixed(3) 
-                            : parseFloat(displayRates[currency]?.to_ILS || '0').toFixed(3)}
-                        </span>
-                      )}
-                      <span className="text-xs text-muted-foreground">ILS</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1">
+                    {isEditing ? (
+                      <Input
+                        ref={editingCurrency === currency ? inputRef : null}
+                        type="text"
+                        inputMode="decimal"
+                        value={displayRates[currency]?.to_ILS || ''}
+                        onChange={(e) => handleRateChange(currency, 'to_ILS', e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="w-16 h-6 text-xs p-1 text-center"
+                      />
+                    ) : (
+                      <span 
+                        className="text-sm font-semibold cursor-pointer hover:text-primary transition-colors"
+                        onDoubleClick={() => handleDoubleClick(currency)}
+                      >
+                        {typeof displayRates[currency]?.to_ILS === 'number' 
+                          ? displayRates[currency]?.to_ILS?.toFixed(3) 
+                          : parseFloat(displayRates[currency]?.to_ILS || '0').toFixed(3)}
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground">ILS</span>
+                  </div>
                 </div>
               </div>
             ))}
