@@ -232,22 +232,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_config: {
-        Args: { config_name: string }
-        Returns: string
-      }
-      is_authorized: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      set_session_token: {
-        Args: { token: string }
-        Returns: undefined
-      }
+      cleanup_expired_sessions: { Args: never; Returns: undefined }
+      get_config: { Args: { config_name: string }; Returns: string }
+      is_authorized: { Args: never; Returns: boolean }
+      set_session_token: { Args: { token: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
