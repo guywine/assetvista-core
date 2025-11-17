@@ -3,10 +3,11 @@ import { Asset } from "@/types/portfolio";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Edit2, Check, X, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import { Edit2, Check, X, ChevronUp, ChevronDown, ChevronsUpDown, RefreshCw, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { validateNumericInput } from "@/lib/utils";
+import { useStockPrices } from "@/hooks/useStockPrices";
 
 interface PricingTableProps {
   groupAAssets: Asset[];
@@ -26,6 +27,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
   const [sortBy, setSortBy] = useState<"name" | "sub_class" | "updated_at">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { toast } = useToast();
+  const { updateStockPrices, isUpdating } = useStockPrices();
   const priceInputRef = useRef<HTMLInputElement>(null);
   const ytwInputRef = useRef<HTMLInputElement>(null);
 
@@ -209,16 +211,58 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
     }
   };
 
+  // Calculate eligible assets for auto-update
+  const eligibleAssetsCount = useMemo(() => {
+    return allAssets.filter(asset => 
+      asset.ISIN && asset.ISIN.trim() !== '' &&
+      (asset.class === "Public Equity" || 
+       (asset.class === "Fixed Income" && asset.sub_class === "REIT stock") ||
+       asset.class === "Commodities & more")
+    ).length;
+  }, [allAssets]);
+
+  const handleUpdatePrices = async () => {
+    await updateStockPrices(allAssets, onUpdateAsset);
+  };
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>
-          Quick Pricing Updates ({consolidatedAssets.length} unique assets, {allAssets.length} total holdings)
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Update prices and YTW for assets that require regular pricing updates.
-          <span className="text-xs opacity-75">Double-click values to edit, Enter to save, Escape to cancel.</span>
-        </p>
+      <CardHeader className="py-3 px-4 md:py-4 md:px-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>
+              Quick Pricing Updates ({consolidatedAssets.length} unique assets, {allAssets.length} total holdings)
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              Update prices and YTW for assets that require regular pricing updates.
+              <span className="text-xs opacity-75 ml-1">Double-click values to edit, Enter to save, Escape to cancel.</span>
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={handleUpdatePrices}
+            disabled={isUpdating || eligibleAssetsCount === 0}
+            className="ml-4"
+          >
+            {isUpdating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Updating...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Update Prices
+              </>
+            )}
+          </Button>
+        </div>
+        {eligibleAssetsCount > 0 && (
+          <p className="text-xs text-muted-foreground mt-2">
+            {eligibleAssetsCount} asset{eligibleAssetsCount === 1 ? '' : 's'} with ticker{eligibleAssetsCount === 1 ? '' : 's'} available for auto-update
+          </p>
+        )}
       </CardHeader>
       <CardContent>
         <div className="rounded-md border max-h-[600px] overflow-y-auto">
