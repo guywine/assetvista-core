@@ -25,6 +25,16 @@ export function useStockPrices() {
     return false;
   };
 
+  const isTelAvivStock = (asset: Asset): boolean => {
+    // Primary check: ticker ends with .TA
+    if (asset.ISIN && asset.ISIN.endsWith('.TA')) return true;
+    
+    // Secondary check: currency is ILS (backup for TASE stocks)
+    if (asset.origin_currency === 'ILS') return true;
+    
+    return false;
+  };
+
   const updateStockPrices = async (
     assets: Asset[],
     onUpdateAsset: (asset: Asset) => Promise<Asset>
@@ -80,9 +90,17 @@ export function useStockPrices() {
       for (const asset of eligibleAssets) {
         const ticker = asset.ISIN;
         if (ticker && prices[ticker] !== undefined) {
+          let adjustedPrice = prices[ticker];
+          
+          // Tel Aviv stocks are quoted in agorot (1/100 shekel)
+          if (isTelAvivStock(asset)) {
+            adjustedPrice = adjustedPrice / 100;
+            console.log(`TASE conversion: ${ticker} ${prices[ticker]} → ${adjustedPrice}`);
+          }
+          
           const updatedAsset = {
             ...asset,
-            price: prices[ticker],
+            price: adjustedPrice,
           };
           
           // Queue the update
