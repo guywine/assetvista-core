@@ -11,6 +11,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { ChartContainer } from '@/components/ui/chart';
 import { useAssetLiquidationSettings } from '@/hooks/useAssetLiquidationSettings';
 import { useAssetLookup } from '@/hooks/useAssetLookup';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PredictionSettings {
   publicEquityIRR: number;
@@ -44,6 +45,7 @@ interface PortfolioPredictionsProps {
 export function PortfolioPredictions({ assets, viewCurrency, fxRates }: PortfolioPredictionsProps) {
   const { getLiquidationYear, saveLiquidationYear, isLoading: liquidationLoading } = useAssetLiquidationSettings();
   const { getAssetGroupsByClass } = useAssetLookup(assets);
+  const isMobile = useIsMobile();
   
   const currentYear = new Date().getFullYear();
   const yearOptions = [
@@ -624,40 +626,42 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                        
                        return (
                          <div key={assetName} className="ml-4 flex items-center justify-between text-sm">
-                           <div className="flex items-center space-x-2">
-                             <span className="text-muted-foreground">{assetName}</span>
-                             <span className="text-xs text-muted-foreground">
-                               {formatCurrency(totalValue, viewCurrency)}
-                             </span>
-                             {groupAssets.length > 1 && (
-                               <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                                 {groupAssets.length} holdings
-                               </span>
-                             )}
-                           </div>
-                           <div className="flex items-center space-x-4">
-                             <Select 
-                               value={getLiquidationYear(groupAssets[0])}
-                               onValueChange={(value) => saveLiquidationYear(assetName, value)}
-                             >
-                              <SelectTrigger className="w-20">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {yearOptions.map(year => (
-                                  <SelectItem key={year} value={year}>{year}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`re-${assetName}`} className="text-xs">Include</Label>
-                              <Switch
-                                id={`re-${assetName}`}
-                                checked={settings.realEstateToggles[assetName] || false}
-                                onCheckedChange={(value) => updateRealEstateToggle(assetName, value)}
-                              />
+                              <span className="text-muted-foreground">{assetName}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatCurrency(totalValue, viewCurrency)}
+                              </span>
+                              {!isMobile && groupAssets.length > 1 && (
+                                <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                                  {groupAssets.length} holdings
+                                </span>
+                              )}
                             </div>
-                          </div>
+                            <div className="flex items-center space-x-4">
+                              {!isMobile && (
+                                <Select 
+                                  value={getLiquidationYear(groupAssets[0])}
+                                  onValueChange={(value) => saveLiquidationYear(assetName, value)}
+                                >
+                                 <SelectTrigger className="w-20">
+                                   <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                   {yearOptions.map(year => (
+                                     <SelectItem key={year} value={year}>{year}</SelectItem>
+                                   ))}
+                                 </SelectContent>
+                               </Select>
+                              )}
+                             <div className="flex items-center space-x-2">
+                               {!isMobile && <Label htmlFor={`re-${assetName}`} className="text-xs">Include</Label>}
+                               <Switch
+                                 id={`re-${assetName}`}
+                                 checked={settings.realEstateToggles[assetName] || false}
+                                 onCheckedChange={(value) => updateRealEstateToggle(assetName, value)}
+                               />
+                             </div>
+                           </div>
                         </div>
                        );
                      });
@@ -729,43 +733,47 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                        
                        return (
                          <div key={assetName} className="ml-4 flex items-center justify-between text-sm">
-                           <div className="flex items-center space-x-2">
-                             <span className="text-muted-foreground">{assetName}</span>
-                             <span className="text-xs text-muted-foreground">
-                               {formatCurrency(totalValue, viewCurrency)}
-                             </span>
-                             <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                               {(averageFactor * 100).toFixed(0)}%
-                             </span>
-                             {groupAssets.length > 1 && (
-                               <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
-                                 {groupAssets.length} holdings
-                               </span>
-                             )}
-                           </div>
-                           <div className="flex items-center space-x-4">
-                             <Select 
-                               value={getLiquidationYear(groupAssets[0])}
-                               onValueChange={(value) => saveLiquidationYear(assetName, value)}
-                             >
-                              <SelectTrigger className="w-20">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {yearOptions.map(year => (
-                                  <SelectItem key={year} value={year}>{year}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
                             <div className="flex items-center space-x-2">
-                              <Label htmlFor={`pe-${assetName}`} className="text-xs">Include</Label>
-                              <Switch
-                                id={`pe-${assetName}`}
-                                checked={settings.privateEquityToggles[assetName] || false}
-                                onCheckedChange={(value) => updatePrivateEquityToggle(assetName, value)}
-                              />
+                              <span className="text-muted-foreground">{assetName}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {formatCurrency(totalValue, viewCurrency)}
+                              </span>
+                              {!isMobile && (
+                                <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                                  {(averageFactor * 100).toFixed(0)}%
+                                </span>
+                              )}
+                              {!isMobile && groupAssets.length > 1 && (
+                                <span className="text-xs text-muted-foreground bg-muted px-1 py-0.5 rounded">
+                                  {groupAssets.length} holdings
+                                </span>
+                              )}
                             </div>
-                          </div>
+                            <div className="flex items-center space-x-4">
+                              {!isMobile && (
+                                <Select 
+                                  value={getLiquidationYear(groupAssets[0])}
+                                  onValueChange={(value) => saveLiquidationYear(assetName, value)}
+                                >
+                                 <SelectTrigger className="w-20">
+                                   <SelectValue />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                   {yearOptions.map(year => (
+                                     <SelectItem key={year} value={year}>{year}</SelectItem>
+                                   ))}
+                                 </SelectContent>
+                               </Select>
+                              )}
+                             <div className="flex items-center space-x-2">
+                               {!isMobile && <Label htmlFor={`pe-${assetName}`} className="text-xs">Include</Label>}
+                               <Switch
+                                 id={`pe-${assetName}`}
+                                 checked={settings.privateEquityToggles[assetName] || false}
+                                 onCheckedChange={(value) => updatePrivateEquityToggle(assetName, value)}
+                               />
+                             </div>
+                           </div>
                         </div>
                        );
                      });
