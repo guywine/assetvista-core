@@ -274,6 +274,22 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
     });
   }, [assets, assetCalculations, settings, currentYear, fixedIncomeYTW, fxRates, viewCurrency]);
 
+  // Calculate liquid total for the "later" year (excluding Private Equity Potential)
+  const liquidLaterTotal = useMemo(() => {
+    const laterData = chartData.find(d => d.year === 'later');
+    if (!laterData) return 0;
+    
+    return (
+      laterData.Cash +
+      laterData["Fixed Income"] +
+      laterData["Public Equity"] +
+      laterData["Commodities & more"] +
+      laterData["Real Estate"] +
+      laterData["Private Equity Factored"]
+      // Explicitly excluding: laterData["Private Equity Potential"]
+    );
+  }, [chartData]);
+
   // Helper functions for toggle management
   const updateRealEstateToggle = (assetName: string, value: boolean) => {
     setSettings(prev => ({
@@ -802,6 +818,14 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
             <CardDescription>
               Evolution of your liquid portfolio over time based on prediction settings
             </CardDescription>
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-muted-foreground">Liquid Total (Later):</span>
+                <span className="text-lg font-semibold">
+                  {formatCurrency(liquidLaterTotal, viewCurrency)}
+                </span>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[500px] w-full">
