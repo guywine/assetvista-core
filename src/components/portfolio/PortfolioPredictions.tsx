@@ -654,7 +654,6 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                                 </Select>
                                )}
                               <div className="flex items-center space-x-2">
-                                {!isMobile && <Label htmlFor={`re-${assetName}`} className="text-xs">Include</Label>}
                                 <Switch
                                   id={`re-${assetName}`}
                                   checked={settings.realEstateToggles[assetName] || false}
@@ -766,7 +765,6 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                                 </Select>
                                )}
                               <div className="flex items-center space-x-2">
-                                {!isMobile && <Label htmlFor={`pe-${assetName}`} className="text-xs">Include</Label>}
                                 <Switch
                                   id={`pe-${assetName}`}
                                   checked={settings.privateEquityToggles[assetName] || false}
