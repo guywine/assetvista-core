@@ -24,7 +24,7 @@ interface EditingAsset {
 
 export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: PricingTableProps) {
   const [editingAsset, setEditingAsset] = useState<EditingAsset | null>(null);
-  const [sortBy, setSortBy] = useState<"name" | "sub_class" | "updated_at">("name");
+  const [sortBy, setSortBy] = useState<"name" | "class" | "sub_class" | "updated_at">("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const { toast } = useToast();
   const { updateStockPrices, isUpdating } = useStockPrices();
@@ -63,6 +63,12 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
       let comparison = 0;
 
       switch (sortBy) {
+        case "class":
+          comparison = a.class.localeCompare(b.class);
+          if (comparison === 0) {
+            comparison = a.name.localeCompare(b.name);
+          }
+          break;
         case "sub_class":
           comparison = a.sub_class.localeCompare(b.sub_class);
           if (comparison === 0) {
@@ -84,7 +90,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
     return sorted;
   }, [consolidatedAssets, sortBy, sortDirection]);
 
-  const handleSort = (column: "name" | "sub_class" | "updated_at") => {
+  const handleSort = (column: "name" | "class" | "sub_class" | "updated_at") => {
     if (sortBy === column) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -93,7 +99,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
     }
   };
 
-  const SortIcon = ({ column }: { column: "name" | "sub_class" | "updated_at" }) => {
+  const SortIcon = ({ column }: { column: "name" | "class" | "sub_class" | "updated_at" }) => {
     if (sortBy !== column) {
       return <ChevronsUpDown className="h-3 w-3 opacity-40" />;
     }
@@ -278,6 +284,15 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                     <SortIcon column="name" />
                   </div>
                 </th>
+                <th
+                  className="p-2 font-medium text-muted cursor-pointer hover:text-foreground transition-colors select-none"
+                  onClick={() => handleSort("class")}
+                >
+                  <div className="flex items-center gap-1">
+                    Asset Class
+                    <SortIcon column="class" />
+                  </div>
+                </th>
                 <th className="p-2 font-medium text-muted">ISIN</th>
                 <th
                   className="p-2 font-medium text-muted cursor-pointer hover:text-foreground transition-colors select-none"
@@ -314,6 +329,7 @@ export function PricingTable({ groupAAssets, groupBAssets, onUpdateAsset }: Pric
                     className={`hover:bg-financial-success/50 transition-colors ${isEven ? "bg-muted/20" : "bg-background"}`}
                   >
                     <td className="p-2 py-1.5 font-medium max-w-[200px] truncate">{asset.name}</td>
+                    <td className="p-2 py-1.5 text-xs text-muted-foreground">{asset.class}</td>
                     <td className="p-2 py-1.5 text-xs text-muted-foreground">{asset.ISIN || '-'}</td>
                     <td className="p-2 py-1.5 text-xs text-muted-foreground">{asset.sub_class}</td>
                     <td className="p-2 py-1.5 text-right">
