@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
   AlertDialog,
@@ -15,7 +16,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Download, Calendar, Trash2 } from "lucide-react";
+import { Download, Calendar, Trash2, GitCompare } from "lucide-react";
+import { useFXRates } from "@/hooks/useFXRates";
+import { PortfolioComparisonDialog } from "./PortfolioComparisonDialog";
 import { PortfolioSnapshot } from "@/types/portfolio";
 import { formatCurrency, calculateAssetValue } from "@/lib/portfolio-utils";
 import {
@@ -36,8 +39,11 @@ import * as XLSX from "xlsx-js-style";
 export function PortfolioHistory() {
   const [snapshots, setSnapshots] = useState<PortfolioSnapshot[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedForComparison, setSelectedForComparison] = useState<string[]>([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const { fxRates } = useFXRates();
 
   useEffect(() => {
     loadSnapshots();
@@ -693,23 +699,70 @@ export function PortfolioHistory() {
     );
   }
 
+  const handleSelectionToggle = (snapshotId: string) => {
+    setSelectedForComparison((prev) => {
+      if (prev.includes(snapshotId)) {
+        return prev.filter((id) => id !== snapshotId);
+      } else if (prev.length < 2) {
+        return [...prev, snapshotId];
+      }
+      return prev;
+    });
+  };
+
+  const handleCompare = () => {
+    if (selectedForComparison.length === 2) {
+      setIsComparisonOpen(true);
+    }
+  };
+
+  const selectedSnapshotA = snapshots.find((s) => s.id === selectedForComparison[0]);
+  const selectedSnapshotB = snapshots.find((s) => s.id === selectedForComparison[1]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Portfolio History</h3>
-        <Badge variant="secondary">{snapshots.length} snapshots</Badge>
+        <div className="flex items-center gap-2">
+          {selectedForComparison.length === 2 && (
+            <Button onClick={handleCompare} size="sm" className="gap-2">
+              <GitCompare className="h-4 w-4" />
+              Compare Selected
+            </Button>
+          )}
+          <Badge variant="secondary">{snapshots.length} snapshots</Badge>
+        </div>
       </div>
 
       <div className="grid gap-4">
-        {snapshots.map((snapshot) => (
-          <Card key={snapshot.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{snapshot.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{format(new Date(snapshot.created_at), "PPP")}</p>
-                </div>
-                <div className="flex items-center gap-2">
+        {snapshots.map((snapshot, index) => {
+          const isSelected = selectedForComparison.includes(snapshot.id);
+          const selectionIndex = selectedForComparison.indexOf(snapshot.id);
+          const selectionNumber = selectionIndex >= 0 ? selectionIndex + 1 : null;
+
+          return (
+            <Card key={snapshot.id} className={`hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-primary' : ''}`}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-center gap-1">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => handleSelectionToggle(snapshot.id)}
+                        disabled={!isSelected && selectedForComparison.length >= 2}
+                      />
+                      {selectionNumber && (
+                        <Badge variant="default" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
+                          {selectionNumber}
+                        </Badge>
+                      )}
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{snapshot.name}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{format(new Date(snapshot.created_at), "PPP")}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                   {!isMobile && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -770,8 +823,17 @@ export function PortfolioHistory() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        );
+        })}
       </div>
+
+      <PortfolioComparisonDialog
+        portfolioA={selectedSnapshotA || null}
+        portfolioB={selectedSnapshotB || null}
+        currentFxRates={fxRates}
+        isOpen={isComparisonOpen}
+        onClose={() => setIsComparisonOpen(false)}
+      />
     </div>
   );
 }
