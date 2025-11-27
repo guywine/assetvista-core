@@ -9,28 +9,49 @@ export interface AssetDelta {
   deltaUSD: number; // Delta converted to USD (for display and sorting)
 }
 
-type ComparisonCategory = 'liquid' | 'private_equity' | 'real_estate';
+export interface PositionChange {
+  assetName: string;
+  assetClass: AssetClass;
+  subClass: string;
+  originCurrency: Currency;
+  value: number;
+  valueUSD: number;
+  changeType: 'new' | 'deleted';
+}
 
-const LIQUID_CLASSES: AssetClass[] = ['Cash', 'Fixed Income', 'Public Equity', 'Commodities & more'];
+type ComparisonCategory = 'cash' | 'public_equity_fixed_income' | 'private_equity' | 'real_estate';
+
+// Cash-like assets (Cash class + Bank Deposit + Money Market sub-classes)
+const CASH_LIKE_SUBCLASSES: string[] = ['Bank Deposit', 'Money Market'];
+
+// Fixed Income subclasses that are NOT cash-like
+const NON_CASH_FIXED_INCOME_SUBCLASSES: string[] = ['Gov 1-2', 'Gov long', 'CPI linked', 'Corporate', 'REIT stock', 'Private Credit', 'none'];
+
 const PRIVATE_EQUITY_CLASSES: AssetClass[] = ['Private Equity'];
 const REAL_ESTATE_CLASSES: AssetClass[] = ['Real Estate'];
 
 function getAssetsByCategory(assets: Asset[], category: ComparisonCategory): Asset[] {
-  let targetClasses: AssetClass[];
-  
   switch (category) {
-    case 'liquid':
-      targetClasses = LIQUID_CLASSES;
-      break;
+    case 'cash':
+      // Cash class + Bank Deposit + Money Market sub-classes
+      return assets.filter(asset => 
+        asset.class === 'Cash' || 
+        (asset.class === 'Fixed Income' && CASH_LIKE_SUBCLASSES.includes(asset.sub_class))
+      );
+    
+    case 'public_equity_fixed_income':
+      // Public Equity class + Fixed Income (excluding Bank Deposit and Money Market)
+      return assets.filter(asset => 
+        asset.class === 'Public Equity' || 
+        (asset.class === 'Fixed Income' && NON_CASH_FIXED_INCOME_SUBCLASSES.includes(asset.sub_class))
+      );
+    
     case 'private_equity':
-      targetClasses = PRIVATE_EQUITY_CLASSES;
-      break;
+      return assets.filter(asset => PRIVATE_EQUITY_CLASSES.includes(asset.class));
+    
     case 'real_estate':
-      targetClasses = REAL_ESTATE_CLASSES;
-      break;
+      return assets.filter(asset => REAL_ESTATE_CLASSES.includes(asset.class));
   }
-  
-  return assets.filter(asset => targetClasses.includes(asset.class));
 }
 
 function calculateAssetValue(asset: Asset): number {
@@ -119,6 +140,74 @@ export function getTopDeltas(deltas: AssetDelta[], limit: number): AssetDelta[] 
   
   // Return top N
   return sorted.slice(0, limit);
+}
+
+export function findNewAndDeletedPositions(
+  portfolioA: PortfolioSnapshot,  // Earlier portfolio
+  portfolioB: PortfolioSnapshot,  // Later portfolio
+  currentFxRates: FXRates
+): PositionChange[] {
+  const assetsA = portfolioA.assets as Asset[];
+  const assetsB = portfolioB.assets as Asset[];
+  
+  // Filter out cash-like assets from both portfolios
+  const filteredA = assetsA.filter(asset => 
+    !(asset.class === 'Cash' || 
+      (asset.class === 'Fixed Income' && CASH_LIKE_SUBCLASSES.includes(asset.sub_class)))
+  );
+  
+  const filteredB = assetsB.filter(asset => 
+    !(asset.class === 'Cash' || 
+      (asset.class === 'Fixed Income' && CASH_LIKE_SUBCLASSES.includes(asset.sub_class)))
+  );
+  
+  const assetNamesA = new Set(filteredA.map(a => a.name));
+  const assetNamesB = new Set(filteredB.map(a => a.name));
+  
+  const changes: PositionChange[] = [];
+  
+  // Find new positions (in B but not in A)
+  for (const asset of filteredB) {
+    if (!assetNamesA.has(asset.name)) {
+      const value = calculateAssetValue(asset);
+      const originToILS = currentFxRates[asset.origin_currency]?.to_ILS || 1;
+      const usdToILS = currentFxRates['USD']?.to_ILS || 1;
+      const valueUSD = value * (originToILS / usdToILS);
+      
+      changes.push({
+        assetName: asset.name,
+        assetClass: asset.class,
+        subClass: asset.sub_class,
+        originCurrency: asset.origin_currency,
+        value,
+        valueUSD,
+        changeType: 'new'
+      });
+    }
+  }
+  
+  // Find deleted positions (in A but not in B)
+  for (const asset of filteredA) {
+    if (!assetNamesB.has(asset.name)) {
+      const value = calculateAssetValue(asset);
+      const originToILS = currentFxRates[asset.origin_currency]?.to_ILS || 1;
+      const usdToILS = currentFxRates['USD']?.to_ILS || 1;
+      const valueUSD = value * (originToILS / usdToILS);
+      
+      changes.push({
+        assetName: asset.name,
+        assetClass: asset.class,
+        subClass: asset.sub_class,
+        originCurrency: asset.origin_currency,
+        value,
+        valueUSD,
+        changeType: 'deleted'
+      });
+    }
+  }
+  
+  // Sort by absolute USD value descending
+  return changes.sort((a, b) => Math.abs(b.valueUSD) - Math.abs(a.valueUSD));
 }
 
 export function formatCurrencyValue(value: number, currency: Currency): string {

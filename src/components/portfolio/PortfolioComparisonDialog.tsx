@@ -24,8 +24,11 @@ import {
   calculatePortfolioDeltas,
   getTopDeltas,
   formatCurrencyValue,
-  AssetDelta
+  findNewAndDeletedPositions,
+  AssetDelta,
+  PositionChange
 } from '@/lib/portfolio-comparison-utils';
+import { Badge } from "@/components/ui/badge";
 
 interface PortfolioComparisonDialogProps {
   portfolioA: PortfolioSnapshot | null;
@@ -43,15 +46,22 @@ export function PortfolioComparisonDialog({
   onClose,
 }: PortfolioComparisonDialogProps) {
   const [openSections, setOpenSections] = useState({
-    liquid: true,
+    cash: true,
+    publicEquityFixedIncome: true,
     privateEquity: true,
     realEstate: true,
+    newDeletedPositions: true,
   });
 
   if (!portfolioA || !portfolioB) return null;
 
-  const liquidDeltas = getTopDeltas(
-    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'liquid'),
+  const cashDeltas = getTopDeltas(
+    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'cash'),
+    10
+  );
+
+  const publicEquityFixedIncomeDeltas = getTopDeltas(
+    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'public_equity_fixed_income'),
     20
   );
 
@@ -64,6 +74,8 @@ export function PortfolioComparisonDialog({
     calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'real_estate'),
     10
   );
+
+  const positionChanges = findNewAndDeletedPositions(portfolioA, portfolioB, currentFxRates);
 
   const DeltaTable = ({ deltas, portfolioAName, portfolioBName }: { 
     deltas: AssetDelta[], 
@@ -116,6 +128,54 @@ export function PortfolioComparisonDialog({
     );
   };
 
+  const PositionChangesTable = ({ changes }: { changes: PositionChange[] }) => {
+    if (changes.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground p-4 text-center">
+          No new or deleted positions found
+        </div>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[30%]">Asset Name</TableHead>
+            <TableHead className="w-[20%]">Class / Sub-class</TableHead>
+            <TableHead className="text-right w-[18%]">Value</TableHead>
+            <TableHead className="text-right w-[18%]">Value (USD)</TableHead>
+            <TableHead className="text-center w-[14%]">Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {changes.map((change, index) => (
+            <TableRow key={`${change.assetName}-${index}`}>
+              <TableCell className="font-medium">{change.assetName}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {change.assetClass} / {change.subClass}
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground">
+                {formatCurrencyValue(change.value, change.originCurrency)}
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground">
+                {formatCurrencyValue(change.valueUSD, 'USD')}
+              </TableCell>
+              <TableCell className="text-center">
+                <Badge 
+                  variant={change.changeType === 'new' ? 'default' : 'destructive'}
+                  className={change.changeType === 'new' ? 'bg-financial-success hover:bg-financial-success/80' : ''}
+                >
+                  {change.changeType === 'new' ? 'New' : 'Deleted'}
+                </Badge>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    );
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
@@ -127,20 +187,42 @@ export function PortfolioComparisonDialog({
         </SheetHeader>
 
         <div className="mt-6 space-y-4">
-          {/* Liquid Portfolio Delta */}
+          {/* Cash Delta */}
           <Collapsible
-            open={openSections.liquid}
-            onOpenChange={(open) => setOpenSections({ ...openSections, liquid: open })}
+            open={openSections.cash}
+            onOpenChange={(open) => setOpenSections({ ...openSections, cash: open })}
           >
             <div className="border rounded-lg">
               <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                <h3 className="font-semibold">Liquid Portfolio Delta (Top 20)</h3>
-                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.liquid ? 'rotate-180' : ''}`} />
+                <h3 className="font-semibold">Cash Delta (Top 10)</h3>
+                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.cash ? 'rotate-180' : ''}`} />
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="border-t">
                   <DeltaTable 
-                    deltas={liquidDeltas} 
+                    deltas={cashDeltas} 
+                    portfolioAName={portfolioA.name}
+                    portfolioBName={portfolioB.name}
+                  />
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+
+          {/* Public Equity & Fixed Income Delta */}
+          <Collapsible
+            open={openSections.publicEquityFixedIncome}
+            onOpenChange={(open) => setOpenSections({ ...openSections, publicEquityFixedIncome: open })}
+          >
+            <div className="border rounded-lg">
+              <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <h3 className="font-semibold">Public Equity & Fixed Income Delta (Top 20)</h3>
+                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.publicEquityFixedIncome ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="border-t">
+                  <DeltaTable 
+                    deltas={publicEquityFixedIncomeDeltas} 
                     portfolioAName={portfolioA.name}
                     portfolioBName={portfolioB.name}
                   />
@@ -188,6 +270,24 @@ export function PortfolioComparisonDialog({
                     portfolioAName={portfolioA.name}
                     portfolioBName={portfolioB.name}
                   />
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+
+          {/* New or Deleted Positions */}
+          <Collapsible
+            open={openSections.newDeletedPositions}
+            onOpenChange={(open) => setOpenSections({ ...openSections, newDeletedPositions: open })}
+          >
+            <div className="border rounded-lg">
+              <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <h3 className="font-semibold">New or Deleted Positions</h3>
+                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.newDeletedPositions ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="border-t">
+                  <PositionChangesTable changes={positionChanges} />
                 </div>
               </CollapsibleContent>
             </div>
