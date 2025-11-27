@@ -75,27 +75,27 @@ Deno.serve(async (req) => {
       },
       {
         currency: 'EUR',
-        to_usd_rate: ilsToEur / ilsToUsd,
+        to_usd_rate: ilsToUsd / ilsToEur,
         to_ils_rate: 1 / ilsToEur,
       },
       {
         currency: 'CHF',
-        to_usd_rate: ilsToChf / ilsToUsd,
+        to_usd_rate: ilsToUsd / ilsToChf,
         to_ils_rate: 1 / ilsToChf,
       },
       {
         currency: 'CAD',
-        to_usd_rate: ilsToCad / ilsToUsd,
+        to_usd_rate: ilsToUsd / ilsToCad,
         to_ils_rate: 1 / ilsToCad,
       },
       {
         currency: 'HKD',
-        to_usd_rate: ilsToHkd / ilsToUsd,
+        to_usd_rate: ilsToUsd / ilsToHkd,
         to_ils_rate: 1 / ilsToHkd,
       },
       {
         currency: 'GBP',
-        to_usd_rate: ilsToGbp / ilsToUsd,
+        to_usd_rate: ilsToUsd / ilsToGbp,
         to_ils_rate: 1 / ilsToGbp,
       },
     ];
