@@ -47,7 +47,8 @@ export function PortfolioComparisonDialog({
 }: PortfolioComparisonDialogProps) {
   const [openSections, setOpenSections] = useState({
     cash: true,
-    publicEquityFixedIncome: true,
+    publicEquity: true,
+    fixedIncome: true,
     privateEquity: true,
     realEstate: true,
     newDeletedPositions: true,
@@ -58,22 +59,27 @@ export function PortfolioComparisonDialog({
   const cashDeltas = getTopDeltas(
     calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'cash'),
     10
-  );
+  ).filter(d => d.deltaUSD !== 0);
 
-  const publicEquityFixedIncomeDeltas = getTopDeltas(
-    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'public_equity_fixed_income'),
-    20
-  );
+  const publicEquityDeltas = getTopDeltas(
+    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'public_equity'),
+    15
+  ).filter(d => d.deltaUSD !== 0);
+
+  const fixedIncomeDeltas = getTopDeltas(
+    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'fixed_income'),
+    10
+  ).filter(d => d.deltaUSD !== 0);
 
   const privateEquityDeltas = getTopDeltas(
     calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'private_equity'),
     10
-  );
+  ).filter(d => d.deltaUSD !== 0);
 
   const realEstateDeltas = getTopDeltas(
     calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'real_estate'),
     10
-  );
+  ).filter(d => d.deltaUSD !== 0);
 
   const positionChanges = findNewAndDeletedPositions(portfolioA, portfolioB, currentFxRates);
 
@@ -209,20 +215,42 @@ export function PortfolioComparisonDialog({
             </div>
           </Collapsible>
 
-          {/* Public Equity & Fixed Income Delta */}
+          {/* Public Equity Delta */}
           <Collapsible
-            open={openSections.publicEquityFixedIncome}
-            onOpenChange={(open) => setOpenSections({ ...openSections, publicEquityFixedIncome: open })}
+            open={openSections.publicEquity}
+            onOpenChange={(open) => setOpenSections({ ...openSections, publicEquity: open })}
           >
             <div className="border rounded-lg">
               <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                <h3 className="font-semibold">Public Equity & Fixed Income Delta (Top 20)</h3>
-                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.publicEquityFixedIncome ? 'rotate-180' : ''}`} />
+                <h3 className="font-semibold">Public Equity Delta (Top 15)</h3>
+                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.publicEquity ? 'rotate-180' : ''}`} />
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="border-t">
                   <DeltaTable 
-                    deltas={publicEquityFixedIncomeDeltas} 
+                    deltas={publicEquityDeltas} 
+                    portfolioAName={portfolioA.name}
+                    portfolioBName={portfolioB.name}
+                  />
+                </div>
+              </CollapsibleContent>
+            </div>
+          </Collapsible>
+
+          {/* Fixed Income Delta */}
+          <Collapsible
+            open={openSections.fixedIncome}
+            onOpenChange={(open) => setOpenSections({ ...openSections, fixedIncome: open })}
+          >
+            <div className="border rounded-lg">
+              <CollapsibleTrigger className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <h3 className="font-semibold">Fixed Income Delta (Top 10)</h3>
+                <ChevronDown className={`h-5 w-5 transition-transform ${openSections.fixedIncome ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="border-t">
+                  <DeltaTable 
+                    deltas={fixedIncomeDeltas} 
                     portfolioAName={portfolioA.name}
                     portfolioBName={portfolioB.name}
                   />
