@@ -95,9 +95,10 @@ export function calculatePortfolioDeltas(
     const valueB = assetDataB?.totalValue || 0;
     const delta = valueB - valueA;
     
-    // Convert delta to USD for sorting and display
-    const fxRate = currentFxRates[currency];
-    const deltaUSD = fxRate ? delta * fxRate.to_USD : delta;
+    // Convert delta to USD using the same logic as main portfolio
+    const originToILS = currentFxRates[currency]?.to_ILS || 1;
+    const usdToILS = currentFxRates['USD']?.to_ILS || 1;
+    const deltaUSD = delta * (originToILS / usdToILS);
     
     deltas.push({
       assetName,
