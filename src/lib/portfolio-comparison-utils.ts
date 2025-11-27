@@ -19,7 +19,7 @@ export interface PositionChange {
   changeType: 'new' | 'deleted';
 }
 
-type ComparisonCategory = 'cash' | 'public_equity_fixed_income' | 'private_equity' | 'real_estate';
+type ComparisonCategory = 'cash' | 'public_equity' | 'fixed_income' | 'private_equity' | 'real_estate';
 
 // Cash-like assets (Cash class + Bank Deposit + Money Market sub-classes)
 const CASH_LIKE_SUBCLASSES: string[] = ['Bank Deposit', 'Money Market'];
@@ -39,11 +39,14 @@ function getAssetsByCategory(assets: Asset[], category: ComparisonCategory): Ass
         (asset.class === 'Fixed Income' && CASH_LIKE_SUBCLASSES.includes(asset.sub_class))
       );
     
-    case 'public_equity_fixed_income':
-      // Public Equity class + Fixed Income (excluding Bank Deposit and Money Market)
+    case 'public_equity':
+      // Public Equity class only
+      return assets.filter(asset => asset.class === 'Public Equity');
+    
+    case 'fixed_income':
+      // Fixed Income (excluding Bank Deposit and Money Market)
       return assets.filter(asset => 
-        asset.class === 'Public Equity' || 
-        (asset.class === 'Fixed Income' && NON_CASH_FIXED_INCOME_SUBCLASSES.includes(asset.sub_class))
+        asset.class === 'Fixed Income' && NON_CASH_FIXED_INCOME_SUBCLASSES.includes(asset.sub_class)
       );
     
     case 'private_equity':
