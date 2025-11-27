@@ -6,7 +6,7 @@ export interface AssetDelta {
   valueA: number;  // Value in origin currency for Portfolio A
   valueB: number;  // Value in origin currency for Portfolio B
   delta: number;   // valueB - valueA (in origin currency)
-  deltaUSD: number; // Absolute delta converted to USD (for sorting)
+  deltaUSD: number; // Delta converted to USD (for display and sorting)
 }
 
 type ComparisonCategory = 'liquid' | 'private_equity' | 'real_estate';
@@ -95,7 +95,7 @@ export function calculatePortfolioDeltas(
     const valueB = assetDataB?.totalValue || 0;
     const delta = valueB - valueA;
     
-    // Convert delta to USD for sorting
+    // Convert delta to USD for sorting and display
     const fxRate = currentFxRates[currency];
     const deltaUSD = fxRate ? delta * fxRate.to_USD : delta;
     
@@ -105,7 +105,7 @@ export function calculatePortfolioDeltas(
       valueA,
       valueB,
       delta,
-      deltaUSD: Math.abs(deltaUSD)
+      deltaUSD: deltaUSD  // Store actual signed value
     });
   }
   
@@ -114,7 +114,7 @@ export function calculatePortfolioDeltas(
 
 export function getTopDeltas(deltas: AssetDelta[], limit: number): AssetDelta[] {
   // Sort by absolute USD value descending
-  const sorted = [...deltas].sort((a, b) => b.deltaUSD - a.deltaUSD);
+  const sorted = [...deltas].sort((a, b) => Math.abs(b.deltaUSD) - Math.abs(a.deltaUSD));
   
   // Return top N
   return sorted.slice(0, limit);

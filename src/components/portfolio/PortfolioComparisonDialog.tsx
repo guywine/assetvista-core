@@ -90,8 +90,8 @@ export function PortfolioComparisonDialog({
         </TableHeader>
         <TableBody>
           {deltas.map((delta, index) => {
-            const isPositive = delta.delta > 0;
-            const isNegative = delta.delta < 0;
+            const isPositive = delta.deltaUSD > 0;
+            const isNegative = delta.deltaUSD < 0;
             
             return (
               <TableRow key={`${delta.assetName}-${index}`}>
@@ -106,7 +106,7 @@ export function PortfolioComparisonDialog({
                   isPositive ? 'text-financial-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'
                 }`}>
                   {isPositive && '+'}
-                  {formatCurrencyValue(delta.delta, delta.originCurrency)}
+                  {formatCurrencyValue(delta.deltaUSD, 'USD')}
                 </TableCell>
               </TableRow>
             );

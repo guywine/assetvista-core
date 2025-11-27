@@ -716,8 +716,23 @@ export function PortfolioHistory() {
     }
   };
 
-  const selectedSnapshotA = snapshots.find((s) => s.id === selectedForComparison[0]);
-  const selectedSnapshotB = snapshots.find((s) => s.id === selectedForComparison[1]);
+  // Order portfolios by date: earlier = A, later = B
+  const getOrderedSnapshots = () => {
+    if (selectedForComparison.length !== 2) return [null, null];
+    
+    const selected = selectedForComparison
+      .map(id => snapshots.find(s => s.id === id))
+      .filter(Boolean) as PortfolioSnapshot[];
+    
+    // Sort by snapshot_date, earlier first
+    selected.sort((a, b) => 
+      new Date(a.snapshot_date).getTime() - new Date(b.snapshot_date).getTime()
+    );
+    
+    return selected;
+  };
+  
+  const [selectedSnapshotA, selectedSnapshotB] = getOrderedSnapshots();
 
   return (
     <div className="space-y-4">
