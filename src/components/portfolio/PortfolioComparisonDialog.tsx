@@ -18,8 +18,9 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Printer } from "lucide-react";
+import { useState, useRef } from "react";
+import { Button } from "@/components/ui/button";
 import {
   calculatePortfolioDeltas,
   calculatePublicEquityDeltas,
@@ -55,7 +56,35 @@ export function PortfolioComparisonDialog({
     newDeletedPositions: true,
   });
 
+  const contentRef = useRef<HTMLDivElement>(null);
+
   if (!portfolioA || !portfolioB) return null;
+
+  const handlePrint = () => {
+    // Save current state
+    const previousState = { ...openSections };
+    
+    // Expand all sections for printing
+    setOpenSections({
+      cash: true,
+      publicEquity: true,
+      fixedIncome: true,
+      privateEquity: true,
+      realEstate: true,
+      newDeletedPositions: true,
+    });
+
+    // Give DOM time to update before printing
+    setTimeout(() => {
+      window.print();
+      
+      // Restore previous state after print dialog closes
+      // The user may have canceled, so we restore after a short delay
+      setTimeout(() => {
+        setOpenSections(previousState);
+      }, 100);
+    }, 100);
+  };
 
   const cashDeltas = getTopDeltas(
     calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'cash'),
@@ -253,15 +282,26 @@ export function PortfolioComparisonDialog({
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto">
-        <SheetHeader>
-          <SheetTitle>Portfolio Comparison</SheetTitle>
-          <p className="text-sm text-muted-foreground">
-            {portfolioA.name} vs {portfolioB.name}
-          </p>
+      <SheetContent side="right" className="w-full sm:max-w-3xl overflow-y-auto print-content">
+        <SheetHeader className="flex flex-row items-start justify-between space-y-0">
+          <div>
+            <SheetTitle>Portfolio Comparison</SheetTitle>
+            <p className="text-sm text-muted-foreground">
+              {portfolioA.name} vs {portfolioB.name}
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handlePrint}
+            className="print:hidden"
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Print
+          </Button>
         </SheetHeader>
 
-        <div className="mt-6 space-y-4">
+        <div ref={contentRef} className="mt-6 space-y-4">
           {/* Cash Delta */}
           <Collapsible
             open={openSections.cash}

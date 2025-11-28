@@ -119,4 +119,90 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Print styles */
+  @media print {
+    /* Hide everything except the print content */
+    body > *:not(:has(.print-content)) {
+      display: none !important;
+    }
+
+    /* Make sheet content full width and remove transforms */
+    [data-radix-dialog-content] {
+      position: static !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      transform: none !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      padding: 1rem !important;
+    }
+
+    /* Show sheet overlay as white background */
+    [data-radix-dialog-overlay] {
+      position: static !important;
+      background: white !important;
+    }
+
+    /* Ensure tables have proper borders */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+    }
+
+    th,
+    td {
+      border: 1px solid #ddd !important;
+      padding: 8px !important;
+      color: black !important;
+    }
+
+    th {
+      background-color: #f5f5f5 !important;
+      font-weight: 600 !important;
+    }
+
+    /* Force all collapsible sections to be open */
+    [data-state="closed"] [data-radix-collapsible-content] {
+      display: block !important;
+      height: auto !important;
+    }
+
+    /* Hide chevron icons */
+    .lucide-chevron-down {
+      display: none !important;
+    }
+
+    /* Prevent page breaks inside sections */
+    .border.rounded-lg {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Hide interactive elements */
+    button {
+      display: none !important;
+    }
+
+    /* Ensure readable text */
+    * {
+      color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Remove background colors that might not print well */
+    .hover\:bg-muted\/50:hover {
+      background-color: transparent !important;
+    }
+
+    /* Make collapsible triggers look like regular headers */
+    [data-radix-collapsible-trigger] {
+      cursor: default !important;
+    }
+
+    /* Page margins */
+    @page {
+      margin: 1cm;
+    }
+  }
 }
