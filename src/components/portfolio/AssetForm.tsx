@@ -38,8 +38,8 @@ export function AssetForm({
 }: AssetFormProps) {
   const [formData, setFormData] = useState<Partial<Asset>>({
     name: '',
-    class: 'Cash',
-    sub_class: 'USD',
+    class: 'Public Equity',
+    sub_class: 'Big Tech',
     ISIN: '',
     account_entity: 'Roy',
     account_bank: 'Poalim',
@@ -108,9 +108,9 @@ export function AssetForm({
       }
     } else {
       setFormData({
-        name: 'USD Cash',
-        class: 'Cash',
-        sub_class: 'USD',
+        name: '',
+        class: 'Public Equity',
+        sub_class: 'Big Tech',
         ISIN: '',
         account_entity: 'Roy',
         account_bank: 'Poalim',
