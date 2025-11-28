@@ -217,22 +217,9 @@ export function AssetForm({
     // For cash assets, name is optional - if not provided, use currency as name
     const assetName = formData.name?.trim() || (formData.class === 'Cash' ? `${formData.sub_class} Cash` : '');
     
-    // Debug logging
-    console.log('[handleSave] Validation check:', {
-      currentMode,
-      isCashAsset,
-      assetName,
-      existingAssetsCount: existingAssets.length,
-      existingAssetNames: existingAssets.map(a => a.name)
-    });
-    
     // Check for near-duplicate names when creating NEW asset
     if (currentMode === 'NEW' && !isCashAsset && assetName) {
-      console.log('[handleSave] Running duplicate validation for:', assetName);
-      
       const exactMatch = findAssetsByName(assetName);
-      console.log('[handleSave] Exact match result:', exactMatch);
-      
       if (exactMatch.length > 0) {
         toast({
           title: "Asset already exists",
@@ -243,8 +230,6 @@ export function AssetForm({
       }
       
       const nearDuplicates = findPotentialDuplicates(assetName);
-      console.log('[handleSave] Near duplicates result:', nearDuplicates);
-      
       if (nearDuplicates.length > 0) {
         toast({
           title: "Similar asset name exists",
@@ -253,8 +238,6 @@ export function AssetForm({
         });
         return;
       }
-    } else {
-      console.log('[handleSave] Skipping validation:', { currentMode, isCashAsset, assetName });
     }
     
     const calculatedPrice = formData.class === 'Private Equity' && usePECalculation && 
