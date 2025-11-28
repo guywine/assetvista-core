@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Asset, AssetClass, AccountEntity, Currency } from '@/types/portfolio';
 import { validateAsset, generateId, getSubClassOptions, getBankOptions, calculatePEPrice } from '@/lib/portfolio-utils';
 import { ASSET_CLASSES, ACCOUNT_ENTITIES, CURRENCIES } from '@/constants/portfolio';
@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAssetLookup } from '@/hooks/useAssetLookup';
 import { validateNumericInput } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 type FormMode = 'NEW' | 'EXISTING_HOLDING' | 'DUPLICATE' | 'EDIT';
 
@@ -66,8 +67,15 @@ export function AssetForm({
   const [errors, setErrors] = useState<string[]>([]);
   const [currentMode, setCurrentMode] = useState<FormMode>(mode);
   const [selectedExistingAsset, setSelectedExistingAsset] = useState<Asset | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   
-  const { findAssetsByName, getUniqueAssetNames } = useAssetLookup(existingAssets);
+  const { findAssetsByName, getUniqueAssetNames, findSimilarAssetNames, findPotentialDuplicates } = useAssetLookup(existingAssets);
+  const { toast } = useToast();
+
+  const suggestedAssets = useMemo(() => {
+    if (!formData.name?.trim() || currentMode !== 'NEW' || isCashAsset) return [];
+    return findSimilarAssetNames(formData.name.trim()).slice(0, 5);
+  }, [formData.name, currentMode, findSimilarAssetNames]);
 
   useEffect(() => {
     setCurrentMode(mode);
@@ -127,16 +135,17 @@ export function AssetForm({
 
   const handleNameChange = (name: string) => {
     setFormData(prev => ({ ...prev, name }));
-    
-    if (currentMode === 'NEW' && name.trim()) {
-      const existingAssets = findAssetsByName(name.trim());
-      if (existingAssets.length > 0) {
-        // Auto-switch to existing holding mode
-        setCurrentMode('EXISTING_HOLDING');
-        setSelectedExistingAsset(existingAssets[0]);
-        populateFromExistingAsset(existingAssets[0]);
-      }
+    setShowSuggestions(true);
+  };
+
+  const handleSelectExistingAsset = (assetName: string) => {
+    const existingAssets = findAssetsByName(assetName);
+    if (existingAssets.length > 0) {
+      setCurrentMode('EXISTING_HOLDING');
+      setSelectedExistingAsset(existingAssets[0]);
+      populateFromExistingAsset(existingAssets[0]);
     }
+    setShowSuggestions(false);
   };
 
   const populateFromExistingAsset = (existingAsset: Asset) => {
@@ -204,6 +213,29 @@ export function AssetForm({
     
     // For cash assets, name is optional - if not provided, use currency as name
     const assetName = formData.name?.trim() || (formData.class === 'Cash' ? `${formData.sub_class} Cash` : '');
+    
+    // Check for near-duplicate names when creating NEW asset
+    if (currentMode === 'NEW' && !isCashAsset && assetName) {
+      const exactMatch = findAssetsByName(assetName);
+      if (exactMatch.length > 0) {
+        toast({
+          title: "Asset already exists",
+          description: `An asset named "${assetName}" already exists. Use the suggestions to add to existing holding, or choose a different name.`,
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const nearDuplicates = findPotentialDuplicates(assetName);
+      if (nearDuplicates.length > 0) {
+        toast({
+          title: "Similar asset name exists",
+          description: `A similar asset "${nearDuplicates[0]}" already exists. Please use consistent naming.`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
     
     const calculatedPrice = formData.class === 'Private Equity' && usePECalculation && 
         peCompanyValue && peHoldingPercentage && quantity 
@@ -392,7 +424,7 @@ export function AssetForm({
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <Label htmlFor="name" className="font-semibold">
                 Asset Name {formData.class !== 'Cash' && '*'}
                 {isCashAsset && <Badge variant="outline" className="ml-1">Auto</Badge>}
@@ -401,17 +433,31 @@ export function AssetForm({
                 id="name"
                 value={formData.name || (isCashAsset ? `${formData.sub_class} Cash` : "")}
                 onChange={(e) => handleNameChange(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                 placeholder={formData.class === 'Cash' ? 'Auto-generated from currency' : 'Enter asset name'}
                 className="border-border/50 focus:border-financial-primary"
                 disabled={isNameFieldLocked}
-                list="asset-names"
+                autoComplete="off"
               />
-              {currentMode === 'NEW' && !isCashAsset && (
-                <datalist id="asset-names">
-                  {existingAssetNames.map(name => (
-                    <option key={name} value={name} />
+              
+              {/* Custom suggestions dropdown */}
+              {showSuggestions && suggestedAssets.length > 0 && currentMode === 'NEW' && !isCashAsset && (
+                <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-auto">
+                  <div className="p-2 text-xs text-muted-foreground border-b border-border">
+                    Click to use existing asset:
+                  </div>
+                  {suggestedAssets.map(name => (
+                    <button
+                      key={name}
+                      type="button"
+                      className="w-full px-3 py-2 text-left hover:bg-muted text-sm transition-colors"
+                      onMouseDown={() => handleSelectExistingAsset(name)}
+                    >
+                      {name}
+                    </button>
                   ))}
-                </datalist>
+                </div>
               )}
             </div>
 
