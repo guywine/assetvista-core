@@ -12,6 +12,7 @@ import { ChartContainer } from '@/components/ui/chart';
 import { useAssetLiquidationSettings } from '@/hooks/useAssetLiquidationSettings';
 import { useAssetLookup } from '@/hooks/useAssetLookup';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { PREDICTION_DEFAULTS } from '@/constants/portfolio';
 
 interface PredictionSettings {
   publicEquityIRR: number;
@@ -58,12 +59,12 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
 
   // Yearly spending is always stored in USD
   const getDefaultYearlySpending = (): number => {
-    return 800000; // Always in USD
+    return PREDICTION_DEFAULTS.YEARLY_SPENDING_USD;
   };
 
   const [settings, setSettings] = useState<PredictionSettings>({
-    publicEquityIRR: 12,
-    commoditiesMoreIRR: 12,
+    publicEquityIRR: PREDICTION_DEFAULTS.PUBLIC_EQUITY_IRR,
+    commoditiesMoreIRR: PREDICTION_DEFAULTS.COMMODITIES_MORE_IRR,
     yearlySpending: getDefaultYearlySpending(),
     realEstateToggles: {},
     realEstateSubClassToggles: {},
