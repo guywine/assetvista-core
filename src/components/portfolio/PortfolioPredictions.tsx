@@ -126,6 +126,11 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
   // Calculate weighted average YTW for Fixed Income
   const fixedIncomeYTW = calculateWeightedYTW(assets, assetCalculations);
 
+  // Helper function for after-tax calculations
+  const calculateAfterTax = (value: number, taxRate: number): number => {
+    return value * (1 - taxRate / 100);
+  };
+
   // Helper functions for chart calculations
   const calculateYearValue = (baseValue: number, growthRate: number, yearsFromCurrent: number): number => {
     return baseValue * Math.pow(1 + growthRate / 100, yearsFromCurrent);
@@ -236,11 +241,14 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
             dataPoint["Commodities & more"] += calculateYearValue(calc.display_value, settings.commoditiesMoreIRR, yearsFromCurrent);
             break;
           case 'Real Estate':
-            dataPoint["Real Estate"] += assetValues.factored; // Current value at liquidation
+            const reAfterTax = assetValues.factored * (1 - PREDICTION_DEFAULTS.REAL_ESTATE_TAX / 100);
+            dataPoint["Real Estate"] += reAfterTax;
             break;
           case 'Private Equity':
-            dataPoint["Private Equity Factored"] += assetValues.factored;
-            dataPoint["Private Equity Potential"] += assetValues.potential;
+            const peFactoredAfterTax = assetValues.factored * (1 - PREDICTION_DEFAULTS.PRIVATE_EQUITY_TAX / 100);
+            const pePotentialAfterTax = assetValues.potential * (1 - PREDICTION_DEFAULTS.PRIVATE_EQUITY_TAX / 100);
+            dataPoint["Private Equity Factored"] += peFactoredAfterTax;
+            dataPoint["Private Equity Potential"] += pePotentialAfterTax;
             break;
         }
       });
@@ -615,6 +623,12 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                 <span className="text-muted-foreground">Included Total Value:</span>
                 <span className="font-medium">{formatCurrency(getToggleableTotal('Real Estate'), viewCurrency)}</span>
               </div>
+              <div className="flex justify-between items-center pl-4 border-l-2 border-amber-500/50">
+                <span className="text-muted-foreground text-sm italic">Net Value (After Tax):</span>
+                <span className="font-medium text-sm text-amber-600 dark:text-amber-400">
+                  {formatCurrency(calculateAfterTax(getToggleableTotal('Real Estate'), PREDICTION_DEFAULTS.REAL_ESTATE_TAX), viewCurrency)}
+                </span>
+              </div>
 
               {/* Real Estate Sub-classes */}
               {[...new Set(assetsByClass['Real Estate'].map(a => a.sub_class))].map(subClass => (
@@ -718,9 +732,21 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                   <span className="text-muted-foreground">Factored Value:</span>
                   <span className="font-medium">{formatCurrency(getToggleableTotal('Private Equity', true), viewCurrency)}</span>
                 </div>
+                <div className="flex justify-between items-center pl-4 border-l-2 border-amber-500/50">
+                  <span className="text-muted-foreground text-sm italic">Net Factored Value (After Tax):</span>
+                  <span className="font-medium text-sm text-amber-600 dark:text-amber-400">
+                    {formatCurrency(calculateAfterTax(getToggleableTotal('Private Equity', true), PREDICTION_DEFAULTS.PRIVATE_EQUITY_TAX), viewCurrency)}
+                  </span>
+                </div>
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Full Potential Value:</span>
                   <span className="font-medium">{formatCurrency(getToggleableTotal('Private Equity', false), viewCurrency)}</span>
+                </div>
+                <div className="flex justify-between items-center pl-4 border-l-2 border-amber-500/50">
+                  <span className="text-muted-foreground text-sm italic">Net Potential Value (After Tax):</span>
+                  <span className="font-medium text-sm text-amber-600 dark:text-amber-400">
+                    {formatCurrency(calculateAfterTax(getToggleableTotal('Private Equity', false), PREDICTION_DEFAULTS.PRIVATE_EQUITY_TAX), viewCurrency)}
+                  </span>
                 </div>
               </div>
 

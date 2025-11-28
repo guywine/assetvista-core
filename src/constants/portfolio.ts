@@ -86,5 +86,7 @@ export const PREDICTION_DEFAULTS = {
   PUBLIC_EQUITY_IRR: 9,        // Default IRR for Public Equity (%)
   COMMODITIES_MORE_IRR: 9,     // Default IRR for Commodities & more (%)
   YEARLY_SPENDING_USD: 800000, // Default yearly spending in USD
+  PRIVATE_EQUITY_TAX: 20,      // Tax rate for Private Equity (%)
+  REAL_ESTATE_TAX: 10,         // Tax rate for Real Estate (%)
 } as const;
 
