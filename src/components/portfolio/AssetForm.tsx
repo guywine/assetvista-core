@@ -72,10 +72,13 @@ export function AssetForm({
   const { findAssetsByName, getUniqueAssetNames, findSimilarAssetNames, findPotentialDuplicates } = useAssetLookup(existingAssets);
   const { toast } = useToast();
 
+  // Cash assets have auto-generated immutable names - define early since used in useMemo
+  const isCashAsset = formData.class === 'Cash';
+
   const suggestedAssets = useMemo(() => {
     if (!formData.name?.trim() || currentMode !== 'NEW' || isCashAsset) return [];
     return findSimilarAssetNames(formData.name.trim()).slice(0, 5);
-  }, [formData.name, currentMode, findSimilarAssetNames]);
+  }, [formData.name, currentMode, isCashAsset, findSimilarAssetNames]);
 
   useEffect(() => {
     setCurrentMode(mode);
@@ -330,9 +333,6 @@ export function AssetForm({
   const isPriceFieldLocked = isSharedFieldsLocked && formData.class !== 'Private Equity' && formData.class !== 'Real Estate';
   const isPEHoldingPercentageLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
   const existingAssetNames = getUniqueAssetNames();
-  
-  // Cash assets have auto-generated immutable names
-  const isCashAsset = formData.class === 'Cash';
   const isNameFieldLocked = isSharedFieldsLocked || isCashAsset;
   
   const getFormTitle = () => {
