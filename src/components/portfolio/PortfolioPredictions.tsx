@@ -535,14 +535,17 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
               </div>
               <div className="flex justify-between items-center">
                 <Label htmlFor="public-equity-irr" className="text-muted-foreground">Expected IRR, after Tax:</Label>
-                <Input
-                  id="public-equity-irr"
-                  type="number"
-                  value={settings.publicEquityIRR}
-                  onChange={(e) => setSettings(prev => ({ ...prev, publicEquityIRR: Number(e.target.value) }))}
-                  className="w-20 text-right"
-                  step="0.1"
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    id="public-equity-irr"
+                    type="number"
+                    value={settings.publicEquityIRR}
+                    onChange={(e) => setSettings(prev => ({ ...prev, publicEquityIRR: Number(e.target.value) }))}
+                    className="w-16 text-right"
+                    step="0.1"
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
               </div>
             </div>
 
@@ -557,14 +560,17 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
               </div>
               <div className="flex justify-between items-center">
                 <Label htmlFor="commodities-irr" className="text-muted-foreground">Expected IRR, after Tax:</Label>
-                <Input
-                  id="commodities-irr"
-                  type="number"
-                  value={settings.commoditiesMoreIRR}
-                  onChange={(e) => setSettings(prev => ({ ...prev, commoditiesMoreIRR: Number(e.target.value) }))}
-                  className="w-20 text-right"
-                  step="0.1"
-                />
+                <div className="flex items-center gap-1">
+                  <Input
+                    id="commodities-irr"
+                    type="number"
+                    value={settings.commoditiesMoreIRR}
+                    onChange={(e) => setSettings(prev => ({ ...prev, commoditiesMoreIRR: Number(e.target.value) }))}
+                    className="w-16 text-right"
+                    step="0.1"
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
               </div>
             </div>
 
