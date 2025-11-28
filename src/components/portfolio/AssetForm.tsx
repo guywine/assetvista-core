@@ -97,7 +97,7 @@ export function AssetForm({
       }
     } else {
       setFormData({
-        name: '',
+        name: 'USD Cash',
         class: 'Cash',
         sub_class: 'USD',
         ISIN: '',
@@ -263,8 +263,12 @@ export function AssetForm({
     const defaultQuantity = (newClass === 'Private Equity' || newClass === 'Real Estate') ? 1 : (formData.quantity || 0);
     const defaultPrice = newClass === 'Cash' ? 1 : (formData.price || 0);
     
+    // Auto-generate name for Cash assets
+    const autoName = newClass === 'Cash' ? `${defaultSubClass} Cash` : formData.name;
+    
     setFormData(prev => ({
       ...prev,
+      name: autoName,
       class: newClass,
       sub_class: defaultSubClass as any,
       quantity: defaultQuantity,
@@ -291,6 +295,10 @@ export function AssetForm({
   const isPriceFieldLocked = isSharedFieldsLocked && formData.class !== 'Private Equity' && formData.class !== 'Real Estate';
   const isPEHoldingPercentageLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
   const existingAssetNames = getUniqueAssetNames();
+  
+  // Cash assets have auto-generated immutable names
+  const isCashAsset = formData.class === 'Cash';
+  const isNameFieldLocked = isSharedFieldsLocked || isCashAsset;
   
   const getFormTitle = () => {
     switch (currentMode) {
@@ -384,17 +392,18 @@ export function AssetForm({
             <div className="space-y-2">
               <Label htmlFor="name" className="font-semibold">
                 Asset Name {formData.class !== 'Cash' && '*'}
+                {isCashAsset && <Badge variant="outline" className="ml-1">Auto</Badge>}
               </Label>
               <Input
                 id="name"
-                value={formData.name || ""}
+                value={formData.name || (isCashAsset ? `${formData.sub_class} Cash` : "")}
                 onChange={(e) => handleNameChange(e.target.value)}
-                placeholder={formData.class === 'Cash' ? 'Optional for cash' : 'Enter asset name'}
+                placeholder={formData.class === 'Cash' ? 'Auto-generated from currency' : 'Enter asset name'}
                 className="border-border/50 focus:border-financial-primary"
-                disabled={isSharedFieldsLocked}
+                disabled={isNameFieldLocked}
                 list="asset-names"
               />
-              {currentMode === 'NEW' && (
+              {currentMode === 'NEW' && !isCashAsset && (
                 <datalist id="asset-names">
                   {existingAssetNames.map(name => (
                     <option key={name} value={name} />
@@ -440,7 +449,9 @@ export function AssetForm({
                     ...prev, 
                     sub_class: value as any,
                     // For Cash assets, always sync currency with sub-class
-                    origin_currency: prev.class === 'Cash' ? value as Currency : prev.origin_currency
+                    origin_currency: prev.class === 'Cash' ? value as Currency : prev.origin_currency,
+                    // Auto-update name for Cash assets when currency changes
+                    name: prev.class === 'Cash' ? `${value} Cash` : prev.name
                   }));
                 }}
                 disabled={isSharedFieldsLocked}
