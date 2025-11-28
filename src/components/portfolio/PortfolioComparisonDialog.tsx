@@ -64,6 +64,9 @@ export function PortfolioComparisonDialog({
     // Save current state
     const previousState = { ...openSections };
     
+    // Add print mode class to body
+    document.body.setAttribute('data-print-mode', 'true');
+    
     // Expand all sections for printing
     setOpenSections({
       cash: true,
@@ -78,9 +81,9 @@ export function PortfolioComparisonDialog({
     setTimeout(() => {
       window.print();
       
-      // Restore previous state after print dialog closes
-      // The user may have canceled, so we restore after a short delay
+      // Remove print mode and restore previous state after print dialog closes
       setTimeout(() => {
+        document.body.removeAttribute('data-print-mode');
         setOpenSections(previousState);
       }, 100);
     }, 100);
