@@ -22,6 +22,7 @@ import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import {
   calculatePortfolioDeltas,
+  calculatePublicEquityDeltas,
   getTopDeltas,
   formatCurrencyValue,
   findNewAndDeletedPositions,
@@ -62,7 +63,7 @@ export function PortfolioComparisonDialog({
   ).filter(d => d.deltaUSD !== 0);
 
   const publicEquityDeltas = getTopDeltas(
-    calculatePortfolioDeltas(portfolioA, portfolioB, currentFxRates, 'public_equity'),
+    calculatePublicEquityDeltas(portfolioA, portfolioB, currentFxRates),
     15
   ).filter(d => d.deltaUSD !== 0);
 
@@ -125,6 +126,74 @@ export function PortfolioComparisonDialog({
                 }`}>
                   {isPositive && '+'}
                   {formatCurrencyValue(delta.deltaUSD, 'USD')}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+      </Table>
+    );
+  };
+
+  const PublicEquityDeltaTable = ({ deltas, portfolioAName, portfolioBName }: { 
+    deltas: AssetDelta[], 
+    portfolioAName: string, 
+    portfolioBName: string 
+  }) => {
+    if (deltas.length === 0) {
+      return (
+        <div className="text-sm text-muted-foreground p-4 text-center">
+          No changes found
+        </div>
+      );
+    }
+
+    return (
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[28%]">Asset Name</TableHead>
+            <TableHead className="text-right w-[18%]">{portfolioAName}</TableHead>
+            <TableHead className="text-right w-[18%]">{portfolioBName}</TableHead>
+            <TableHead className="text-right w-[22%]">Delta</TableHead>
+            <TableHead className="text-right w-[14%]">Price%</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {deltas.map((delta, index) => {
+            const isPositive = delta.deltaUSD > 0;
+            const isNegative = delta.deltaUSD < 0;
+            const priceIsPositive = delta.priceChangePercent !== undefined && delta.priceChangePercent > 0;
+            const priceIsNegative = delta.priceChangePercent !== undefined && delta.priceChangePercent < 0;
+            
+            return (
+              <TableRow key={`${delta.assetName}-${index}`}>
+                <TableCell className="font-medium">{delta.assetName}</TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  {delta.valueA === 0 ? '-' : formatCurrencyValue(delta.valueA, delta.originCurrency)}
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  {delta.valueB === 0 ? '-' : formatCurrencyValue(delta.valueB, delta.originCurrency)}
+                </TableCell>
+                <TableCell className={`text-right font-semibold ${
+                  isPositive ? 'text-financial-success' : isNegative ? 'text-destructive' : 'text-muted-foreground'
+                }`}>
+                  {isPositive && '+'}
+                  {formatCurrencyValue(delta.deltaUSD, 'USD')}
+                </TableCell>
+                <TableCell className={`text-right font-semibold ${
+                  delta.priceChangePercent === undefined 
+                    ? 'text-muted-foreground' 
+                    : priceIsPositive 
+                    ? 'text-financial-success' 
+                    : priceIsNegative 
+                    ? 'text-destructive'
+                    : 'text-muted-foreground'
+                }`}>
+                  {delta.priceChangePercent !== undefined 
+                    ? `${delta.priceChangePercent >= 0 ? '+' : ''}${delta.priceChangePercent.toFixed(2)}%`
+                    : '-'
+                  }
                 </TableCell>
               </TableRow>
             );
@@ -227,7 +296,7 @@ export function PortfolioComparisonDialog({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <div className="border-t">
-                  <DeltaTable 
+                  <PublicEquityDeltaTable 
                     deltas={publicEquityDeltas} 
                     portfolioAName={portfolioA.name}
                     portfolioBName={portfolioB.name}
