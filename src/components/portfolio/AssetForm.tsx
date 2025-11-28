@@ -333,7 +333,7 @@ export function AssetForm({
   const isPriceFieldLocked = isSharedFieldsLocked && formData.class !== 'Private Equity' && formData.class !== 'Real Estate';
   const isPEHoldingPercentageLocked = isSharedFieldsLocked && formData.class !== 'Private Equity';
   const existingAssetNames = getUniqueAssetNames();
-  const isNameFieldLocked = isSharedFieldsLocked || isCashAsset;
+  const isNameFieldLocked = isSharedFieldsLocked || isCashAsset || currentMode === 'EDIT';
   
   const getFormTitle = () => {
     switch (currentMode) {
