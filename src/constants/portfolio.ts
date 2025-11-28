@@ -81,3 +81,10 @@ export const ACCOUNT_BANKS = [
   'Leumi', 'etoro', 'Tom Trust', 'Off-Bank'
 ] as const;
 
+// Prediction Settings Defaults
+export const PREDICTION_DEFAULTS = {
+  PUBLIC_EQUITY_IRR: 9,        // Default IRR for Public Equity (%)
+  COMMODITIES_MORE_IRR: 9,     // Default IRR for Commodities & more (%)
+  YEARLY_SPENDING_USD: 800000, // Default yearly spending in USD
+} as const;
+
