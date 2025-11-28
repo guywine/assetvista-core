@@ -534,7 +534,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                 <span className="font-medium">{formatCurrency(classTotals['Public Equity'], viewCurrency)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <Label htmlFor="public-equity-irr" className="text-muted-foreground">Expected IRR (%):</Label>
+                <Label htmlFor="public-equity-irr" className="text-muted-foreground">Expected IRR, after Tax:</Label>
                 <Input
                   id="public-equity-irr"
                   type="number"
@@ -556,7 +556,7 @@ export function PortfolioPredictions({ assets, viewCurrency, fxRates }: Portfoli
                 <span className="font-medium">{formatCurrency(classTotals['Commodities & more'], viewCurrency)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <Label htmlFor="commodities-irr" className="text-muted-foreground">Expected IRR (%):</Label>
+                <Label htmlFor="commodities-irr" className="text-muted-foreground">Expected IRR, after Tax:</Label>
                 <Input
                   id="commodities-irr"
                   type="number"
