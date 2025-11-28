@@ -70,6 +70,23 @@ export function useAssetLookup(assets: Asset[]) {
     return 0;
   };
 
+  // Normalize name for comparison (remove extra spaces, punctuation, case-insensitive)
+  const normalizeName = (name: string): string => {
+    return name
+      .toLowerCase()
+      .replace(/[.\-_]/g, ' ')  // Replace punctuation with spaces
+      .replace(/\s+/g, ' ')      // Collapse multiple spaces
+      .trim();
+  };
+
+  const findPotentialDuplicates = (newName: string): string[] => {
+    const normalizedNew = normalizeName(newName);
+    return getUniqueAssetNames().filter(existingName => {
+      const normalizedExisting = normalizeName(existingName);
+      return normalizedNew === normalizedExisting && newName !== existingName;
+    });
+  };
+
   return {
     findAssetsByName,
     getUniqueAssetNames,
@@ -77,6 +94,7 @@ export function useAssetLookup(assets: Asset[]) {
     getAssetTemplate,
     getAssetGroupsByClass,
     calculateGroupTotalValue,
+    findPotentialDuplicates,
     assetsByName
   };
 }
