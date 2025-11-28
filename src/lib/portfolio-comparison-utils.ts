@@ -7,6 +7,10 @@ export interface AssetDelta {
   valueB: number;  // Value in origin currency for Portfolio B
   delta: number;   // valueB - valueA (in origin currency)
   deltaUSD: number; // Delta converted to USD (for display and sorting)
+  // Optional fields for price tracking (Public Equity only)
+  priceA?: number;
+  priceB?: number;
+  priceChangePercent?: number;
 }
 
 export interface PositionChange {
@@ -94,6 +98,34 @@ export function aggregateAssetsByName(
   return aggregated;
 }
 
+// Aggregate public equity assets by name, tracking prices
+function aggregatePublicEquityByName(
+  assets: Asset[]
+): Map<string, { currency: Currency; totalValue: number; price: number }> {
+  const publicEquityAssets = getAssetsByCategory(assets, 'public_equity');
+  const aggregated = new Map<string, { currency: Currency; totalValue: number; price: number }>();
+  
+  for (const asset of publicEquityAssets) {
+    const value = calculateAssetValue(asset);
+    const existing = aggregated.get(asset.name);
+    
+    if (existing) {
+      // If same asset name exists, sum the values (assuming same currency)
+      existing.totalValue += value;
+      // Use the most recent price
+      existing.price = asset.price;
+    } else {
+      aggregated.set(asset.name, {
+        currency: asset.origin_currency,
+        totalValue: value,
+        price: asset.price
+      });
+    }
+  }
+  
+  return aggregated;
+}
+
 export function calculatePortfolioDeltas(
   portfolioA: PortfolioSnapshot,
   portfolioB: PortfolioSnapshot,
@@ -143,6 +175,61 @@ export function getTopDeltas(deltas: AssetDelta[], limit: number): AssetDelta[] 
   
   // Return top N
   return sorted.slice(0, limit);
+}
+
+// Calculate public equity deltas with price change percentages
+export function calculatePublicEquityDeltas(
+  portfolioA: PortfolioSnapshot,
+  portfolioB: PortfolioSnapshot,
+  currentFxRates: FXRates
+): AssetDelta[] {
+  const assetsA = aggregatePublicEquityByName(portfolioA.assets as Asset[]);
+  const assetsB = aggregatePublicEquityByName(portfolioB.assets as Asset[]);
+  
+  // Get all unique asset names from both portfolios
+  const allAssetNames = new Set([...assetsA.keys(), ...assetsB.keys()]);
+  
+  const deltas: AssetDelta[] = [];
+  
+  for (const assetName of allAssetNames) {
+    const assetDataA = assetsA.get(assetName);
+    const assetDataB = assetsB.get(assetName);
+    
+    // Determine the currency (prefer the one that exists)
+    const currency = assetDataA?.currency || assetDataB?.currency || 'USD';
+    
+    const valueA = assetDataA?.totalValue || 0;
+    const valueB = assetDataB?.totalValue || 0;
+    const delta = valueB - valueA;
+    
+    // Convert delta to USD
+    const originToILS = currentFxRates[currency]?.to_ILS || 1;
+    const usdToILS = currentFxRates['USD']?.to_ILS || 1;
+    const deltaUSD = delta * (originToILS / usdToILS);
+    
+    // Calculate price change percentage
+    let priceChangePercent: number | undefined;
+    const priceA = assetDataA?.price;
+    const priceB = assetDataB?.price;
+    
+    if (priceA && priceB && priceA !== 0) {
+      priceChangePercent = ((priceB - priceA) / priceA) * 100;
+    }
+    
+    deltas.push({
+      assetName,
+      originCurrency: currency,
+      valueA,
+      valueB,
+      delta,
+      deltaUSD,
+      priceA,
+      priceB,
+      priceChangePercent
+    });
+  }
+  
+  return deltas;
 }
 
 export function findNewAndDeletedPositions(
