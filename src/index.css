@@ -122,13 +122,21 @@ All colors MUST be HSL.
 
   /* Print styles */
   @media print {
-    /* Hide everything except the print content */
-    body > *:not(:has(.print-content)) {
-      display: none !important;
+    /* Hide the main app root */
+    body > #root {
+      visibility: hidden !important;
+      position: absolute !important;
     }
 
-    /* Make sheet content full width and remove transforms */
-    [data-radix-dialog-content] {
+    /* Show the Radix portal */
+    body > [data-radix-portal] {
+      visibility: visible !important;
+      position: static !important;
+    }
+
+    /* Make print content visible and full width */
+    .print-content {
+      visibility: visible !important;
       position: static !important;
       width: 100% !important;
       max-width: 100% !important;
@@ -138,10 +146,11 @@ All colors MUST be HSL.
       padding: 1rem !important;
     }
 
-    /* Show sheet overlay as white background */
+    /* Reset overlay */
     [data-radix-dialog-overlay] {
       position: static !important;
       background: white !important;
+      opacity: 1 !important;
     }
 
     /* Ensure tables have proper borders */
