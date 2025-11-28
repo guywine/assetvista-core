@@ -263,19 +263,22 @@ export function AssetForm({
     const defaultQuantity = (newClass === 'Private Equity' || newClass === 'Real Estate') ? 1 : (formData.quantity || 0);
     const defaultPrice = newClass === 'Cash' ? 1 : (formData.price || 0);
     
-    // Auto-generate name for Cash assets
-    const autoName = newClass === 'Cash' ? `${defaultSubClass} Cash` : formData.name;
-    
-    setFormData(prev => ({
-      ...prev,
-      name: autoName,
-      class: newClass,
-      sub_class: defaultSubClass as any,
-      quantity: defaultQuantity,
-      price: defaultPrice,
-      // For Cash assets, always sync currency with sub-class
-      origin_currency: newClass === 'Cash' ? defaultSubClass as Currency : prev.origin_currency,
-    }));
+    setFormData(prev => {
+      // Auto-generate name for Cash assets, clear when switching FROM Cash to non-Cash
+      const autoName = newClass === 'Cash' 
+        ? `${defaultSubClass} Cash` 
+        : (prev.class === 'Cash' ? '' : prev.name);
+      
+      return {
+        ...prev,
+        name: autoName,
+        class: newClass,
+        sub_class: defaultSubClass as any,
+        quantity: defaultQuantity,
+        price: defaultPrice,
+        origin_currency: newClass === 'Cash' ? defaultSubClass as Currency : prev.origin_currency,
+      };
+    });
   };
 
   const handleEntityChange = (newEntity: AccountEntity) => {
