@@ -419,7 +419,7 @@ export function AssetForm({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="class" className="font-semibold">Asset Class *</Label>
-              <Select value={formData.class} onValueChange={handleClassChange} disabled={isSharedFieldsLocked}>
+              <Select value={formData.class} onValueChange={handleClassChange} disabled={isSharedFieldsLocked || currentMode === 'EDIT'}>
                 <SelectTrigger className="border-border/50 focus:border-financial-primary">
                   <SelectValue />
                 </SelectTrigger>
