@@ -81,10 +81,31 @@ export function useAssetLookup(assets: Asset[]) {
 
   const findPotentialDuplicates = (newName: string): string[] => {
     const normalizedNew = normalizeName(newName);
-    return getUniqueAssetNames().filter(existingName => {
+    const uniqueNames = getUniqueAssetNames();
+    
+    // Debug logging
+    console.log('[findPotentialDuplicates] Input:', newName);
+    console.log('[findPotentialDuplicates] Normalized input:', normalizedNew);
+    console.log('[findPotentialDuplicates] All existing asset names:', uniqueNames);
+    
+    const duplicates = uniqueNames.filter(existingName => {
       const normalizedExisting = normalizeName(existingName);
-      return normalizedNew === normalizedExisting && newName !== existingName;
+      const isSameNormalized = normalizedNew === normalizedExisting;
+      const isDifferentOriginal = newName !== existingName;
+      const isMatch = isSameNormalized && isDifferentOriginal;
+      
+      console.log(`[findPotentialDuplicates] Comparing with "${existingName}":`, {
+        normalizedExisting,
+        isSameNormalized,
+        isDifferentOriginal,
+        isMatch
+      });
+      
+      return isMatch;
     });
+    
+    console.log('[findPotentialDuplicates] Found duplicates:', duplicates);
+    return duplicates;
   };
 
   return {
