@@ -3,7 +3,9 @@ import { format, differenceInDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useAccountUpdateTracker } from '@/hooks/useAccountUpdateTracker';
 import { Asset, AccountEntity, AccountBank } from '@/types/portfolio';
 import { ACCOUNT_UPDATE_THRESHOLDS, ACCOUNT_UPDATE_COLORS } from '@/constants/portfolio';
@@ -13,6 +15,8 @@ interface AccountUpdateTrackerProps {
 }
 
 export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
+  const [expandedEntities, setExpandedEntities] = useState<Set<AccountEntity>>(new Set());
+
   // Extract unique accounts from assets
   const uniqueAccounts = useMemo(() => {
     const accountMap = new Map<string, { account_entity: AccountEntity; account_bank: AccountBank }>();
@@ -55,6 +59,42 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
     return format(new Date(lastUpdated), 'MMM dd');
   };
 
+  const getEntityStatus = (entity: AccountEntity, accounts: typeof uniqueAccounts) => {
+    // Priority: NEVER (worst) > STALE > WARNING > RECENT (best)
+    let worstLevel = 0; // 0=RECENT, 1=WARNING, 2=STALE, 3=NEVER
+    
+    accounts.forEach(account => {
+      const status = getAccountStatus(entity, account.account_bank);
+      const lastUpdated = status?.last_updated;
+      
+      if (!lastUpdated) {
+        worstLevel = 3; // NEVER - worst possible
+      } else {
+        const daysSinceUpdate = differenceInDays(new Date(), new Date(lastUpdated));
+        if (daysSinceUpdate > ACCOUNT_UPDATE_THRESHOLDS.WARNING) {
+          worstLevel = Math.max(worstLevel, 2); // STALE
+        } else if (daysSinceUpdate > ACCOUNT_UPDATE_THRESHOLDS.RECENT) {
+          worstLevel = Math.max(worstLevel, 1); // WARNING
+        }
+      }
+    });
+    
+    return [ACCOUNT_UPDATE_COLORS.RECENT, ACCOUNT_UPDATE_COLORS.WARNING, 
+            ACCOUNT_UPDATE_COLORS.STALE, ACCOUNT_UPDATE_COLORS.NEVER][worstLevel];
+  };
+
+  const toggleEntity = (entity: AccountEntity) => {
+    setExpandedEntities(prev => {
+      const next = new Set(prev);
+      if (next.has(entity)) {
+        next.delete(entity);
+      } else {
+        next.add(entity);
+      }
+      return next;
+    });
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -65,37 +105,6 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
     );
   }
 
-  // Flatten accounts into rows with entity showing only on first occurrence
-  // Add entity header rows with "Mark All" button
-  const rows: Array<{ 
-    type: 'entity-header' | 'account';
-    entity: AccountEntity | null; 
-    bank: AccountBank; 
-    actualEntity: AccountEntity;
-    accounts?: typeof uniqueAccounts;
-  }> = [];
-  
-  Array.from(accountsByEntity.entries()).forEach(([entity, accounts]) => {
-    // Add entity header row with Mark All button
-    rows.push({
-      type: 'entity-header',
-      entity: entity,
-      bank: '' as AccountBank,
-      actualEntity: entity,
-      accounts: accounts,
-    });
-    
-    // Add individual account rows
-    accounts.forEach((account) => {
-      rows.push({
-        type: 'account',
-        entity: null,
-        bank: account.account_bank,
-        actualEntity: entity,
-      });
-    });
-  });
-
   return (
     <Card>
       <CardHeader className="py-2 px-4">
@@ -105,72 +114,89 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 space-y-1">
-        {rows.map((row, idx) => {
-          if (row.type === 'entity-header') {
-            // Entity header row with Mark All button
-            return (
-              <div key={`${row.actualEntity}-header`} className="flex items-center justify-between py-1.5 border-b">
-                <span className="font-semibold text-sm">{row.entity}</span>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs border border-dashed hover:text-foreground text-muted-foreground">
-                      Mark All for {row.entity}
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Update All Accounts</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        Mark all {row.accounts?.length} accounts for "{row.entity}" as updated now?
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => row.accounts && markAllEntityAsUpdated(row.actualEntity, row.accounts)}>
-                        Yes, Update All
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            );
-          }
+        {Array.from(accountsByEntity.entries()).map(([entity, accounts]) => {
+          const isExpanded = expandedEntities.has(entity);
+          const entityStatusColor = getEntityStatus(entity, accounts);
           
-          // Individual account row (indented)
-          const status = getAccountStatus(row.actualEntity, row.bank);
-          const lastUpdated = status?.last_updated;
-          const statusColor = getStatusColor(lastUpdated);
-
           return (
-            <div key={`${row.actualEntity}|${row.bank}`} className="flex items-center justify-between py-1 pl-4 hover:bg-muted/50 rounded-sm">
-              <div className="flex items-center gap-4 flex-1">
-                <span className="text-sm min-w-[120px]">{row.bank}</span>
-                <span className={`text-sm ${statusColor}`}>
-                  {formatDate(lastUpdated)}
-                </span>
+            <Collapsible key={entity} open={isExpanded} onOpenChange={() => toggleEntity(entity)}>
+              <div className="border-b py-1.5">
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger asChild>
+                    <button className="flex items-center gap-2 hover:opacity-70 transition-opacity">
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                      <span className="font-semibold text-sm">{entity}</span>
+                      <span className={`text-lg ${entityStatusColor}`}>●</span>
+                    </button>
+                  </CollapsibleTrigger>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs border border-dashed hover:text-foreground text-muted-foreground">
+                        Mark All for {entity}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Update All Accounts</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Mark all {accounts.length} accounts for "{entity}" as updated now?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => markAllEntityAsUpdated(entity, accounts)}>
+                          Yes, Update All
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+                
+                <CollapsibleContent className="mt-1">
+                  {accounts.map((account) => {
+                    const status = getAccountStatus(entity, account.account_bank);
+                    const lastUpdated = status?.last_updated;
+                    const statusColor = getStatusColor(lastUpdated);
+
+                    return (
+                      <div key={`${entity}|${account.account_bank}`} className="flex items-center justify-between py-1 pl-6 hover:bg-muted/50 rounded-sm">
+                        <div className="flex items-center gap-4 flex-1">
+                          <span className="text-sm min-w-[120px]">{account.account_bank}</span>
+                          <span className={`text-sm ${statusColor}`}>
+                            {formatDate(lastUpdated)}
+                          </span>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
+                              Mark Updated
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Update Account</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Mark "{entity} - {account.account_bank}" as updated now?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => markAsUpdated(entity, account.account_bank)}>
+                                Yes, Update
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    );
+                  })}
+                </CollapsibleContent>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
-                    Mark Updated
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Update Account</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Mark "{row.actualEntity} - {row.bank}" as updated now?
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => markAsUpdated(row.actualEntity, row.bank)}>
-                      Yes, Update
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+            </Collapsible>
           );
         })}
       </CardContent>
