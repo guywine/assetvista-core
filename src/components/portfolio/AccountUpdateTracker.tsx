@@ -3,7 +3,6 @@ import { format, differenceInDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAccountUpdateTracker } from '@/hooks/useAccountUpdateTracker';
 import { Asset, AccountEntity, AccountBank } from '@/types/portfolio';
@@ -105,94 +104,75 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
           <Badge variant="outline" className="text-xs">{uniqueAccounts.length}</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="h-8 py-1 px-2 text-xs">Entity</TableHead>
-              <TableHead className="h-8 py-1 px-2 text-xs">Bank</TableHead>
-              <TableHead className="h-8 py-1 px-2 text-xs">Last Updated</TableHead>
-              <TableHead className="h-8 py-1 px-2 text-xs w-24">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.map((row, idx) => {
-              if (row.type === 'entity-header') {
-                // Entity header row with Mark All button
-                return (
-                  <TableRow key={`${row.actualEntity}-header`} className="bg-muted/30">
-                    <TableCell className="py-2 px-2 text-xs font-semibold">
-                      {row.entity}
-                    </TableCell>
-                    <TableCell colSpan={3} className="py-2 px-2 text-right">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="secondary" className="h-6 px-3 text-xs">
-                            Mark All for {row.entity}
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Update All Accounts</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Mark all {row.accounts?.length} accounts for "{row.entity}" as updated now?
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => row.accounts && markAllEntityAsUpdated(row.actualEntity, row.accounts)}>
-                              Yes, Update All
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </TableCell>
-                  </TableRow>
-                );
-              }
-              
-              // Individual account row
-              const status = getAccountStatus(row.actualEntity, row.bank);
-              const lastUpdated = status?.last_updated;
-              const statusColor = getStatusColor(lastUpdated);
+      <CardContent className="p-4 space-y-2">
+        {rows.map((row, idx) => {
+          if (row.type === 'entity-header') {
+            // Entity header row with Mark All button
+            return (
+              <div key={`${row.actualEntity}-header`} className="flex items-center justify-between py-2 border-b">
+                <span className="font-semibold text-sm">{row.entity}</span>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
+                      Mark All for {row.entity}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Update All Accounts</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Mark all {row.accounts?.length} accounts for "{row.entity}" as updated now?
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => row.accounts && markAllEntityAsUpdated(row.actualEntity, row.accounts)}>
+                        Yes, Update All
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            );
+          }
+          
+          // Individual account row (indented)
+          const status = getAccountStatus(row.actualEntity, row.bank);
+          const lastUpdated = status?.last_updated;
+          const statusColor = getStatusColor(lastUpdated);
 
-              return (
-                <TableRow key={`${row.actualEntity}|${row.bank}`} className="hover:bg-muted/50">
-                  <TableCell className="py-1 px-2 text-xs font-medium">
-                    {row.entity || ''}
-                  </TableCell>
-                  <TableCell className="py-1 px-2 text-xs">{row.bank}</TableCell>
-                  <TableCell className={`py-1 px-2 text-xs ${statusColor}`}>
-                    {formatDate(lastUpdated)}
-                  </TableCell>
-                  <TableCell className="py-1 px-2">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="h-6 px-2 text-xs">
-                          Mark Updated
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Update Account</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Mark "{row.bank}" as updated now?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => markAsUpdated(row.actualEntity, row.bank)}>
-                            Yes, Update
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+          return (
+            <div key={`${row.actualEntity}|${row.bank}`} className="flex items-center justify-between py-2 pl-4 hover:bg-muted/50 rounded-sm">
+              <div className="flex items-center gap-4 flex-1">
+                <span className="text-sm min-w-[120px]">{row.bank}</span>
+                <span className={`text-sm ${statusColor}`}>
+                  {formatDate(lastUpdated)}
+                </span>
+              </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
+                    Mark Updated
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Update Account</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Mark "{row.actualEntity} - {row.bank}" as updated now?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => markAsUpdated(row.actualEntity, row.bank)}>
+                      Yes, Update
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          );
+        })}
       </CardContent>
     </Card>
   );
