@@ -39,7 +39,7 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
     return new Map([...grouped.entries()].sort());
   }, [uniqueAccounts]);
 
-  const { statuses, isLoading, markAsUpdated, getAccountStatus } = 
+  const { statuses, isLoading, markAsUpdated, markAllEntityAsUpdated, getAccountStatus } = 
     useAccountUpdateTracker(uniqueAccounts);
 
   const getStatusColor = (lastUpdated: string | null) => {
@@ -66,11 +66,30 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
   }
 
   // Flatten accounts into rows with entity showing only on first occurrence
-  const rows: Array<{ entity: AccountEntity | null; bank: AccountBank; actualEntity: AccountEntity }> = [];
+  // Add entity header rows with "Mark All" button
+  const rows: Array<{ 
+    type: 'entity-header' | 'account';
+    entity: AccountEntity | null; 
+    bank: AccountBank; 
+    actualEntity: AccountEntity;
+    accounts?: typeof uniqueAccounts;
+  }> = [];
+  
   Array.from(accountsByEntity.entries()).forEach(([entity, accounts]) => {
-    accounts.forEach((account, idx) => {
+    // Add entity header row with Mark All button
+    rows.push({
+      type: 'entity-header',
+      entity: entity,
+      bank: '' as AccountBank,
+      actualEntity: entity,
+      accounts: accounts,
+    });
+    
+    // Add individual account rows
+    accounts.forEach((account) => {
       rows.push({
-        entity: idx === 0 ? entity : null,
+        type: 'account',
+        entity: null,
         bank: account.account_bank,
         actualEntity: entity,
       });
@@ -97,6 +116,41 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
           </TableHeader>
           <TableBody>
             {rows.map((row, idx) => {
+              if (row.type === 'entity-header') {
+                // Entity header row with Mark All button
+                return (
+                  <TableRow key={`${row.actualEntity}-header`} className="bg-muted/30">
+                    <TableCell className="py-2 px-2 text-xs font-semibold">
+                      {row.entity}
+                    </TableCell>
+                    <TableCell colSpan={3} className="py-2 px-2 text-right">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="secondary" className="h-6 px-3 text-xs">
+                            Mark All for {row.entity}
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Update All Accounts</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Mark all {row.accounts?.length} accounts for "{row.entity}" as updated now?
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => row.accounts && markAllEntityAsUpdated(row.actualEntity, row.accounts)}>
+                              Yes, Update All
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+              
+              // Individual account row
               const status = getAccountStatus(row.actualEntity, row.bank);
               const lastUpdated = status?.last_updated;
               const statusColor = getStatusColor(lastUpdated);
@@ -113,8 +167,8 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
                   <TableCell className="py-1 px-2">
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
-                          ✓ Update
+                        <Button size="sm" variant="outline" className="h-6 px-2 text-xs">
+                          Mark Updated
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
