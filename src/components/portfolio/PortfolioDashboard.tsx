@@ -330,12 +330,18 @@ export function PortfolioDashboard() {
           </TabsContent>
 
           <TabsContent value="pricing" className="space-y-6">
-            <AccountUpdateTracker assets={assets} />
-            <PricingTable
-              groupAAssets={pricingGroupAAssets}
-              groupBAssets={pricingGroupBAssets}
-              onUpdateAsset={updateAsset}
-            />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-1">
+                <AccountUpdateTracker assets={assets} />
+              </div>
+              <div className="lg:col-span-2">
+                <PricingTable
+                  groupAAssets={pricingGroupAAssets}
+                  groupBAssets={pricingGroupBAssets}
+                  onUpdateAsset={updateAsset}
+                />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="predictions" className="space-y-6">
