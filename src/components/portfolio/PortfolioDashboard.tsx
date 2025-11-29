@@ -19,6 +19,7 @@ import { PortfolioPredictions } from './PortfolioPredictions';
 import { PricingTable } from './PricingTable';
 import { FXRatesBar } from './FXRatesBar';
 import { AssetSearch } from './AssetSearch';
+import { AccountUpdateTracker } from './AccountUpdateTracker';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
@@ -329,6 +330,7 @@ export function PortfolioDashboard() {
           </TabsContent>
 
           <TabsContent value="pricing" className="space-y-6">
+            <AccountUpdateTracker assets={assets} />
             <PricingTable
               groupAAssets={pricingGroupAAssets}
               groupBAssets={pricingGroupBAssets}
