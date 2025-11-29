@@ -105,6 +105,15 @@ export interface GroupedAssets {
   };
 }
 
+export interface AccountUpdateStatus {
+  id: string;
+  account_entity: AccountEntity;
+  account_bank: AccountBank;
+  last_updated: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 /*
 export interface Summary {
   holdings_by_class: Array<{

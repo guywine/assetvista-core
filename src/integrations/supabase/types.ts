@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_update_tracker: {
+        Row: {
+          account_bank: string
+          account_entity: string
+          created_at: string
+          id: string
+          last_updated: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_bank: string
+          account_entity: string
+          created_at?: string
+          id?: string
+          last_updated?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_bank?: string
+          account_entity?: string
+          created_at?: string
+          id?: string
+          last_updated?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_config: {
         Row: {
           created_at: string
