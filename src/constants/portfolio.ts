@@ -92,8 +92,8 @@ export const PREDICTION_DEFAULTS = {
 
 // Account Update Status Thresholds (days)
 export const ACCOUNT_UPDATE_THRESHOLDS = {
-  RECENT: 30,      // Days considered "recently updated" (green)
-  WARNING: 60,     // Days before warning status (yellow)
+  RECENT: 14,      // Days considered "recently updated" (green)
+  WARNING: 45,     // Days before warning status (yellow)
   // Beyond WARNING = stale (orange)
   // No date = never updated (red)
 } as const;
