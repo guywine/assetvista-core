@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useAccountUpdateTracker } from '@/hooks/useAccountUpdateTracker';
 import { Asset, AccountEntity, AccountBank } from '@/types/portfolio';
+import { ACCOUNT_UPDATE_THRESHOLDS, ACCOUNT_UPDATE_COLORS } from '@/constants/portfolio';
 
 interface AccountUpdateTrackerProps {
   assets: Asset[];
@@ -43,11 +44,11 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
     useAccountUpdateTracker(uniqueAccounts);
 
   const getStatusColor = (lastUpdated: string | null) => {
-    if (!lastUpdated) return 'text-destructive';
+    if (!lastUpdated) return ACCOUNT_UPDATE_COLORS.NEVER;
     const daysSinceUpdate = differenceInDays(new Date(), new Date(lastUpdated));
-    if (daysSinceUpdate <= 30) return 'text-green-600';
-    if (daysSinceUpdate <= 60) return 'text-yellow-600';
-    return 'text-orange-600';
+    if (daysSinceUpdate <= ACCOUNT_UPDATE_THRESHOLDS.RECENT) return ACCOUNT_UPDATE_COLORS.RECENT;
+    if (daysSinceUpdate <= ACCOUNT_UPDATE_THRESHOLDS.WARNING) return ACCOUNT_UPDATE_COLORS.WARNING;
+    return ACCOUNT_UPDATE_COLORS.STALE;
   };
 
   const formatDate = (lastUpdated: string | null) => {

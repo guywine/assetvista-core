@@ -90,3 +90,19 @@ export const PREDICTION_DEFAULTS = {
   REAL_ESTATE_TAX: 10,         // Tax rate for Real Estate (%)
 } as const;
 
+// Account Update Status Thresholds (days)
+export const ACCOUNT_UPDATE_THRESHOLDS = {
+  RECENT: 30,      // Days considered "recently updated" (green)
+  WARNING: 60,     // Days before warning status (yellow)
+  // Beyond WARNING = stale (orange)
+  // No date = never updated (red)
+} as const;
+
+// Account Update Status Colors (Tailwind classes)
+export const ACCOUNT_UPDATE_COLORS = {
+  RECENT: 'text-green-600',     // ≤ 30 days
+  WARNING: 'text-yellow-600',   // ≤ 60 days  
+  STALE: 'text-orange-600',     // > 60 days
+  NEVER: 'text-destructive',    // Never updated
+} as const;
+
