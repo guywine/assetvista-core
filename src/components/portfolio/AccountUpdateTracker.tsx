@@ -98,22 +98,22 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
 
   return (
     <Card>
-      <CardHeader className="py-3 px-4">
+      <CardHeader className="py-2 px-4">
         <CardTitle className="text-sm flex items-center justify-between">
           <span>Account Update Tracker</span>
           <Badge variant="outline" className="text-xs">{uniqueAccounts.length}</Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-4 space-y-2">
+      <CardContent className="p-4 space-y-1">
         {rows.map((row, idx) => {
           if (row.type === 'entity-header') {
             // Entity header row with Mark All button
             return (
-              <div key={`${row.actualEntity}-header`} className="flex items-center justify-between py-2 border-b">
+              <div key={`${row.actualEntity}-header`} className="flex items-center justify-between py-1.5 border-b">
                 <span className="font-semibold text-sm">{row.entity}</span>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
+                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs border border-dashed hover:text-foreground text-muted-foreground">
                       Mark All for {row.entity}
                     </Button>
                   </AlertDialogTrigger>
@@ -142,7 +142,7 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
           const statusColor = getStatusColor(lastUpdated);
 
           return (
-            <div key={`${row.actualEntity}|${row.bank}`} className="flex items-center justify-between py-2 pl-4 hover:bg-muted/50 rounded-sm">
+            <div key={`${row.actualEntity}|${row.bank}`} className="flex items-center justify-between py-1 pl-4 hover:bg-muted/50 rounded-sm">
               <div className="flex items-center gap-4 flex-1">
                 <span className="text-sm min-w-[120px]">{row.bank}</span>
                 <span className={`text-sm ${statusColor}`}>
