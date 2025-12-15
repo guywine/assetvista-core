@@ -119,7 +119,7 @@ export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsPr
                           const count = getExistingHoldingsCount(asset.name);
                           if (count > 0) {
                             return (
-                              <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                              <Badge className="text-xs px-1.5 py-0 bg-primary/20 text-primary border-primary/30">
                                 {count} holding{count > 1 ? 's' : ''}
                               </Badge>
                             );
