@@ -100,9 +100,9 @@ export const ACCOUNT_UPDATE_THRESHOLDS = {
 
 // Account Update Status Colors (Tailwind classes)
 export const ACCOUNT_UPDATE_COLORS = {
-  RECENT: 'text-green-600',     // ≤ 30 days
-  WARNING: 'text-yellow-600',   // ≤ 60 days  
-  STALE: 'text-orange-600',     // > 60 days
+  RECENT: 'text-green-600',     // ≤ 14 days
+  WARNING: 'text-yellow-400',   // ≤ 45 days  
+  STALE: 'text-orange-600',     // > 45 days
   NEVER: 'text-destructive',    // Never updated
 } as const;
 
