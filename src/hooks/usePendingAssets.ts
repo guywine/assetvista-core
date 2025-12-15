@@ -104,12 +104,50 @@ export function usePendingAssets() {
     }
   };
 
+  const updatePendingAsset = async (id: string, assetClass: AssetClass, valueUsd: number) => {
+    try {
+      const { data, error } = await supabase
+        .from('pending_assets')
+        .update({
+          asset_class: assetClass,
+          value_usd: valueUsd,
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const typedData = data as PendingAsset;
+      setPendingAssets(prev => 
+        prev.map(asset => asset.id === id ? typedData : asset)
+          .sort((a, b) => b.value_usd - a.value_usd)
+      );
+
+      toast({
+        title: 'Success',
+        description: 'Pending asset updated',
+      });
+
+      return data;
+    } catch (error: any) {
+      console.error('Error updating pending asset:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update pending asset',
+        variant: 'destructive',
+      });
+      throw error;
+    }
+  };
+
   const totalValue = pendingAssets.reduce((sum, asset) => sum + asset.value_usd, 0);
 
   return {
     pendingAssets,
     isLoading,
     addPendingAsset,
+    updatePendingAsset,
     deletePendingAsset,
     totalValue,
     refetch: fetchPendingAssets,
