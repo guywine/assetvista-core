@@ -1,0 +1,156 @@
+import { useState } from 'react';
+import { usePendingAssets, PendingAsset } from '@/hooks/usePendingAssets';
+import { AssetClass } from '@/types/portfolio';
+import { formatCurrency } from '@/lib/portfolio-utils';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreHorizontal, Plus, PlusCircle, Trash2 } from 'lucide-react';
+import { PendingAssetDialog } from './PendingAssetDialog';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface PendingAssetsProps {
+  onCreateAsset: (data: { name: string; class: AssetClass }) => void;
+}
+
+export function PendingAssets({ onCreateAsset }: PendingAssetsProps) {
+  const { pendingAssets, isLoading, addPendingAsset, deletePendingAsset, totalValue } = usePendingAssets();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleCreateAsset = (asset: PendingAsset) => {
+    onCreateAsset({ name: asset.name, class: asset.asset_class as AssetClass });
+  };
+
+  const handleRemove = async (id: string) => {
+    await deletePendingAsset(id);
+  };
+
+  const handleAddPendingAsset = async (name: string, assetClass: AssetClass, valueUsd: number) => {
+    await addPendingAsset(name, assetClass, valueUsd);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-gradient-to-br from-muted/30 to-muted/10 shadow-card border-border/50">
+        <CardHeader>
+          <Skeleton className="h-6 w-32" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-24 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <Card className="bg-gradient-to-br from-muted/30 to-muted/10 shadow-card border-border/50">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold text-foreground">Pending Assets</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Total: {formatCurrency(totalValue, 'USD')}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDialogOpen(true)}
+              className="gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              Add
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {pendingAssets.length === 0 ? (
+            <div className="text-center py-6 text-muted-foreground">
+              <p className="text-sm">No pending assets</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsDialogOpen(true)}
+                className="mt-2 gap-1"
+              >
+                <PlusCircle className="h-4 w-4" />
+                Add your first pending asset
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Name</TableHead>
+                  <TableHead className="text-xs">Class</TableHead>
+                  <TableHead className="text-xs text-right">Value (USD)</TableHead>
+                  <TableHead className="text-xs w-10"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pendingAssets.map((asset) => (
+                  <TableRow key={asset.id}>
+                    <TableCell className="text-sm font-medium py-2">
+                      {asset.name}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground py-2">
+                      {asset.asset_class}
+                    </TableCell>
+                    <TableCell className="text-sm font-mono text-right py-2">
+                      {formatCurrency(asset.value_usd, 'USD')}
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => handleCreateAsset(asset)}
+                            className="gap-2"
+                          >
+                            <PlusCircle className="h-4 w-4" />
+                            Create Asset
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleRemove(asset.id)}
+                            className="gap-2 text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <PendingAssetDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        onSave={handleAddPendingAsset}
+      />
+    </>
+  );
+}

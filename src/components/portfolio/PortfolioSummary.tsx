@@ -1,4 +1,4 @@
-import { Asset, ViewCurrency, FXRates, AssetCalculations } from "@/types/portfolio";
+import { Asset, ViewCurrency, FXRates, AssetCalculations, AssetClass } from "@/types/portfolio";
 import {
   calculateAssetValue,
   formatCurrency,
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { PendingAssets } from "./PendingAssets";
 
 import {
   PieChart,
@@ -29,8 +30,9 @@ interface PortfolioSummaryProps {
   assets: Asset[];
   viewCurrency: ViewCurrency;
   fxRates: FXRates;
+  onCreateAssetFromPending?: (data: { name: string; class: AssetClass }) => void;
 }
-export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSummaryProps) {
+export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetFromPending }: PortfolioSummaryProps) {
   // State for managing asset class visibility in pie chart
   const [visibleAssetClasses, setVisibleAssetClasses] = useState<Record<string, boolean>>({});
 
@@ -451,6 +453,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates }: PortfolioSum
           </div>
         </CardContent>
       </Card>
+
+      {/* Pending Assets */}
+      {onCreateAssetFromPending && (
+        <PendingAssets onCreateAsset={onCreateAssetFromPending} />
+      )}
 
       {/* First Row - Holdings Tables */}
 
