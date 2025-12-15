@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { verifySession } from '@/lib/session-utils';
 
 import { useAssets } from '@/hooks/useAssets';
+import { useAssetLookup } from '@/hooks/useAssetLookup';
 import { useFXRates } from '@/hooks/useFXRates';
 import { PortfolioHeader } from './PortfolioHeader';
 import { AssetTable } from './AssetTable';
@@ -25,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 
 export function PortfolioDashboard() {
   const { assets, isLoading, addAsset, updateAsset, deleteAsset, getAssetNameCount } = useAssets();
+  const { findAssetsByName } = useAssetLookup(assets);
   const [viewCurrency, setViewCurrency] = useState<ViewCurrency>('USD');
   const [activeTab, setActiveTab] = useState<string>('assets');
   const { logout } = useAuth();
@@ -226,27 +228,48 @@ export function PortfolioDashboard() {
 
   // Handler for creating asset from pending asset
   const handleCreateAssetFromPending = useCallback((data: { name: string; class: AssetClass }) => {
-    // Create partial asset with prefilled name and class
-    const subClassOptions = getSubClassOptions(data.class);
-    const defaultSubClass = subClassOptions[subClassOptions.length - 1];
+    // Check if asset name already exists in portfolio
+    const existingAssets = findAssetsByName(data.name);
     
-    const prefilledAsset: Partial<Asset> = {
-      name: data.name,
-      class: data.class,
-      sub_class: defaultSubClass as any,
-      account_entity: 'Roy',
-      account_bank: 'Poalim',
-      beneficiary: 'Kids',
-      origin_currency: 'USD',
-      quantity: 0,
-      price: 1,
-      factor: 1.0,
-    };
-    
-    setEditingAsset(prefilledAsset as Asset);
-    setAssetFormMode('NEW');
-    setIsAssetFormOpen(true);
-  }, []);
+    if (existingAssets.length > 0) {
+      // Asset exists - open in EXISTING_HOLDING mode with template from existing asset
+      const template = existingAssets[0];
+      const prefilledAsset: Partial<Asset> = {
+        ...template,
+        id: undefined, // New holding needs new ID
+        // Reset account-specific fields for user to fill
+        account_entity: 'Roy',
+        account_bank: 'Poalim',
+        beneficiary: 'Kids',
+        quantity: 0,
+      };
+      
+      setEditingAsset(prefilledAsset as Asset);
+      setAssetFormMode('EXISTING_HOLDING');
+      setIsAssetFormOpen(true);
+    } else {
+      // New asset - open in NEW mode with prefilled name and class
+      const subClassOptions = getSubClassOptions(data.class);
+      const defaultSubClass = subClassOptions[subClassOptions.length - 1];
+      
+      const prefilledAsset: Partial<Asset> = {
+        name: data.name,
+        class: data.class,
+        sub_class: defaultSubClass as any,
+        account_entity: 'Roy',
+        account_bank: 'Poalim',
+        beneficiary: 'Kids',
+        origin_currency: 'USD',
+        quantity: 0,
+        price: 1,
+        factor: 1.0,
+      };
+      
+      setEditingAsset(prefilledAsset as Asset);
+      setAssetFormMode('NEW');
+      setIsAssetFormOpen(true);
+    }
+  }, [findAssetsByName]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
