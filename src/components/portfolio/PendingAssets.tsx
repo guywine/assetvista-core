@@ -20,7 +20,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Plus, PlusCircle, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Plus, PlusCircle, Trash2 } from 'lucide-react';
 import { PendingAssetDialog } from './PendingAssetDialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -30,9 +30,10 @@ interface PendingAssetsProps {
 }
 
 export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsProps) {
-  const { pendingAssets, isLoading, addPendingAsset, deletePendingAsset, totalValue } = usePendingAssets();
+  const { pendingAssets, isLoading, addPendingAsset, updatePendingAsset, deletePendingAsset, totalValue } = usePendingAssets();
   const { findAssetsByName } = useAssetLookup(existingAssets);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<PendingAsset | null>(null);
 
   const getExistingHoldingsCount = (assetName: string): number => {
     return findAssetsByName(assetName).length;
@@ -48,6 +49,21 @@ export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsPr
 
   const handleAddPendingAsset = async (name: string, assetClass: AssetClass, valueUsd: number) => {
     await addPendingAsset(name, assetClass, valueUsd);
+  };
+
+  const handleEdit = (asset: PendingAsset) => {
+    setEditingAsset(asset);
+    setIsDialogOpen(true);
+  };
+
+  const handleUpdatePendingAsset = async (id: string, assetClass: AssetClass, valueUsd: number) => {
+    await updatePendingAsset(id, assetClass, valueUsd);
+    setEditingAsset(null);
+  };
+
+  const handleDialogClose = () => {
+    setIsDialogOpen(false);
+    setEditingAsset(null);
   };
 
   if (isLoading) {
@@ -143,6 +159,13 @@ export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsPr
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
+                            onClick={() => handleEdit(asset)}
+                            className="gap-2"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
                             onClick={() => handleCreateAsset(asset)}
                             className="gap-2"
                           >
@@ -169,9 +192,11 @@ export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsPr
 
       <PendingAssetDialog
         isOpen={isDialogOpen}
-        onClose={() => setIsDialogOpen(false)}
+        onClose={handleDialogClose}
         onSave={handleAddPendingAsset}
+        onUpdate={handleUpdatePendingAsset}
         existingAssets={existingAssets}
+        editingAsset={editingAsset}
       />
     </>
   );

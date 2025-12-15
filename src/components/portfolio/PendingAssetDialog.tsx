@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Asset, AssetClass } from '@/types/portfolio';
 import { ASSET_CLASSES } from '@/constants/portfolio';
 import { useAssetLookup } from '@/hooks/useAssetLookup';
 import { useToast } from '@/hooks/use-toast';
+import { PendingAsset } from '@/hooks/usePendingAssets';
 import {
   Dialog,
   DialogContent,
@@ -24,10 +25,19 @@ interface PendingAssetDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (name: string, assetClass: AssetClass, valueUsd: number) => Promise<void>;
+  onUpdate?: (id: string, assetClass: AssetClass, valueUsd: number) => Promise<void>;
   existingAssets: Asset[];
+  editingAsset?: PendingAsset | null;
 }
 
-export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: PendingAssetDialogProps) {
+export function PendingAssetDialog({ 
+  isOpen, 
+  onClose, 
+  onSave, 
+  onUpdate,
+  existingAssets,
+  editingAsset 
+}: PendingAssetDialogProps) {
   const [name, setName] = useState('');
   const [assetClass, setAssetClass] = useState<AssetClass>('Public Equity');
   const [valueUsd, setValueUsd] = useState('');
@@ -37,29 +47,50 @@ export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: 
   const { findSimilarAssetNames, findAssetsByName, findPotentialDuplicates } = useAssetLookup(existingAssets);
   const { toast } = useToast();
 
+  const isEditMode = !!editingAsset;
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (editingAsset) {
+      setName(editingAsset.name);
+      setAssetClass(editingAsset.asset_class);
+      setValueUsd(editingAsset.value_usd.toString());
+    } else {
+      setName('');
+      setAssetClass('Public Equity');
+      setValueUsd('');
+    }
+  }, [editingAsset]);
+
   const suggestedAssets = useMemo(() => {
-    if (!name.trim()) return [];
+    if (!name.trim() || isEditMode) return [];
     return findSimilarAssetNames(name.trim()).slice(0, 5);
-  }, [name, findSimilarAssetNames]);
+  }, [name, findSimilarAssetNames, isEditMode]);
 
   const handleSave = async () => {
     const trimmedName = name.trim();
     if (!trimmedName || !valueUsd) return;
 
-    // Check for near-duplicate names (but allow exact matches for existing assets)
-    const nearDuplicates = findPotentialDuplicates(trimmedName);
-    if (nearDuplicates.length > 0) {
-      toast({
-        title: "Similar asset name exists",
-        description: `A similar asset "${nearDuplicates[0]}" already exists. Please use consistent naming.`,
-        variant: "destructive"
-      });
-      return;
+    // Only check for near-duplicates in add mode
+    if (!isEditMode) {
+      const nearDuplicates = findPotentialDuplicates(trimmedName);
+      if (nearDuplicates.length > 0) {
+        toast({
+          title: "Similar asset name exists",
+          description: `A similar asset "${nearDuplicates[0]}" already exists. Please use consistent naming.`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     setIsSaving(true);
     try {
-      await onSave(trimmedName, assetClass, parseFloat(valueUsd) || 0);
+      if (isEditMode && onUpdate) {
+        await onUpdate(editingAsset.id, assetClass, parseFloat(valueUsd) || 0);
+      } else {
+        await onSave(trimmedName, assetClass, parseFloat(valueUsd) || 0);
+      }
       // Reset form
       setName('');
       setAssetClass('Public Equity');
@@ -85,7 +116,7 @@ export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: 
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-financial-primary text-lg font-bold">
-            Add Pending Asset
+            {isEditMode ? 'Edit Pending Asset' : 'Add Pending Asset'}
           </DialogTitle>
         </DialogHeader>
 
@@ -96,10 +127,12 @@ export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: 
               id="pending-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              onFocus={() => setShowSuggestions(true)}
+              onFocus={() => !isEditMode && setShowSuggestions(true)}
               onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               placeholder="e.g., NVIDIA, Treasury Bond"
               autoComplete="off"
+              disabled={isEditMode}
+              className={isEditMode ? "bg-muted cursor-not-allowed" : ""}
             />
             {showSuggestions && suggestedAssets.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-48 overflow-auto">
@@ -168,7 +201,7 @@ export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: 
             onClick={handleSave}
             disabled={!name.trim() || !valueUsd || isSaving}
           >
-            {isSaving ? 'Adding...' : 'Add'}
+            {isSaving ? (isEditMode ? 'Saving...' : 'Adding...') : (isEditMode ? 'Save' : 'Add')}
           </Button>
         </div>
       </DialogContent>
