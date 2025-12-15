@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
-import { calculateAssetValue, filterAssetsByFilters, getPricingGroupAAssets, getPricingGroupBAssets } from '@/lib/portfolio-utils';
+import { calculateAssetValue, filterAssetsByFilters, getPricingGroupAAssets, getPricingGroupBAssets, getSubClassOptions } from '@/lib/portfolio-utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { verifySession } from '@/lib/session-utils';
 
@@ -224,6 +224,30 @@ export function PortfolioDashboard() {
     setActiveTab(value);
   };
 
+  // Handler for creating asset from pending asset
+  const handleCreateAssetFromPending = useCallback((data: { name: string; class: AssetClass }) => {
+    // Create partial asset with prefilled name and class
+    const subClassOptions = getSubClassOptions(data.class);
+    const defaultSubClass = subClassOptions[subClassOptions.length - 1];
+    
+    const prefilledAsset: Partial<Asset> = {
+      name: data.name,
+      class: data.class,
+      sub_class: defaultSubClass as any,
+      account_entity: 'Roy',
+      account_bank: 'Poalim',
+      beneficiary: 'Kids',
+      origin_currency: 'USD',
+      quantity: 0,
+      price: 1,
+      factor: 1.0,
+    };
+    
+    setEditingAsset(prefilledAsset as Asset);
+    setAssetFormMode('NEW');
+    setIsAssetFormOpen(true);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <div className="container mx-auto p-6 space-y-8">
@@ -326,6 +350,7 @@ export function PortfolioDashboard() {
               assets={assets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
+              onCreateAssetFromPending={handleCreateAssetFromPending}
             />
           </TabsContent>
 

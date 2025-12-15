@@ -188,6 +188,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_assets: {
+        Row: {
+          asset_class: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          value_usd: number
+        }
+        Insert: {
+          asset_class: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          value_usd?: number
+        }
+        Update: {
+          asset_class?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          value_usd?: number
+        }
+        Relationships: []
+      }
       portfolio_snapshots: {
         Row: {
           assets: Json
