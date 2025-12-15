@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { usePendingAssets, PendingAsset } from '@/hooks/usePendingAssets';
+import { useAssetLookup } from '@/hooks/useAssetLookup';
 import { Asset, AssetClass } from '@/types/portfolio';
 import { formatCurrency } from '@/lib/portfolio-utils';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,7 +31,12 @@ interface PendingAssetsProps {
 
 export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsProps) {
   const { pendingAssets, isLoading, addPendingAsset, deletePendingAsset, totalValue } = usePendingAssets();
+  const { findAssetsByName } = useAssetLookup(existingAssets);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const getExistingHoldingsCount = (assetName: string): number => {
+    return findAssetsByName(assetName).length;
+  };
 
   const handleCreateAsset = (asset: PendingAsset) => {
     onCreateAsset({ name: asset.name, class: asset.asset_class as AssetClass });
@@ -106,7 +113,20 @@ export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsPr
                 {pendingAssets.map((asset) => (
                   <TableRow key={asset.id}>
                     <TableCell className="text-sm font-medium py-2">
-                      {asset.name}
+                      <div className="flex items-center gap-2">
+                        {asset.name}
+                        {(() => {
+                          const count = getExistingHoldingsCount(asset.name);
+                          if (count > 0) {
+                            return (
+                              <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                                {count} holding{count > 1 ? 's' : ''}
+                              </Badge>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground py-2">
                       {asset.asset_class}
