@@ -46,18 +46,7 @@ export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: 
     const trimmedName = name.trim();
     if (!trimmedName || !valueUsd) return;
 
-    // Check for exact match
-    const exactMatch = findAssetsByName(trimmedName);
-    if (exactMatch.length > 0) {
-      toast({
-        title: "Asset already exists",
-        description: `An asset named "${trimmedName}" already exists. Use the suggestions to select it, or choose a different name.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Check for near-duplicate names
+    // Check for near-duplicate names (but allow exact matches for existing assets)
     const nearDuplicates = findPotentialDuplicates(trimmedName);
     if (nearDuplicates.length > 0) {
       toast({
@@ -124,6 +113,11 @@ export function PendingAssetDialog({ isOpen, onClose, onSave, existingAssets }: 
                     className="w-full px-3 py-2 text-left hover:bg-muted text-sm transition-colors"
                     onMouseDown={() => {
                       setName(assetName);
+                      // Auto-fill asset class from existing asset
+                      const existingAsset = findAssetsByName(assetName);
+                      if (existingAsset.length > 0) {
+                        setAssetClass(existingAsset[0].class as AssetClass);
+                      }
                       setShowSuggestions(false);
                     }}
                   >
