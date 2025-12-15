@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { usePendingAssets, PendingAsset } from '@/hooks/usePendingAssets';
-import { AssetClass } from '@/types/portfolio';
+import { Asset, AssetClass } from '@/types/portfolio';
 import { formatCurrency } from '@/lib/portfolio-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,9 +24,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 interface PendingAssetsProps {
   onCreateAsset: (data: { name: string; class: AssetClass }) => void;
+  existingAssets: Asset[];
 }
 
-export function PendingAssets({ onCreateAsset }: PendingAssetsProps) {
+export function PendingAssets({ onCreateAsset, existingAssets }: PendingAssetsProps) {
   const { pendingAssets, isLoading, addPendingAsset, deletePendingAsset, totalValue } = usePendingAssets();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -150,6 +151,7 @@ export function PendingAssets({ onCreateAsset }: PendingAssetsProps) {
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
         onSave={handleAddPendingAsset}
+        existingAssets={existingAssets}
       />
     </>
   );

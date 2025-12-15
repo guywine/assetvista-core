@@ -456,7 +456,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
 
       {/* Pending Assets */}
       {onCreateAssetFromPending && (
-        <PendingAssets onCreateAsset={onCreateAssetFromPending} />
+        <PendingAssets onCreateAsset={onCreateAssetFromPending} existingAssets={assets} />
       )}
 
       {/* First Row - Holdings Tables */}
