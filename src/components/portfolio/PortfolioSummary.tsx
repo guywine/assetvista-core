@@ -386,9 +386,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
     showValue?: boolean;
     valueFormatter?: (n: number) => string;
   }) => (
-    <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+    <ul className={showValue ? "space-y-1.5 text-sm" : "flex flex-wrap gap-x-4 gap-y-2 text-sm"}>
       {items.map((item, index) => (
-        <li key={item.name} className="inline-flex items-center gap-2">
+        <li key={item.name} className="flex items-center gap-2">
           <span
             className="h-3 w-3 rounded-[3px] flex-shrink-0"
             style={{ backgroundColor: colors[index % colors.length] }}
@@ -793,7 +793,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
-                    <CustomPieLegend items={subClassPieData["Public Equity"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                    <CustomPieLegend items={subClassPieData["Public Equity"] || []} colors={SUB_CLASS_COLORS} showValue={true} />
                   </div>
                 </div>
               </CardContent>
@@ -832,7 +832,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                       </ResponsiveContainer>
                     </div>
                     <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
-                      <CustomPieLegend items={subClassPieData["Commodities & more"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                      <CustomPieLegend items={subClassPieData["Commodities & more"] || []} colors={SUB_CLASS_COLORS} showValue={true} />
                     </div>
                   </div>
                 </CardContent>
@@ -885,7 +885,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                         </ResponsiveContainer>
                       </div>
                       <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
-                        <CustomPieLegend items={bigTechPieData} colors={SUB_CLASS_COLORS} showValue={false} />
+                        <CustomPieLegend items={bigTechPieData} colors={SUB_CLASS_COLORS} showValue={true} />
                       </div>
                     </div>
                   </CardContent>
@@ -942,7 +942,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
-                    <CustomPieLegend items={fixedIncomePieData} colors={SUB_CLASS_COLORS} showValue={false} />
+                    <CustomPieLegend items={fixedIncomePieData} colors={SUB_CLASS_COLORS} showValue={true} />
                   </div>
                 </div>
               </CardContent>
@@ -1030,7 +1030,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
-                    <CustomPieLegend items={subClassPieData["Real Estate"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                    <CustomPieLegend items={subClassPieData["Real Estate"] || []} colors={SUB_CLASS_COLORS} showValue={true} />
                   </div>
                 </div>
               </CardContent>
@@ -1162,7 +1162,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     </ResponsiveContainer>
                   </div>
                   <div className="mt-4 md:mt-0 md:min-w-[220px] md:max-w-[280px]">
-                    <CustomPieLegend items={subClassPieData["Private Equity"] || []} colors={SUB_CLASS_COLORS} showValue={false} />
+                    <CustomPieLegend items={subClassPieData["Private Equity"] || []} colors={SUB_CLASS_COLORS} showValue={true} />
                   </div>
                 </div>
               </CardContent>
