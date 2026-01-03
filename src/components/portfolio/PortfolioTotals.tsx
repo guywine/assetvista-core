@@ -142,7 +142,7 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="max-w-lg divide-y divide-border/50">
+        <div className="w-full divide-y divide-border/50">
           {totalsData.map(classData => {
             const isClassExpanded = expandedClasses.has(classData.className);
             
@@ -152,19 +152,21 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
                 open={isClassExpanded}
                 onOpenChange={() => toggleClass(classData.className)}
               >
-                <CollapsibleTrigger className="w-full flex justify-between items-center px-4 py-2.5 hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <ChevronRight 
-                      className={cn(
-                        "h-4 w-4 text-muted-foreground transition-transform duration-200",
-                        isClassExpanded && "rotate-90"
-                      )} 
-                    />
-                    <span className="font-semibold text-foreground">{classData.className}</span>
+                <CollapsibleTrigger className="w-full hover:bg-muted/50 transition-colors">
+                  <div className="max-w-lg flex justify-between items-center px-4 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <ChevronRight 
+                        className={cn(
+                          "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                          isClassExpanded && "rotate-90"
+                        )} 
+                      />
+                      <span className="font-semibold text-foreground">{classData.className}</span>
+                    </div>
+                    <span className="font-mono font-semibold text-foreground">
+                      {formatCurrency(classData.classTotal, viewCurrency)}
+                    </span>
                   </div>
-                  <span className="font-mono font-semibold text-foreground">
-                    {formatCurrency(classData.classTotal, viewCurrency)}
-                  </span>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <div className="bg-muted/20">
@@ -178,19 +180,21 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
                           open={isSubClassExpanded}
                           onOpenChange={() => toggleSubClass(subClassKey)}
                         >
-                          <CollapsibleTrigger className="w-full flex justify-between items-center px-6 py-1.5 hover:bg-muted/30 transition-colors">
-                            <div className="flex items-center gap-2">
-                              <ChevronRight 
-                                className={cn(
-                                  "h-3 w-3 text-muted-foreground transition-transform duration-200",
-                                  isSubClassExpanded && "rotate-90"
-                                )} 
-                              />
-                              <span className="text-sm text-foreground">{subClassData.subClassName}</span>
+                          <CollapsibleTrigger className="w-full hover:bg-muted/30 transition-colors">
+                            <div className="max-w-lg flex justify-between items-center px-6 py-1.5">
+                              <div className="flex items-center gap-2">
+                                <ChevronRight 
+                                  className={cn(
+                                    "h-3 w-3 text-muted-foreground transition-transform duration-200",
+                                    isSubClassExpanded && "rotate-90"
+                                  )} 
+                                />
+                                <span className="text-sm text-foreground">{subClassData.subClassName}</span>
+                              </div>
+                              <span className="font-mono text-sm text-foreground">
+                                {formatCurrency(subClassData.subClassTotal, viewCurrency)}
+                              </span>
                             </div>
-                            <span className="font-mono text-sm text-foreground">
-                              {formatCurrency(subClassData.subClassTotal, viewCurrency)}
-                            </span>
                           </CollapsibleTrigger>
                           <CollapsibleContent>
                             <div>
@@ -198,16 +202,18 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
                                 <div 
                                   key={asset.name}
                                   className={cn(
-                                    "flex justify-between items-center px-10 py-1 hover:bg-slate-200 transition-colors",
+                                    "w-full transition-colors hover:bg-slate-200",
                                     index % 2 === 0 ? "bg-slate-50" : "bg-slate-100"
                                   )}
                                 >
-                                  <span className="text-sm text-muted-foreground truncate pr-4">
-                                    {asset.name}
-                                  </span>
-                                  <span className="font-mono text-sm text-muted-foreground flex-shrink-0">
-                                    {formatCurrency(asset.totalValue, viewCurrency)}
-                                  </span>
+                                  <div className="max-w-lg flex justify-between items-center px-10 py-1">
+                                    <span className="text-sm text-muted-foreground truncate pr-4">
+                                      {asset.name}
+                                    </span>
+                                    <span className="font-mono text-sm text-muted-foreground flex-shrink-0">
+                                      {formatCurrency(asset.totalValue, viewCurrency)}
+                                    </span>
+                                  </div>
                                 </div>
                               ))}
                             </div>
