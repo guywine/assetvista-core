@@ -18,6 +18,7 @@ import { PortfolioFilters } from './PortfolioFilters';
 import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
 import { PortfolioPredictions } from './PortfolioPredictions';
 import { PricingTable } from './PricingTable';
+import { PortfolioTotals } from './PortfolioTotals';
 import { FXRatesBar } from './FXRatesBar';
 import { AssetSearch } from './AssetSearch';
 import { AccountUpdateTracker } from './AccountUpdateTracker';
@@ -215,8 +216,8 @@ export function PortfolioDashboard() {
   };
 
   const handleTabChange = async (value: string) => {
-    // Check session validity before switching to predictions, pricing, or history tabs
-    if (value === 'predictions' || value === 'history' || value === 'pricing') {
+    // Check session validity before switching to predictions, pricing, history, or totals tabs
+    if (value === 'predictions' || value === 'history' || value === 'pricing' || value === 'totals') {
       const sessionValid = await verifySession();
       if (!sessionValid) {
         logout();
@@ -293,7 +294,7 @@ export function PortfolioDashboard() {
           />
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto md:h-10 gap-y-2 max-w-2xl bg-muted/50 p-1 pb-3 md:pb-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto md:h-10 gap-y-2 max-w-3xl bg-muted/50 p-1 pb-3 md:pb-1">
             <TabsTrigger 
               value="assets" 
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
@@ -305,6 +306,12 @@ export function PortfolioDashboard() {
               className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
             >
               Summary
+            </TabsTrigger>
+            <TabsTrigger 
+              value="totals" 
+              className="data-[state=active]:bg-financial-primary data-[state=active]:text-white font-semibold"
+            >
+              Totals
             </TabsTrigger>
             <TabsTrigger 
               value="pricing" 
@@ -374,6 +381,14 @@ export function PortfolioDashboard() {
               viewCurrency={viewCurrency}
               fxRates={fxRates}
               onCreateAssetFromPending={handleCreateAssetFromPending}
+            />
+          </TabsContent>
+
+          <TabsContent value="totals" className="space-y-6">
+            <PortfolioTotals
+              assets={assets}
+              viewCurrency={viewCurrency}
+              fxRates={fxRates}
             />
           </TabsContent>
 
