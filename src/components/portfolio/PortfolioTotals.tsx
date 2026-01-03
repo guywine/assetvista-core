@@ -70,7 +70,8 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
       'Fixed Income',
       'Real Estate',
       'Private Equity',
-      'Commodities & more'
+      'Commodities & more',
+      'Cash'
     ];
 
     classOrder.forEach(className => {
@@ -141,7 +142,7 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        <div className="divide-y divide-border/50">
+        <div className="max-w-lg divide-y divide-border/50">
           {totalsData.map(classData => {
             const isClassExpanded = expandedClasses.has(classData.className);
             
@@ -192,11 +193,14 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
                             </span>
                           </CollapsibleTrigger>
                           <CollapsibleContent>
-                            <div className="bg-muted/10">
-                              {subClassData.assets.map(asset => (
+                            <div>
+                              {subClassData.assets.map((asset, index) => (
                                 <div 
                                   key={asset.name}
-                                  className="flex justify-between items-center px-10 py-1 hover:bg-muted/20 transition-colors"
+                                  className={cn(
+                                    "flex justify-between items-center px-10 py-1 hover:bg-muted/30 transition-colors",
+                                    index % 2 === 0 ? "bg-muted/5" : "bg-muted/15"
+                                  )}
                                 >
                                   <span className="text-sm text-muted-foreground truncate pr-4">
                                     {asset.name}
