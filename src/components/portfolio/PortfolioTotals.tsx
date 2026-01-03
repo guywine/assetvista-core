@@ -198,8 +198,8 @@ export function PortfolioTotals({ assets, viewCurrency, fxRates }: PortfolioTota
                                 <div 
                                   key={asset.name}
                                   className={cn(
-                                    "flex justify-between items-center px-10 py-1 hover:bg-muted/40 transition-colors",
-                                    index % 2 === 0 ? "bg-transparent" : "bg-muted/30"
+                                    "flex justify-between items-center px-10 py-1 hover:bg-slate-200 transition-colors",
+                                    index % 2 === 0 ? "bg-slate-50" : "bg-slate-100"
                                   )}
                                 >
                                   <span className="text-sm text-muted-foreground truncate pr-4">
