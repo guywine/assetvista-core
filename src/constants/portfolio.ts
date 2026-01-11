@@ -11,6 +11,13 @@ import type {
   Beneficiary
 } from '@/types/portfolio';
 
+// Re-export liquidity utilities for convenience
+export { 
+  LIQUIDITY_CATEGORIES, 
+  LIQUIDITY_CATEGORY_DESCRIPTIONS,
+  type LiquidityCategory 
+} from '@/lib/liquidity-utils';
+
 // Currencies
 export const CURRENCIES: Currency[] = ['ILS', 'USD', 'CHF', 'EUR', 'CAD', 'HKD', 'GBP'];
 

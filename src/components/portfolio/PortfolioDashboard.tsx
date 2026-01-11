@@ -19,6 +19,7 @@ import { PortfolioGrouping, GroupByField } from './PortfolioGrouping';
 import { PortfolioPredictions } from './PortfolioPredictions';
 import { PricingTable } from './PricingTable';
 import { PortfolioTotals } from './PortfolioTotals';
+import { LiquidityTable } from './LiquidityTable';
 import { FXRatesBar } from './FXRatesBar';
 import { AssetSearch } from './AssetSearch';
 import { AccountUpdateTracker } from './AccountUpdateTracker';
@@ -385,6 +386,11 @@ export function PortfolioDashboard() {
           </TabsContent>
 
           <TabsContent value="totals" className="space-y-6">
+            <LiquidityTable
+              assets={assets}
+              viewCurrency={viewCurrency}
+              fxRates={fxRates}
+            />
             <PortfolioTotals
               assets={assets}
               viewCurrency={viewCurrency}

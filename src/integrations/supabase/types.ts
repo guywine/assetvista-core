@@ -188,6 +188,27 @@ export type Database = {
         }
         Relationships: []
       }
+      limited_liquidity_assets: {
+        Row: {
+          asset_name: string
+          created_at: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          asset_name: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          asset_name?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_assets: {
         Row: {
           asset_class: string
