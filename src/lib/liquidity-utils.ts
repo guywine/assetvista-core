@@ -109,7 +109,7 @@ export function calculateLiquidityMatrix(
     const category = classifyAssetLiquidity(asset, limitedLiquidityAssetNames);
     const beneficiary = asset.beneficiary as Beneficiary;
     const calculations = calculateAssetValue(asset, fxRates, viewCurrency);
-    const value = calculations.converted_value;
+    const value = calculations.display_value;
 
     const beneficiaryMap = matrix.get(category);
     if (beneficiaryMap && BENEFICIARIES.includes(beneficiary)) {
