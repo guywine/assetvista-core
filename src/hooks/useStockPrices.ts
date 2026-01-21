@@ -13,9 +13,16 @@ interface UpdateStockPricesResponse {
 export function useStockPrices() {
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const isOption = (asset: Asset): boolean => {
+    return asset.ISIN?.startsWith('O:') ?? false;
+  };
+
   const isEligibleForUpdate = (asset: Asset): boolean => {
     // Must have a ticker (ISIN field)
     if (!asset.ISIN || asset.ISIN.trim() === '') return false;
+    
+    // Options are eligible (identified by O: prefix)
+    if (isOption(asset)) return true;
     
     // Must be one of these asset types
     if (asset.class === 'Public Equity') return true;
