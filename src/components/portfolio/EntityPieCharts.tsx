@@ -102,7 +102,7 @@ function CustomPieLegend({ items, viewCurrency }: PieLegendProps) {
 
 export function EntityPieCharts({ assets, viewCurrency, fxRates }: EntityPieChartsProps) {
   const [includeRealEstateAndPE, setIncludeRealEstateAndPE] = useState(false);
-  const [aggregateByPerson, setAggregateByPerson] = useState(false);
+  const [aggregateByPerson, setAggregateByPerson] = useState(true);
 
   const entityData = useMemo(() => {
     // Calculate values for each asset
