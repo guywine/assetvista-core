@@ -13,6 +13,19 @@ interface EntityPieChartsProps {
 }
 
 type ChartCategory = 'Cash' | 'Bonds' | 'Public Equity' | 'Private Funds' | 'Real Estate' | 'Private Equity';
+type Person = 'Shimon' | 'Hagit' | 'Roy' | 'Guy' | 'Roni' | 'Tom';
+
+const PERSONS: Person[] = ['Shimon', 'Hagit', 'Roy', 'Guy', 'Roni', 'Tom'];
+
+// Define which entities contribute to each person and with what weight
+const PERSON_ENTITY_WEIGHTS: Record<Person, Record<string, number>> = {
+  'Shimon': { 'Shimon': 1, 'B Joel': 1 },
+  'Hagit': { 'Hagit': 1 },
+  'Roy': { 'Roy': 1, 'SW2009': 1/3, 'Weintraub': 1/3 },
+  'Guy': { 'Guy': 1, 'SW2009': 1/3, 'Weintraub': 1/3 },
+  'Roni': { 'Roni': 1, 'SW2009': 1/3, 'Weintraub': 1/3 },
+  'Tom': { 'Tom': 1 },
+};
 
 const COLORS = [
   "hsl(var(--chart-1))",
@@ -89,6 +102,7 @@ function CustomPieLegend({ items, viewCurrency }: PieLegendProps) {
 
 export function EntityPieCharts({ assets, viewCurrency, fxRates }: EntityPieChartsProps) {
   const [includeRealEstateAndPE, setIncludeRealEstateAndPE] = useState(false);
+  const [aggregateByPerson, setAggregateByPerson] = useState(false);
 
   const entityData = useMemo(() => {
     // Calculate values for each asset
@@ -125,41 +139,71 @@ export function EntityPieCharts({ assets, viewCurrency, fxRates }: EntityPieChar
     return result;
   }, [assets, fxRates, viewCurrency]);
 
-  // Filter entities that have assets and prepare pie chart data
-  const entityCharts = useMemo(() => {
+  // Aggregate by person when toggle is enabled
+  const personData = useMemo(() => {
+    if (!aggregateByPerson) return null;
+    
+    const result: Record<Person, Record<ChartCategory, number>> = {} as Record<Person, Record<ChartCategory, number>>;
+    
+    PERSONS.forEach((person) => {
+      result[person] = {
+        'Cash': 0,
+        'Bonds': 0,
+        'Public Equity': 0,
+        'Private Funds': 0,
+        'Real Estate': 0,
+        'Private Equity': 0,
+      };
+      
+      // Sum up contributions from each entity with their weights
+      const weights = PERSON_ENTITY_WEIGHTS[person];
+      Object.entries(weights).forEach(([entity, weight]) => {
+        const entityValues = entityData[entity];
+        if (entityValues) {
+          (Object.keys(result[person]) as ChartCategory[]).forEach((cat) => {
+            result[person][cat] += entityValues[cat] * weight;
+          });
+        }
+      });
+    });
+    
+    return result;
+  }, [entityData, aggregateByPerson]);
+
+  // Filter entities/persons that have assets and prepare pie chart data
+  const chartItems = useMemo(() => {
     const baseCategories: ChartCategory[] = ['Cash', 'Bonds', 'Public Equity', 'Private Funds'];
     const allCategories: ChartCategory[] = includeRealEstateAndPE 
       ? [...baseCategories, 'Real Estate', 'Private Equity']
       : baseCategories;
 
-    return ACCOUNT_ENTITIES
-      .map((entity) => {
-        const data = entityData[entity];
+    const dataSource = aggregateByPerson && personData ? personData : entityData;
+    const labels = aggregateByPerson ? PERSONS : ACCOUNT_ENTITIES;
+
+    return labels
+      .map((label) => {
+        const data = dataSource[label];
+        if (!data) return null;
+        
         const chartData = allCategories
           .filter((cat) => data[cat] > 0)
           .map((cat) => ({
             name: cat,
             value: data[cat],
-            percentage: 0, // Will calculate after total
+            percentage: 0,
           }));
 
         const total = chartData.reduce((sum, item) => sum + item.value, 0);
-        
-        // Calculate percentages
         chartData.forEach((item) => {
           item.percentage = total > 0 ? (item.value / total) * 100 : 0;
         });
 
-        return {
-          entity,
-          total,
-          chartData,
-        };
+        return { label, total, chartData };
       })
-      .filter((item) => item.total > 0); // Only show entities with assets
-  }, [entityData, includeRealEstateAndPE]);
+      .filter((item): item is NonNullable<typeof item> => item !== null && item.total > 0);
+  }, [entityData, personData, aggregateByPerson, includeRealEstateAndPE]);
 
-  if (entityCharts.length === 0) {
+  if (chartItems.length === 0) {
     return null;
   }
 
@@ -169,31 +213,43 @@ export function EntityPieCharts({ assets, viewCurrency, fxRates }: EntityPieChar
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <CardTitle className="text-lg font-bold text-financial-primary">
-              Asset Breakdown by Entity
+              Asset Breakdown by {aggregateByPerson ? 'Person' : 'Entity'}
             </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Categories: Cash, Bonds, Public Equity, Private Funds
               {includeRealEstateAndPE && ", Real Estate, Private Equity"}
             </p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch 
-              checked={includeRealEstateAndPE} 
-              onCheckedChange={setIncludeRealEstateAndPE}
-              id="include-re-pe"
-            />
-            <label htmlFor="include-re-pe" className="text-sm text-muted-foreground cursor-pointer">
-              Include Real Estate & Private Equity
-            </label>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center space-x-2">
+              <Switch 
+                checked={aggregateByPerson} 
+                onCheckedChange={setAggregateByPerson}
+                id="aggregate-by-person"
+              />
+              <label htmlFor="aggregate-by-person" className="text-sm text-muted-foreground cursor-pointer">
+                Aggregate by Person
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Switch 
+                checked={includeRealEstateAndPE} 
+                onCheckedChange={setIncludeRealEstateAndPE}
+                id="include-re-pe"
+              />
+              <label htmlFor="include-re-pe" className="text-sm text-muted-foreground cursor-pointer">
+                Include Real Estate & Private Equity
+              </label>
+            </div>
           </div>
         </div>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {entityCharts.map(({ entity, total, chartData }) => (
-            <Card key={entity} className="bg-muted/30 border-border/30">
+          {chartItems.map(({ label, total, chartData }) => (
+            <Card key={label} className="bg-muted/30 border-border/30">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">{entity}</CardTitle>
+                <CardTitle className="text-base font-semibold">{label}</CardTitle>
                 <p className="text-sm text-muted-foreground font-mono">
                   {formatCurrency(total, viewCurrency)}
                 </p>
