@@ -20,6 +20,7 @@ import { PortfolioPredictions } from './PortfolioPredictions';
 import { PricingTable } from './PricingTable';
 import { PortfolioTotals } from './PortfolioTotals';
 import { LiquidityTable } from './LiquidityTable';
+import { EntityPieCharts } from './EntityPieCharts';
 import { FXRatesBar } from './FXRatesBar';
 import { AssetSearch } from './AssetSearch';
 import { AccountUpdateTracker } from './AccountUpdateTracker';
@@ -387,6 +388,11 @@ export function PortfolioDashboard() {
 
           <TabsContent value="totals" className="space-y-6">
             <LiquidityTable
+              assets={assets}
+              viewCurrency={viewCurrency}
+              fxRates={fxRates}
+            />
+            <EntityPieCharts
               assets={assets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
