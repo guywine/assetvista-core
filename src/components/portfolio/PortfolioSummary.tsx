@@ -45,6 +45,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
   // State for excluding Money Market and Bank Deposits from Fixed Income chart
   const [excludeMMAndDeposits, setExcludeMMAndDeposits] = useState<boolean>(true);
 
+  // State for Private Equity table sorting
+  const [peSortColumn, setPeSortColumn] = useState<'name' | 'value'>('value');
+  const [peSortDirection, setPeSortDirection] = useState<'asc' | 'desc'>('desc');
+
   // Helper function to format values in millions for Y-axis
   const formatMillions = (value: number): string => {
     const millions = value / 1000000;
@@ -385,23 +389,41 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
       if (!acc[asset.name]) {
         acc[asset.name] = {
           name: asset.name,
-          holdingPercentage: asset.pe_holding_percentage,
+          holdingPercentage: undefined as number | undefined,
           factoredValue: 0,
         };
       }
       acc[asset.name].factoredValue += factoredValue;
       
-      // Keep the holding percentage if available (use first non-null value)
-      if (asset.pe_holding_percentage !== undefined && acc[asset.name].holdingPercentage === undefined) {
-        acc[asset.name].holdingPercentage = asset.pe_holding_percentage;
+      // Sum holding percentages for multiple holdings in same firm
+      if (asset.pe_holding_percentage !== undefined) {
+        acc[asset.name].holdingPercentage = (acc[asset.name].holdingPercentage || 0) + asset.pe_holding_percentage;
       }
       
       return acc;
     }, {} as Record<string, { name: string; holdingPercentage?: number; factoredValue: number }>);
     
-    // Sort by factored value descending
-    return Object.values(aggregated).sort((a, b) => b.factoredValue - a.factoredValue);
-  }, [assets, calculations]);
+    // Sort based on selected column and direction
+    return Object.values(aggregated).sort((a, b) => {
+      if (peSortColumn === 'name') {
+        return peSortDirection === 'asc' 
+          ? a.name.localeCompare(b.name)
+          : b.name.localeCompare(a.name);
+      }
+      return peSortDirection === 'asc' 
+        ? a.factoredValue - b.factoredValue
+        : b.factoredValue - a.factoredValue;
+    });
+  }, [assets, calculations, peSortColumn, peSortDirection]);
+
+  const handlePESort = (column: 'name' | 'value') => {
+    if (peSortColumn === column) {
+      setPeSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setPeSortColumn(column);
+      setPeSortDirection(column === 'name' ? 'asc' : 'desc');
+    }
+  };
 
   // Custom Legend Component
   const CustomPieLegend = ({
@@ -1373,9 +1395,19 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Asset Name</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handlePESort('name')}
+                  >
+                    Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                   <TableHead className="text-right">Holding %</TableHead>
-                  <TableHead className="text-right">Value (Factored)</TableHead>
+                  <TableHead 
+                    className="text-right cursor-pointer hover:bg-muted/50"
+                    onClick={() => handlePESort('value')}
+                  >
+                    Value (Factored) {peSortColumn === 'value' && (peSortDirection === 'asc' ? '↑' : '↓')}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1384,7 +1416,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-right font-mono">
                       {item.holdingPercentage !== undefined 
-                        ? `${(item.holdingPercentage * 100).toFixed(2)}%` 
+                        ? `${item.holdingPercentage.toFixed(2)}%` 
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right font-mono">
