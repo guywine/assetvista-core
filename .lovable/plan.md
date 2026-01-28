@@ -1,38 +1,34 @@
 
+## Fix Sticky Header Background in Private Equity Holdings Table
 
-## Freeze Header Row in Private Equity Holdings Table
-
-### Overview
-Make the table header sticky so it remains visible when scrolling through the table.
+### Problem
+The sticky header is set up, but the individual column header cells (`TableHead`) don't have their own background color, so content may show through when scrolling.
 
 ---
 
-### Changes Required
+### Change Required
 
-**File: `src/components/portfolio/PortfolioSummary.tsx`** (Lines ~1404-1444)
+**File: `src/components/portfolio/PortfolioSummary.tsx`** (Lines 1407-1422)
 
-#### 1. Wrap Table in Scrollable Container
-
-Add a container with a max-height and overflow to enable scrolling:
+Add `bg-card` to each `TableHead` cell so they have a solid background that covers content when scrolling:
 
 ```tsx
-<CardContent>
-  <div className="max-h-[400px] overflow-auto">
-    <Table>
-      ...
-    </Table>
-  </div>
-</CardContent>
-```
-
-#### 2. Add Sticky Header Styling
-
-Add sticky positioning and background to `TableHeader`:
-
-```tsx
-<TableHeader className="sticky top-0 bg-card z-10">
+<TableHeader className="sticky top-0 z-10">
   <TableRow>
-    ...
+    <TableHead 
+      className="cursor-pointer hover:bg-muted/50 bg-card"
+      onClick={() => handlePESort('name')}
+    >
+      Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
+    </TableHead>
+    <TableHead className="text-right bg-card">Holding %</TableHead>
+    <TableHead className="text-right bg-card">Company Value (Factored)</TableHead>
+    <TableHead 
+      className="text-right cursor-pointer hover:bg-muted/50 bg-card"
+      onClick={() => handlePESort('value')}
+    >
+      Value (Factored) {peSortColumn === 'value' && (peSortDirection === 'asc' ? '↑' : '↓')}
+    </TableHead>
   </TableRow>
 </TableHeader>
 ```
@@ -40,7 +36,6 @@ Add sticky positioning and background to `TableHeader`:
 ---
 
 ### Result
-- Table will have a fixed height of 400px maximum
-- Header row stays pinned at the top when scrolling
-- Background color ensures header doesn't become transparent over content
-
+- Each column header cell will have a solid background
+- Content won't show through the header when scrolling
+- Column names remain visible at all times
