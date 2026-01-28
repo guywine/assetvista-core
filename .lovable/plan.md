@@ -1,30 +1,41 @@
 
 
-## Round Company Value to Whole Numbers
+## Style "M" Suffix and Update Column Header
 
-### Change Required
+### Changes Required
 
-**File: `src/components/portfolio/PortfolioSummary.tsx`** (Line 1435)
+**File: `src/components/portfolio/PortfolioSummary.tsx`**
 
-Change `.toFixed(1)` to `.toFixed(0)` to remove decimal places:
+#### 1. Update Column Header (Line 1415)
+
+Change header text from "Company Value (M)" to "Company Value (Factored, M)":
 
 ```tsx
-// Before
-? `${(item.companyValueFactored / 1000000).toFixed(1)}M`
+<TableHead className="text-right bg-card text-muted-foreground text-xs w-32">
+  Company Value (Factored, M)
+</TableHead>
+```
 
-// After
-? `${(item.companyValueFactored / 1000000).toFixed(0)}M`
+#### 2. Style "M" Suffix Distinctly (Lines 1433-1437)
+
+Wrap the "M" in a span with lighter/smaller styling to visually separate it from the number:
+
+```tsx
+<TableCell className="text-right font-mono text-muted-foreground text-xs">
+  {item.companyValueFactored !== undefined 
+    ? <>{(item.companyValueFactored / 1000000).toFixed(0)}<span className="text-muted-foreground/60 ml-0.5">M</span></>
+    : '-'}
+</TableCell>
 ```
 
 ---
 
 ### Result
 
-| Before | After |
-|--------|-------|
-| 5.2M | 5M |
-| 12.7M | 13M |
-| 0.8M | 1M |
+| Element | Before | After |
+|---------|--------|-------|
+| Header | "Company Value (M)" | "Company Value (Factored, M)" |
+| Value display | `5M` | `5` with lighter `M` suffix |
 
-Values will be rounded to the nearest whole million.
+The "M" will appear slightly faded with a small gap from the number, making it clear it's a unit indicator rather than part of the value.
 
