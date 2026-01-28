@@ -1427,7 +1427,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell className="text-right font-mono">
                       {item.holdingPercentage !== undefined 
-                        ? `${item.holdingPercentage.toFixed(2)}%` 
+                        ? `${item.holdingPercentage}%` 
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right font-mono">
