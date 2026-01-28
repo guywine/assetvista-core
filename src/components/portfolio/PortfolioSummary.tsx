@@ -1401,11 +1401,10 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
               Aggregated by asset name, sorted by factored value
             </p>
           </CardHeader>
-          <CardContent>
-            <div className="max-h-[400px] overflow-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-card z-10">
-                  <TableRow>
+          <CardContent className="[&>div]:max-h-[400px]">
+            <Table>
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow>
                   <TableHead 
                     className="cursor-pointer hover:bg-muted/50 bg-card"
                     onClick={() => handlePESort('name')}
@@ -1441,9 +1440,8 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     </TableCell>
                   </TableRow>
                 ))}
-                </TableBody>
-              </Table>
-            </div>
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       )}
