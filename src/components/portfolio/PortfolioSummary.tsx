@@ -25,7 +25,7 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 interface PortfolioSummaryProps {
   assets: Asset[];
   viewCurrency: ViewCurrency;
@@ -373,6 +373,35 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
     "hsl(var(--chart-9))",
     "hsl(var(--chart-10))",
   ];
+
+  // Private Equity holdings aggregated by name
+  const privateEquityByName = useMemo(() => {
+    const peAssets = assets.filter(asset => asset.class === 'Private Equity');
+    
+    const aggregated = peAssets.reduce((acc, asset) => {
+      const calc = calculations.get(asset.id);
+      const factoredValue = calc?.display_value || 0;
+      
+      if (!acc[asset.name]) {
+        acc[asset.name] = {
+          name: asset.name,
+          holdingPercentage: asset.pe_holding_percentage,
+          factoredValue: 0,
+        };
+      }
+      acc[asset.name].factoredValue += factoredValue;
+      
+      // Keep the holding percentage if available (use first non-null value)
+      if (asset.pe_holding_percentage !== undefined && acc[asset.name].holdingPercentage === undefined) {
+        acc[asset.name].holdingPercentage = asset.pe_holding_percentage;
+      }
+      
+      return acc;
+    }, {} as Record<string, { name: string; holdingPercentage?: number; factoredValue: number }>);
+    
+    // Sort by factored value descending
+    return Object.values(aggregated).sort((a, b) => b.factoredValue - a.factoredValue);
+  }, [assets, calculations]);
 
   // Custom Legend Component
   const CustomPieLegend = ({
@@ -1328,6 +1357,46 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
           );
         })}
       </div>
+
+      {/* Private Equity Holdings Table */}
+      {privateEquityByName.length > 0 && (
+        <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold text-financial-primary">
+              Private Equity Holdings
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Aggregated by asset name, sorted by factored value
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Asset Name</TableHead>
+                  <TableHead className="text-right">Holding %</TableHead>
+                  <TableHead className="text-right">Value (Factored)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {privateEquityByName.map((item) => (
+                  <TableRow key={item.name}>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {item.holdingPercentage !== undefined 
+                        ? `${(item.holdingPercentage * 100).toFixed(2)}%` 
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatCurrency(item.factoredValue, viewCurrency)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
