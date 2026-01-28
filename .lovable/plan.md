@@ -1,115 +1,112 @@
 
 
-## Fix Private Equity Holdings Table
+## Add Company Value (Factored) Column to Private Equity Holdings Table
+
+### Overview
+Add a new column "Company Value (Factored)" to the Private Equity Holdings table that displays the company value multiplied by the factor for companies that have a holding percentage.
+
+---
 
 ### Changes Required
 
 **File: `src/components/portfolio/PortfolioSummary.tsx`**
 
----
+#### 1. Update Aggregation Logic (Lines ~389-404)
 
-### 1. Fix Percentage Display (Line ~1383)
+Add `companyValueFactored` to the aggregated data structure. Since a company might have multiple holdings with different factors, we'll need to calculate the factored company value from each asset:
 
-Remove the `* 100` multiplication since the value is already stored as a percentage:
-
-**Current:**
-```tsx
-{item.holdingPercentage !== undefined 
-  ? `${(item.holdingPercentage * 100).toFixed(2)}%` 
-  : '-'}
-```
-
-**Fixed:**
-```tsx
-{item.holdingPercentage !== undefined 
-  ? `${item.holdingPercentage.toFixed(2)}%` 
-  : '-'}
-```
-
----
-
-### 2. Aggregate Holding Percentage (Line ~392-397)
-
-Change the logic to **sum** holding percentages instead of keeping first non-null value:
-
-**Current:**
 ```typescript
-// Keep the holding percentage if available (use first non-null value)
-if (asset.pe_holding_percentage !== undefined && acc[asset.name].holdingPercentage === undefined) {
-  acc[asset.name].holdingPercentage = asset.pe_holding_percentage;
-}
-```
-
-**Fixed:**
-```typescript
-// Sum holding percentages for multiple holdings in same firm
-if (asset.pe_holding_percentage !== undefined) {
-  acc[asset.name].holdingPercentage = (acc[asset.name].holdingPercentage || 0) + asset.pe_holding_percentage;
-}
-```
-
----
-
-### 3. Add Sortable Columns
-
-**Add state variables** (after existing state declarations around line 50):
-```typescript
-const [peSortColumn, setPeSortColumn] = useState<'name' | 'value'>('value');
-const [peSortDirection, setPeSortDirection] = useState<'asc' | 'desc'>('desc');
-```
-
-**Update sort logic in useMemo** (line ~402-403):
-```typescript
-// Sort based on selected column and direction
-return Object.values(aggregated).sort((a, b) => {
-  if (peSortColumn === 'name') {
-    return peSortDirection === 'asc' 
-      ? a.name.localeCompare(b.name)
-      : b.name.localeCompare(a.name);
+const aggregated = peAssets.reduce((acc, asset) => {
+  const calc = calculations.get(asset.id);
+  const factoredValue = calc?.display_value || 0;
+  
+  if (!acc[asset.name]) {
+    acc[asset.name] = {
+      name: asset.name,
+      holdingPercentage: undefined as number | undefined,
+      factoredValue: 0,
+      companyValueFactored: undefined as number | undefined,
+    };
   }
-  return peSortDirection === 'asc' 
-    ? a.factoredValue - b.factoredValue
-    : b.factoredValue - a.factoredValue;
-});
-```
-
-**Add sort toggle function**:
-```typescript
-const handlePESort = (column: 'name' | 'value') => {
-  if (peSortColumn === column) {
-    setPeSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
-  } else {
-    setPeSortColumn(column);
-    setPeSortDirection(column === 'name' ? 'asc' : 'desc');
+  acc[asset.name].factoredValue += factoredValue;
+  
+  // Sum holding percentages for multiple holdings in same firm
+  if (asset.pe_holding_percentage !== undefined) {
+    acc[asset.name].holdingPercentage = (acc[asset.name].holdingPercentage || 0) + asset.pe_holding_percentage;
   }
-};
+  
+  // Calculate factored company value (pe_company_value * factor)
+  if (asset.pe_company_value !== undefined && asset.factor !== undefined) {
+    const factoredCompanyValue = asset.pe_company_value * asset.factor;
+    // Use the latest/highest factored company value (since it's the same company)
+    if (acc[asset.name].companyValueFactored === undefined || factoredCompanyValue > acc[asset.name].companyValueFactored) {
+      acc[asset.name].companyValueFactored = factoredCompanyValue;
+    }
+  }
+  
+  return acc;
+}, {} as Record<string, { name: string; holdingPercentage?: number; factoredValue: number; companyValueFactored?: number }>);
 ```
 
-**Update table headers** to be clickable with sort indicators:
+#### 2. Update Table Headers (Lines ~1395-1413)
+
+Add the new column header between "Holding %" and "Value (Factored)":
+
 ```tsx
-<TableHead 
-  className="cursor-pointer hover:bg-muted/50"
-  onClick={() => handlePESort('name')}
->
-  Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
-</TableHead>
-<TableHead className="text-right">Holding %</TableHead>
-<TableHead 
-  className="text-right cursor-pointer hover:bg-muted/50"
-  onClick={() => handlePESort('value')}
->
-  Value (Factored) {peSortColumn === 'value' && (peSortDirection === 'asc' ? '↑' : '↓')}
-</TableHead>
+<TableHeader>
+  <TableRow>
+    <TableHead 
+      className="cursor-pointer hover:bg-muted/50"
+      onClick={() => handlePESort('name')}
+    >
+      Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
+    </TableHead>
+    <TableHead className="text-right">Holding %</TableHead>
+    <TableHead className="text-right">Company Value (Factored)</TableHead>
+    <TableHead 
+      className="text-right cursor-pointer hover:bg-muted/50"
+      onClick={() => handlePESort('value')}
+    >
+      Value (Factored) {peSortColumn === 'value' && (peSortDirection === 'asc' ? '↑' : '↓')}
+    </TableHead>
+  </TableRow>
+</TableHeader>
+```
+
+#### 3. Update Table Body (Lines ~1414-1425)
+
+Add the new cell to display the factored company value:
+
+```tsx
+<TableBody>
+  {privateEquityByName.map((item) => (
+    <TableRow key={item.name}>
+      <TableCell className="font-medium">{item.name}</TableCell>
+      <TableCell className="text-right font-mono">
+        {item.holdingPercentage !== undefined 
+          ? `${item.holdingPercentage.toFixed(2)}%` 
+          : '-'}
+      </TableCell>
+      <TableCell className="text-right font-mono">
+        {item.companyValueFactored !== undefined 
+          ? formatCurrency(item.companyValueFactored, viewCurrency)
+          : '-'}
+      </TableCell>
+      <TableCell className="text-right font-mono">
+        {formatCurrency(item.factoredValue, viewCurrency)}
+      </TableCell>
+    </TableRow>
+  ))}
+</TableBody>
 ```
 
 ---
 
-### Summary of Changes
+### Summary
 
 | Change | Description |
 |--------|-------------|
-| Remove `* 100` | Percentage is already stored as a percentage, not decimal |
-| Sum holding percentages | Aggregate multiple holdings in same firm by summing `pe_holding_percentage` |
-| Add sort state | Track which column and direction to sort |
-| Clickable headers | Allow clicking Asset Name or Value columns to sort |
+| Add `companyValueFactored` field | Track `pe_company_value * factor` for each company |
+| New table column | "Company Value (Factored)" between Holding % and Value |
+| Display logic | Show formatted currency or "-" if not available |
 
