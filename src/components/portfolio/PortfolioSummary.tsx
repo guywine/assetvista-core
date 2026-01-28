@@ -1407,15 +1407,15 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                 <TableHeader className="sticky top-0 bg-card z-10">
                   <TableRow>
                   <TableHead 
-                    className="cursor-pointer hover:bg-muted/50"
+                    className="cursor-pointer hover:bg-muted/50 bg-card"
                     onClick={() => handlePESort('name')}
                   >
                     Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead className="text-right">Holding %</TableHead>
-                  <TableHead className="text-right">Company Value (Factored)</TableHead>
+                  <TableHead className="text-right bg-card">Holding %</TableHead>
+                  <TableHead className="text-right bg-card">Company Value (Factored)</TableHead>
                   <TableHead 
-                    className="text-right cursor-pointer hover:bg-muted/50"
+                    className="text-right cursor-pointer hover:bg-muted/50 bg-card"
                     onClick={() => handlePESort('value')}
                   >
                     Value (Factored) {peSortColumn === 'value' && (peSortDirection === 'asc' ? '↑' : '↓')}
