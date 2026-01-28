@@ -1412,7 +1412,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead className="text-right bg-card">Holding %</TableHead>
-                  <TableHead className="text-right bg-card">Company Value (Factored)</TableHead>
+                  <TableHead className="text-right bg-card text-muted-foreground text-xs w-32">Company Value (M)</TableHead>
                   <TableHead 
                     className="text-right cursor-pointer hover:bg-muted/50 bg-card"
                     onClick={() => handlePESort('value')}
@@ -1430,9 +1430,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                         ? `${item.holdingPercentage}%` 
                         : '-'}
                     </TableCell>
-                    <TableCell className="text-right font-mono">
+                    <TableCell className="text-right font-mono text-muted-foreground text-xs">
                       {item.companyValueFactored !== undefined 
-                        ? formatCurrency(item.companyValueFactored, viewCurrency)
+                        ? `${(item.companyValueFactored / 1000000).toFixed(1)}M`
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right font-mono">
