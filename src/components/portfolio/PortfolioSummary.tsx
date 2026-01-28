@@ -391,6 +391,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
           name: asset.name,
           holdingPercentage: undefined as number | undefined,
           factoredValue: 0,
+          companyValueFactored: undefined as number | undefined,
         };
       }
       acc[asset.name].factoredValue += factoredValue;
@@ -400,8 +401,17 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
         acc[asset.name].holdingPercentage = (acc[asset.name].holdingPercentage || 0) + asset.pe_holding_percentage;
       }
       
+      // Calculate factored company value (pe_company_value * factor)
+      if (asset.pe_company_value !== undefined && asset.factor !== undefined) {
+        const factoredCompanyValue = asset.pe_company_value * asset.factor;
+        // Use the latest/highest factored company value (since it's the same company)
+        if (acc[asset.name].companyValueFactored === undefined || factoredCompanyValue > acc[asset.name].companyValueFactored) {
+          acc[asset.name].companyValueFactored = factoredCompanyValue;
+        }
+      }
+      
       return acc;
-    }, {} as Record<string, { name: string; holdingPercentage?: number; factoredValue: number }>);
+    }, {} as Record<string, { name: string; holdingPercentage?: number; factoredValue: number; companyValueFactored?: number }>);
     
     // Sort based on selected column and direction
     return Object.values(aggregated).sort((a, b) => {
@@ -1402,6 +1412,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead className="text-right">Holding %</TableHead>
+                  <TableHead className="text-right">Company Value (Factored)</TableHead>
                   <TableHead 
                     className="text-right cursor-pointer hover:bg-muted/50"
                     onClick={() => handlePESort('value')}
@@ -1417,6 +1428,11 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     <TableCell className="text-right font-mono">
                       {item.holdingPercentage !== undefined 
                         ? `${item.holdingPercentage.toFixed(2)}%` 
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {item.companyValueFactored !== undefined 
+                        ? formatCurrency(item.companyValueFactored, viewCurrency)
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right font-mono">
