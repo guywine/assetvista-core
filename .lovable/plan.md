@@ -1,66 +1,54 @@
 
 
-## Fix Sticky Header in Private Equity Holdings Table
+## Style "Company Value (Factored)" Column
 
-### Root Cause
-The `Table` component wraps the table in its own `<div className="overflow-auto">`. This creates a nested scroll context that breaks `position: sticky` - even though the inner div doesn't actually scroll.
-
-### Solution
-Remove our outer scroll container and instead apply the max-height constraint directly to the Table's wrapper using Tailwind's child selector.
+### Overview
+Make the column smaller, grey, and display values in millions for better readability.
 
 ---
 
-### Change Required
+### Changes Required
 
-**File: `src/components/portfolio/PortfolioSummary.tsx`** (Lines ~1404-1446)
+**File: `src/components/portfolio/PortfolioSummary.tsx`**
 
-Replace the current structure:
+#### 1. Style the Column Header (Line 1415)
+
+Add muted/grey text color and smaller width:
 
 ```tsx
-<CardContent>
-  <div className="max-h-[400px] overflow-auto">
-    <Table>
-      ...
-    </Table>
-  </div>
-</CardContent>
+<TableHead className="text-right bg-card text-muted-foreground text-xs w-32">
+  Company Value (M)
+</TableHead>
 ```
 
-With this (using `[&>div]` to target Table's wrapper):
+#### 2. Style the Column Cells (Lines 1433-1437)
+
+Add muted styling and format in millions:
 
 ```tsx
-<CardContent className="[&>div]:max-h-[400px]">
-  <Table>
-    <TableHeader className="sticky top-0 z-10">
-      <TableRow>
-        <TableHead className="cursor-pointer hover:bg-muted/50 bg-card" onClick={() => handlePESort('name')}>
-          Asset Name {peSortColumn === 'name' && (peSortDirection === 'asc' ? '↑' : '↓')}
-        </TableHead>
-        <TableHead className="text-right bg-card">Holding %</TableHead>
-        <TableHead className="text-right bg-card">Company Value (Factored)</TableHead>
-        <TableHead className="text-right cursor-pointer hover:bg-muted/50 bg-card" onClick={() => handlePESort('value')}>
-          Value (Factored) {peSortColumn === 'value' && (peSortDirection === 'asc' ? '↑' : '↓')}
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      ...
-    </TableBody>
-  </Table>
-</CardContent>
+<TableCell className="text-right font-mono text-muted-foreground text-xs">
+  {item.companyValueFactored !== undefined 
+    ? `${(item.companyValueFactored / 1000000).toFixed(1)}M`
+    : '-'}
+</TableCell>
 ```
 
 ---
 
-### How It Works
-- `[&>div]:max-h-[400px]` applies max-height to the Table's internal wrapper div
-- The Table's wrapper already has `overflow-auto`, so it becomes the scroll container
-- With only ONE scroll container, `sticky top-0` works correctly
-- The `bg-card` on each TableHead ensures solid background when scrolling
+### Changes Summary
+
+| Element | Before | After |
+|---------|--------|-------|
+| Header text | "Company Value (Factored)" | "Company Value (M)" |
+| Text color | Default | `text-muted-foreground` (grey) |
+| Text size | Default | `text-xs` (smaller) |
+| Column width | Auto | `w-32` (narrower) |
+| Value format | "$5,200,000" | "5.2M" |
 
 ---
 
 ### Result
-- Single scroll context - no more nested overflow containers
-- Header row stays pinned at top when scrolling
-- Column names remain visible with opaque background
+- Column appears more subtle/secondary compared to main Value column
+- Values are easier to scan in millions format
+- Cleaner, less cluttered table appearance
+
