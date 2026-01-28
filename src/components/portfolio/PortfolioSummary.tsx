@@ -1432,7 +1432,7 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                     </TableCell>
                     <TableCell className="text-right font-mono text-muted-foreground text-xs">
                       {item.companyValueFactored !== undefined 
-                        ? `${(item.companyValueFactored / 1000000).toFixed(1)}M`
+                        ? `${(item.companyValueFactored / 1000000).toFixed(0)}M`
                         : '-'}
                     </TableCell>
                     <TableCell className="text-right font-mono">
