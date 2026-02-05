@@ -12,9 +12,10 @@ import { ACCOUNT_UPDATE_THRESHOLDS, ACCOUNT_UPDATE_COLORS } from '@/constants/po
 
 interface AccountUpdateTrackerProps {
   assets: Asset[];
+  onAccountClick?: (entity: AccountEntity, bank: AccountBank) => void;
 }
 
-export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
+export const AccountUpdateTracker = ({ assets, onAccountClick }: AccountUpdateTrackerProps) => {
   const [expandedEntities, setExpandedEntities] = useState<Set<AccountEntity>>(new Set());
 
   // Extract unique accounts from assets
@@ -164,12 +165,15 @@ export const AccountUpdateTracker = ({ assets }: AccountUpdateTrackerProps) => {
 
                     return (
                       <div key={`${entity}|${account.account_bank}`} className="flex items-center justify-between py-1 pl-6 hover:bg-muted/50 rounded-sm">
-                        <div className="flex items-center gap-4 flex-1">
-                          <span className="text-sm min-w-[120px]">{account.account_bank}</span>
+                        <button
+                          className="flex items-center gap-4 flex-1 hover:bg-muted/30 rounded px-1 -ml-1 text-left"
+                          onClick={() => onAccountClick?.(entity, account.account_bank)}
+                        >
+                          <span className="text-sm min-w-[120px] hover:underline">{account.account_bank}</span>
                           <span className={`text-sm ${statusColor}`}>
                             {formatDate(lastUpdated)}
                           </span>
-                        </div>
+                        </button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="outline" className="h-7 px-3 text-xs">
