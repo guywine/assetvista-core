@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass } from '@/types/portfolio';
+import { Asset, ViewCurrency, FXRates, FilterCriteria, AssetClass, AccountEntity, AccountBank } from '@/types/portfolio';
 import { calculateAssetValue, filterAssetsByFilters, getPricingGroupAAssets, getPricingGroupBAssets, getSubClassOptions } from '@/lib/portfolio-utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { verifySession } from '@/lib/session-utils';
@@ -274,6 +274,17 @@ export function PortfolioDashboard() {
     }
   }, [findAssetsByName]);
 
+  // Handler for clicking on an account in AccountUpdateTracker
+  const handleAccountClick = useCallback((entity: AccountEntity, bank: AccountBank) => {
+    // Override filters to show only this entity + bank
+    setFilters({
+      account_entity: [entity],
+      account_bank: [bank],
+    });
+    // Override grouping to group by class
+    setGroupByFields(['class']);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <div className="container mx-auto p-6 space-y-8">
@@ -363,6 +374,14 @@ export function PortfolioDashboard() {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-1">
+                <AccountUpdateTracker 
+                  assets={assets} 
+                  onAccountClick={handleAccountClick}
+                />
+              </div>
+              <div className="lg:col-span-3">
               <AssetTable
                 assets={filteredAssets}
               viewCurrency={viewCurrency}
@@ -375,6 +394,8 @@ export function PortfolioDashboard() {
               onDuplicateAsset={handleDuplicateAsset}
               onAddAsset={handleAddAsset}
             />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="summary" className="space-y-6">
@@ -405,18 +426,11 @@ export function PortfolioDashboard() {
           </TabsContent>
 
           <TabsContent value="pricing" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-1">
-                <AccountUpdateTracker assets={assets} />
-              </div>
-              <div className="lg:col-span-2">
-                <PricingTable
-                  groupAAssets={pricingGroupAAssets}
-                  groupBAssets={pricingGroupBAssets}
-                  onUpdateAsset={updateAsset}
-                />
-              </div>
-            </div>
+            <PricingTable
+              groupAAssets={pricingGroupAAssets}
+              groupBAssets={pricingGroupBAssets}
+              onUpdateAsset={updateAsset}
+            />
           </TabsContent>
 
           <TabsContent value="predictions" className="space-y-6">
