@@ -254,3 +254,16 @@ export function getPricingGroupBAssets(assets: Asset[]): Asset[] {
            ['Corporate', 'Gov long', 'Gov 1-2', 'CPI linked'].includes(asset.sub_class);
   });
 }
+
+export function calculateDaysToMaturity(maturityDate: string | undefined): number | null {
+  if (!maturityDate || maturityDate === 'none') return null;
+  
+  try {
+    const maturity = parseISO(maturityDate);
+    const today = new Date();
+    const diffTime = maturity.getTime() - today.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  } catch {
+    return null;
+  }
+}
