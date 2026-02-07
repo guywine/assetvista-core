@@ -18,6 +18,7 @@
 10. [Required Secrets / Environment Variables](#10-required-secrets--environment-variables)
 11. [Migration Considerations](#11-migration-considerations)
 12. [Complete SQL Schema](#12-complete-sql-schema)
+13. [Application Code Migration Guide](#13-application-code-migration-guide)
 
 ---
 
@@ -1078,6 +1079,879 @@ CREATE POLICY "Authorized users can delete pending_assets"
 --   );$$
 -- );
 ```
+
+---
+
+---
+
+## 13. Application Code Migration Guide
+
+This section documents all application code changes required to migrate away from Supabase, including a "Maximum Portability" refactoring option.
+
+---
+
+### 13.1 Files That Require Changes
+
+#### Overview Table
+
+| File | Purpose | Change Complexity |
+|------|---------|-------------------|
+| `src/integrations/supabase/client.ts` | Supabase SDK initialization | **HIGH** - Core replacement |
+| `src/integrations/supabase/types.ts` | Auto-generated TypeScript types | **MEDIUM** - Regenerate from new provider |
+| `src/hooks/useAssets.ts` | Asset CRUD operations | **HIGH** - 717 lines, complex batch logic |
+| `src/hooks/useFXRates.ts` | FX rate management | **MEDIUM** - Simple CRUD |
+| `src/hooks/usePendingAssets.ts` | Pending assets CRUD | **LOW** - Simple operations |
+| `src/hooks/usePortfolioSnapshots.ts` | Snapshot creation | **LOW** - Insert only |
+| `src/hooks/useAccountUpdateTracker.ts` | Account tracking | **MEDIUM** - Upsert operations |
+| `src/hooks/useLimitedLiquidityAssets.ts` | Liquidity markers | **LOW** - Simple CRUD |
+| `src/hooks/useAssetLiquidationSettings.ts` | Liquidation settings | **MEDIUM** - Upsert operations |
+| `src/hooks/useStockPrices.ts` | Stock price updates | **MEDIUM** - Edge function calls |
+| `src/contexts/AuthContext.tsx` | Authentication | **HIGH** - Session management |
+| `src/lib/session-utils.ts` | Session validation | **HIGH** - RLS-specific logic |
+| `src/components/portfolio/PortfolioHistory.tsx` | History + Downloads | **MEDIUM** - Database reads |
+| `supabase/functions/*` | Edge functions (4 files) | **HIGH** - Platform-specific |
+
+---
+
+### 13.2 Detailed Change Analysis Per File
+
+#### A. Core Client File
+
+**File**: `src/integrations/supabase/client.ts`
+
+**Current Implementation**:
+```typescript
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from './types';
+
+const SUPABASE_URL = "https://ntvpatckjaqkfozizszm.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbG...";
+
+const getSessionToken = () => {
+  const sessionToken = localStorage.getItem('app_session_token');
+  const expiresAt = localStorage.getItem('app_session_expires');
+  // ... validation logic
+  return sessionToken;
+};
+
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { storage: localStorage, persistSession: true, autoRefreshToken: true },
+  global: {
+    fetch: (input, init) => {
+      // Custom header injection for session token
+      const url = typeof input === 'string' ? input : input.url;
+      if (!url.includes('/functions/v1/')) {
+        const token = getSessionToken();
+        const headers = new Headers(init?.headers || {});
+        if (token) headers.set('X-Session-Token', token);
+        return fetch(input, { ...init, headers });
+      }
+      return fetch(input, init);
+    }
+  }
+});
+```
+
+**Changes Required**:
+- Replace Supabase SDK initialization with new database client
+- Maintain custom header injection for session tokens (or switch to cookies/JWT)
+- If using PostgREST standalone: minimal changes to URL
+- If using custom API: replace with fetch/axios calls
+
+---
+
+#### B. Data Access Hooks (9 files)
+
+Each hook uses Supabase query builder syntax that must be translated.
+
+**Supabase Query Patterns Used**:
+
+| Pattern | Occurrences | Example Files |
+|---------|-------------|---------------|
+| `.from('table').select('*')` | 12 | All hooks |
+| `.insert([data]).select()` | 6 | useAssets, usePendingAssets |
+| `.update(data).eq('id', id)` | 15 | All CRUD hooks |
+| `.delete().eq('id', id)` | 5 | useAssets, usePendingAssets |
+| `.upsert(data, { onConflict })` | 6 | useFXRates, useAccountUpdateTracker |
+| `.order('column', { ascending })` | 8 | Most SELECT queries |
+| `.eq('column', value)` | 20+ | Filtering and updates |
+| `.maybeSingle()` | 8 | Single row returns |
+| `.single()` | 4 | Required single row |
+| `.rpc('function_name', args)` | 2 | is_authorized, cleanup_sessions |
+| `supabase.functions.invoke()` | 3 | Edge function calls |
+
+---
+
+##### B.1 `src/hooks/useAssets.ts` (HIGH complexity - 717 lines)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all assets
+const { data, error } = await supabase
+  .from('assets')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+// INSERT single asset
+const { data, error } = await supabase
+  .from('assets')
+  .insert([assetData])
+  .select()
+  .single();
+
+// UPDATE single asset by ID
+const { error } = await supabase
+  .from('assets')
+  .update(updates)
+  .eq('id', id);
+
+// UPDATE multiple assets by name (batch update)
+const { error } = await supabase
+  .from('assets')
+  .update({ price: newPrice })
+  .eq('name', assetName);
+
+// DELETE single asset
+const { error } = await supabase
+  .from('assets')
+  .delete()
+  .eq('id', id);
+```
+
+**Special Logic**:
+- Batch price updates by asset name
+- Auto-calculation of `is_cash_equivalent` field
+- Complex state management with optimistic updates
+
+---
+
+##### B.2 `src/hooks/useFXRates.ts` (MEDIUM complexity)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all FX rates
+const { data, error } = await supabase
+  .from('fx_rates')
+  .select('*')
+  .order('currency');
+
+// UPSERT FX rate (update if exists, insert if not)
+const { error } = await supabase
+  .from('fx_rates')
+  .upsert(
+    { currency, to_usd_rate, to_ils_rate, is_manual_override: true },
+    { onConflict: 'currency' }
+  );
+
+// Call edge function to update FX rates from API
+const { data, error } = await supabase.functions.invoke('update-fx-rates');
+```
+
+---
+
+##### B.3 `src/hooks/usePendingAssets.ts` (LOW complexity)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all pending assets
+const { data } = await supabase.from('pending_assets').select('*');
+
+// INSERT new pending asset
+const { data } = await supabase.from('pending_assets').insert([asset]).select().single();
+
+// UPDATE pending asset
+const { error } = await supabase.from('pending_assets').update(updates).eq('id', id);
+
+// DELETE pending asset
+const { error } = await supabase.from('pending_assets').delete().eq('id', id);
+```
+
+---
+
+##### B.4 `src/hooks/usePortfolioSnapshots.ts` (LOW complexity)
+
+**Supabase Operations Used**:
+```typescript
+// INSERT new snapshot
+const { data, error } = await supabase
+  .from('portfolio_snapshots')
+  .insert([snapshotData])
+  .select()
+  .single();
+```
+
+---
+
+##### B.5 `src/hooks/useAccountUpdateTracker.ts` (MEDIUM complexity)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all account trackers
+const { data } = await supabase
+  .from('account_update_tracker')
+  .select('*');
+
+// UPSERT account tracker
+const { error } = await supabase
+  .from('account_update_tracker')
+  .upsert(
+    { account_entity, account_bank, last_updated },
+    { onConflict: 'account_entity,account_bank' }
+  );
+
+// UPDATE last_updated timestamp
+const { error } = await supabase
+  .from('account_update_tracker')
+  .update({ last_updated: new Date().toISOString() })
+  .eq('account_entity', entity)
+  .eq('account_bank', bank);
+```
+
+---
+
+##### B.6 `src/hooks/useLimitedLiquidityAssets.ts` (LOW complexity)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all limited liquidity assets
+const { data } = await supabase.from('limited_liquidity_assets').select('*');
+
+// INSERT new marker
+const { error } = await supabase
+  .from('limited_liquidity_assets')
+  .insert([{ asset_name }]);
+
+// DELETE marker
+const { error } = await supabase
+  .from('limited_liquidity_assets')
+  .delete()
+  .eq('asset_name', assetName);
+```
+
+---
+
+##### B.7 `src/hooks/useAssetLiquidationSettings.ts` (MEDIUM complexity)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all liquidation settings
+const { data } = await supabase.from('asset_liquidation_settings').select('*');
+
+// UPSERT liquidation setting
+const { error } = await supabase
+  .from('asset_liquidation_settings')
+  .upsert(
+    { asset_name, liquidation_year },
+    { onConflict: 'asset_name' }
+  );
+
+// DELETE setting
+const { error } = await supabase
+  .from('asset_liquidation_settings')
+  .delete()
+  .eq('asset_name', assetName);
+```
+
+---
+
+##### B.8 `src/hooks/useStockPrices.ts` (MEDIUM complexity)
+
+**Supabase Operations Used**:
+```typescript
+// Call edge function to get stock prices
+const { data, error } = await supabase.functions.invoke('update-stock-prices', {
+  body: { symbols: tickerSymbols }
+});
+```
+
+**Note**: This hook only calls an edge function and doesn't directly access the database.
+
+---
+
+##### B.9 `src/hooks/useSessionAuth.ts` (Can likely DELETE)
+
+**Supabase Operations Used**:
+```typescript
+// RPC call to set session token
+await supabase.rpc('set_session_token', { token: sessionToken });
+```
+
+**Note**: This hook may be deletable if session management is handled differently in the new platform.
+
+---
+
+#### C. Authentication / Session Files
+
+##### C.1 `src/contexts/AuthContext.tsx` (HIGH complexity)
+
+**Supabase Operations Used**:
+```typescript
+// Call edge function to validate password
+const { data, error } = await supabase.functions.invoke('validate-password', {
+  body: { password }
+});
+
+// Returns: { success: true, sessionToken: '...', expiresAt: '...' }
+```
+
+**Session Management Logic**:
+```typescript
+// Store session in localStorage
+localStorage.setItem('app_session_token', sessionToken);
+localStorage.setItem('app_session_expires', expiresAt);
+
+// Clear session on logout
+localStorage.removeItem('app_session_token');
+localStorage.removeItem('app_session_expires');
+```
+
+**Migration Options**:
+1. Replace edge function call with standard REST API call
+2. Maintain header-based session pattern OR switch to cookies/JWT
+3. Consider using a standard auth library (Auth.js, Clerk, etc.)
+
+---
+
+##### C.2 `src/lib/session-utils.ts` (HIGH complexity)
+
+**Supabase Operations Used**:
+```typescript
+// RPC call to verify session
+export async function verifySession(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('is_authorized');
+  if (error) return false;
+  return data === true;
+}
+```
+
+**Error Detection Logic**:
+```typescript
+export function isSessionExpiredError(error: any): boolean {
+  // Checks for: 401, 403, PostgreSQL code 42501, PGRST116
+  // These are Supabase/PostgREST specific error codes
+}
+```
+
+**Migration Requirements**:
+- Replace `supabase.rpc('is_authorized')` with standard API endpoint
+- Update error detection for new platform's error codes
+- Consider middleware-based session validation
+
+---
+
+#### D. Components with Database Access
+
+##### D.1 `src/components/portfolio/PortfolioHistory.tsx` (MEDIUM complexity)
+
+**Supabase Operations Used**:
+```typescript
+// SELECT all snapshots (in parent hook)
+const { data } = await supabase
+  .from('portfolio_snapshots')
+  .select('*')
+  .order('snapshot_date', { ascending: false });
+
+// DELETE snapshot
+const { error } = await supabase
+  .from('portfolio_snapshots')
+  .delete()
+  .eq('id', snapshotId);
+```
+
+---
+
+#### E. Edge Functions (4 files + 1 shared)
+
+| Function | File | Lines | External APIs | DB Operations |
+|----------|------|-------|---------------|---------------|
+| validate-password | `supabase/functions/validate-password/index.ts` | 111 | None | SELECT app_config, INSERT sessions, RPC cleanup_expired_sessions |
+| update-fx-rates | `supabase/functions/update-fx-rates/index.ts` | ~162 | exchangerate.host | UPSERT fx_rates |
+| update-stock-prices | `supabase/functions/update-stock-prices/index.ts` | 69 | MarketStack, Polygon | None (returns prices) |
+| scheduled-stock-price-update | `supabase/functions/scheduled-stock-price-update/index.ts` | ~170 | MarketStack, Polygon | SELECT assets, UPDATE prices |
+| _shared/stock-prices | `supabase/functions/_shared/stock-prices.ts` | ~195 | MarketStack, Polygon | None (shared logic) |
+
+**Deno-Specific Code Patterns**:
+```typescript
+// HTTP server
+Deno.serve(async (req) => { ... });
+
+// Environment variables
+const apiKey = Deno.env.get('MARKETSTACK_API_KEY');
+
+// ESM imports from URLs
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.56.0';
+```
+
+**Migration Requirements**:
+- Convert `Deno.serve()` to platform equivalent (Express, Hono, etc.)
+- Convert `Deno.env.get()` to `process.env` (Node.js) or platform equivalent
+- Convert URL imports to npm packages
+- Update CORS headers if needed
+
+---
+
+### 13.3 Query Syntax Translation Reference
+
+| Supabase | Standard SQL | Prisma | Drizzle |
+|----------|-------------|--------|---------|
+| `.from('assets').select('*')` | `SELECT * FROM assets` | `db.assets.findMany()` | `db.select().from(assets)` |
+| `.select('id, name')` | `SELECT id, name FROM...` | `db.assets.findMany({ select: { id: true, name: true } })` | `db.select({ id: assets.id, name: assets.name }).from(assets)` |
+| `.insert([data])` | `INSERT INTO ... VALUES` | `db.assets.create({ data })` | `db.insert(assets).values(data)` |
+| `.insert([data]).select()` | `INSERT ... RETURNING *` | `db.assets.create({ data })` | `db.insert(assets).values(data).returning()` |
+| `.update(data).eq('id', id)` | `UPDATE ... WHERE id = ?` | `db.assets.update({ where: { id }, data })` | `db.update(assets).set(data).where(eq(assets.id, id))` |
+| `.delete().eq('id', id)` | `DELETE FROM ... WHERE` | `db.assets.delete({ where: { id } })` | `db.delete(assets).where(eq(assets.id, id))` |
+| `.upsert(data, { onConflict: 'col' })` | `INSERT ... ON CONFLICT DO UPDATE` | `db.assets.upsert({ where, create, update })` | `db.insert(assets).values(data).onConflictDoUpdate({ target, set })` |
+| `.order('col', { ascending: false })` | `ORDER BY col DESC` | `orderBy: { col: 'desc' }` | `.orderBy(desc(assets.col))` |
+| `.eq('col', val)` | `WHERE col = ?` | `where: { col: val }` | `.where(eq(assets.col, val))` |
+| `.neq('col', val)` | `WHERE col != ?` | `where: { col: { not: val } }` | `.where(ne(assets.col, val))` |
+| `.gt('col', val)` | `WHERE col > ?` | `where: { col: { gt: val } }` | `.where(gt(assets.col, val))` |
+| `.gte('col', val)` | `WHERE col >= ?` | `where: { col: { gte: val } }` | `.where(gte(assets.col, val))` |
+| `.lt('col', val)` | `WHERE col < ?` | `where: { col: { lt: val } }` | `.where(lt(assets.col, val))` |
+| `.lte('col', val)` | `WHERE col <= ?` | `where: { col: { lte: val } }` | `.where(lte(assets.col, val))` |
+| `.like('col', '%val%')` | `WHERE col LIKE ?` | `where: { col: { contains: val } }` | `.where(like(assets.col, '%val%'))` |
+| `.in('col', [a,b,c])` | `WHERE col IN (?,?,?)` | `where: { col: { in: [a,b,c] } }` | `.where(inArray(assets.col, [a,b,c]))` |
+| `.is('col', null)` | `WHERE col IS NULL` | `where: { col: null }` | `.where(isNull(assets.col))` |
+| `.single()` | (expects exactly 1 row) | `findUnique()` or `findFirst()` | `.limit(1)` + check |
+| `.maybeSingle()` | (expects 0 or 1 row) | `findFirst()` | `.limit(1)` |
+| `.rpc('fn', args)` | `SELECT fn(args)` | Raw query or custom function | Raw query |
+| `.functions.invoke('fn', { body })` | HTTP POST | fetch/axios call | fetch/axios call |
+
+---
+
+### 13.4 Maximum Portability Refactoring Option
+
+To achieve maximum portability, create a Data Access Layer (DAL) abstraction that separates business logic from database implementation.
+
+#### Step 1: Define Repository Interfaces
+
+**New File**: `src/data/interfaces/IAssetRepository.ts`
+```typescript
+import { Asset, CreateAssetDTO, UpdateAssetDTO } from '@/types/portfolio';
+
+export interface IAssetRepository {
+  findAll(): Promise<Asset[]>;
+  findById(id: string): Promise<Asset | null>;
+  findByName(name: string): Promise<Asset[]>;
+  create(asset: CreateAssetDTO): Promise<Asset>;
+  update(id: string, data: UpdateAssetDTO): Promise<Asset>;
+  updateMany(filter: { name: string }, data: Partial<Asset>): Promise<number>;
+  delete(id: string): Promise<void>;
+}
+```
+
+**New File**: `src/data/interfaces/IFXRateRepository.ts`
+```typescript
+import { FXRate } from '@/types/portfolio';
+
+export interface IFXRateRepository {
+  findAll(): Promise<FXRate[]>;
+  findByCurrency(currency: string): Promise<FXRate | null>;
+  upsert(rate: Partial<FXRate> & { currency: string }): Promise<FXRate>;
+}
+```
+
+**New File**: `src/data/interfaces/index.ts`
+```typescript
+export * from './IAssetRepository';
+export * from './IFXRateRepository';
+export * from './IPendingAssetRepository';
+export * from './IPortfolioSnapshotRepository';
+export * from './IAccountUpdateTrackerRepository';
+export * from './ILiquiditySettingsRepository';
+export * from './ISessionRepository';
+```
+
+---
+
+#### Step 2: Create Supabase Implementation
+
+**New File**: `src/data/supabase/AssetRepository.ts`
+```typescript
+import { supabase } from '@/integrations/supabase/client';
+import { IAssetRepository } from '../interfaces';
+import { Asset, CreateAssetDTO, UpdateAssetDTO } from '@/types/portfolio';
+
+export class SupabaseAssetRepository implements IAssetRepository {
+  async findAll(): Promise<Asset[]> {
+    const { data, error } = await supabase
+      .from('assets')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data as Asset[];
+  }
+
+  async findById(id: string): Promise<Asset | null> {
+    const { data, error } = await supabase
+      .from('assets')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+    
+    if (error) throw error;
+    return data as Asset | null;
+  }
+
+  async findByName(name: string): Promise<Asset[]> {
+    const { data, error } = await supabase
+      .from('assets')
+      .select('*')
+      .eq('name', name);
+    
+    if (error) throw error;
+    return data as Asset[];
+  }
+
+  async create(asset: CreateAssetDTO): Promise<Asset> {
+    const { data, error } = await supabase
+      .from('assets')
+      .insert([asset])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Asset;
+  }
+
+  async update(id: string, updates: UpdateAssetDTO): Promise<Asset> {
+    const { data, error } = await supabase
+      .from('assets')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data as Asset;
+  }
+
+  async updateMany(filter: { name: string }, updates: Partial<Asset>): Promise<number> {
+    const { data, error } = await supabase
+      .from('assets')
+      .update(updates)
+      .eq('name', filter.name)
+      .select();
+    
+    if (error) throw error;
+    return data?.length ?? 0;
+  }
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('assets')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+  }
+}
+```
+
+---
+
+#### Step 3: Create Alternative Implementation (e.g., Prisma)
+
+**New File**: `src/data/prisma/AssetRepository.ts`
+```typescript
+import { PrismaClient } from '@prisma/client';
+import { IAssetRepository } from '../interfaces';
+import { Asset, CreateAssetDTO, UpdateAssetDTO } from '@/types/portfolio';
+
+export class PrismaAssetRepository implements IAssetRepository {
+  constructor(private prisma: PrismaClient) {}
+
+  async findAll(): Promise<Asset[]> {
+    return this.prisma.assets.findMany({
+      orderBy: { created_at: 'desc' }
+    });
+  }
+
+  async findById(id: string): Promise<Asset | null> {
+    return this.prisma.assets.findUnique({
+      where: { id }
+    });
+  }
+
+  async findByName(name: string): Promise<Asset[]> {
+    return this.prisma.assets.findMany({
+      where: { name }
+    });
+  }
+
+  async create(asset: CreateAssetDTO): Promise<Asset> {
+    return this.prisma.assets.create({
+      data: asset
+    });
+  }
+
+  async update(id: string, updates: UpdateAssetDTO): Promise<Asset> {
+    return this.prisma.assets.update({
+      where: { id },
+      data: updates
+    });
+  }
+
+  async updateMany(filter: { name: string }, updates: Partial<Asset>): Promise<number> {
+    const result = await this.prisma.assets.updateMany({
+      where: { name: filter.name },
+      data: updates
+    });
+    return result.count;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.prisma.assets.delete({
+      where: { id }
+    });
+  }
+}
+```
+
+---
+
+#### Step 4: Create Provider Context
+
+**New File**: `src/data/DataProvider.tsx`
+```typescript
+import React, { createContext, useContext, useMemo, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Import repository interfaces
+import {
+  IAssetRepository,
+  IFXRateRepository,
+  IPendingAssetRepository,
+  IPortfolioSnapshotRepository,
+  IAccountUpdateTrackerRepository,
+  ILiquiditySettingsRepository,
+} from './interfaces';
+
+// Import Supabase implementations
+import { SupabaseAssetRepository } from './supabase/AssetRepository';
+import { SupabaseFXRateRepository } from './supabase/FXRateRepository';
+// ... other imports
+
+export interface DataRepositories {
+  assetRepository: IAssetRepository;
+  fxRateRepository: IFXRateRepository;
+  pendingAssetRepository: IPendingAssetRepository;
+  portfolioSnapshotRepository: IPortfolioSnapshotRepository;
+  accountUpdateTrackerRepository: IAccountUpdateTrackerRepository;
+  liquiditySettingsRepository: ILiquiditySettingsRepository;
+}
+
+const DataContext = createContext<DataRepositories | undefined>(undefined);
+
+interface DataProviderProps {
+  children: ReactNode;
+  implementation?: 'supabase' | 'prisma';
+}
+
+export function DataProvider({ children, implementation = 'supabase' }: DataProviderProps) {
+  const repositories = useMemo<DataRepositories>(() => {
+    if (implementation === 'supabase') {
+      return {
+        assetRepository: new SupabaseAssetRepository(),
+        fxRateRepository: new SupabaseFXRateRepository(),
+        pendingAssetRepository: new SupabasePendingAssetRepository(),
+        portfolioSnapshotRepository: new SupabasePortfolioSnapshotRepository(),
+        accountUpdateTrackerRepository: new SupabaseAccountUpdateTrackerRepository(),
+        liquiditySettingsRepository: new SupabaseLiquiditySettingsRepository(),
+      };
+    }
+    // Add other implementations here (Prisma, Drizzle, etc.)
+    throw new Error(`Unknown implementation: ${implementation}`);
+  }, [implementation]);
+
+  return (
+    <DataContext.Provider value={repositories}>
+      {children}
+    </DataContext.Provider>
+  );
+}
+
+export function useData(): DataRepositories {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useData must be used within a DataProvider');
+  }
+  return context;
+}
+```
+
+---
+
+#### Step 5: Update Hooks to Use Repository
+
+**Modified**: `src/hooks/useAssets.ts` (example changes)
+```typescript
+import { useData } from '@/data/DataProvider';
+
+export function useAssets() {
+  const { assetRepository } = useData();
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadAssets = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await assetRepository.findAll();
+      setAssets(data);
+    } catch (error) {
+      console.error('Failed to load assets:', error);
+      toast({ title: 'Error', description: 'Failed to load assets', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  }, [assetRepository]);
+
+  const addAsset = useCallback(async (asset: CreateAssetDTO): Promise<Asset | null> => {
+    try {
+      const newAsset = await assetRepository.create(asset);
+      setAssets(prev => [newAsset, ...prev]);
+      toast({ title: 'Success', description: 'Asset added successfully' });
+      return newAsset;
+    } catch (error) {
+      console.error('Failed to add asset:', error);
+      toast({ title: 'Error', description: 'Failed to add asset', variant: 'destructive' });
+      return null;
+    }
+  }, [assetRepository]);
+
+  const updateAsset = useCallback(async (id: string, updates: UpdateAssetDTO): Promise<boolean> => {
+    try {
+      const updated = await assetRepository.update(id, updates);
+      setAssets(prev => prev.map(a => a.id === id ? updated : a));
+      return true;
+    } catch (error) {
+      console.error('Failed to update asset:', error);
+      return false;
+    }
+  }, [assetRepository]);
+
+  const deleteAsset = useCallback(async (id: string): Promise<boolean> => {
+    try {
+      await assetRepository.delete(id);
+      setAssets(prev => prev.filter(a => a.id !== id));
+      toast({ title: 'Success', description: 'Asset deleted successfully' });
+      return true;
+    } catch (error) {
+      console.error('Failed to delete asset:', error);
+      return false;
+    }
+  }, [assetRepository]);
+
+  // ... rest of hook logic
+}
+```
+
+---
+
+#### Step 6: Update App Root
+
+**Modified**: `src/App.tsx`
+```typescript
+import { DataProvider } from '@/data/DataProvider';
+
+function App() {
+  return (
+    <DataProvider implementation="supabase">
+      {/* Rest of app */}
+    </DataProvider>
+  );
+}
+```
+
+---
+
+### 13.5 Complete File Change Checklist
+
+#### Files to Modify (19 files)
+
+**Core Infrastructure (4 files)**:
+- [ ] `src/integrations/supabase/client.ts` - Replace SDK initialization
+- [ ] `src/integrations/supabase/types.ts` - Regenerate types from new provider
+- [ ] `src/contexts/AuthContext.tsx` - Replace auth flow (edge function calls)
+- [ ] `src/lib/session-utils.ts` - Replace RPC calls, update error detection
+
+**Data Hooks (9 files)**:
+- [ ] `src/hooks/useAssets.ts` - All CRUD operations (~50 Supabase calls)
+- [ ] `src/hooks/useFXRates.ts` - SELECT, UPSERT, edge function call
+- [ ] `src/hooks/usePendingAssets.ts` - Simple CRUD (4 operations)
+- [ ] `src/hooks/usePortfolioSnapshots.ts` - INSERT only
+- [ ] `src/hooks/useAccountUpdateTracker.ts` - SELECT, UPSERT, UPDATE
+- [ ] `src/hooks/useLimitedLiquidityAssets.ts` - SELECT, INSERT, DELETE
+- [ ] `src/hooks/useAssetLiquidationSettings.ts` - SELECT, UPSERT, DELETE
+- [ ] `src/hooks/useStockPrices.ts` - Edge function call
+- [ ] `src/hooks/useSessionAuth.ts` - RPC call (consider deleting)
+
+**Components with DB Access (1 file)**:
+- [ ] `src/components/portfolio/PortfolioHistory.tsx` - SELECT, DELETE snapshots
+
+**Edge Functions - Convert to New Platform (5 files)**:
+- [ ] `supabase/functions/validate-password/index.ts` - Auth logic
+- [ ] `supabase/functions/update-fx-rates/index.ts` - FX API + DB write
+- [ ] `supabase/functions/update-stock-prices/index.ts` - Stock API
+- [ ] `supabase/functions/scheduled-stock-price-update/index.ts` - Scheduler
+- [ ] `supabase/functions/_shared/stock-prices.ts` - Shared API logic
+
+---
+
+### 13.6 Effort Estimation
+
+| Migration Path | Estimated Effort | Complexity | Notes |
+|----------------|------------------|------------|-------|
+| **PostgREST Standalone** | 2-3 days | Low | URL change + session middleware. Supabase JS client may still work. |
+| **Custom REST API + ORM (Prisma/Drizzle)** | 1-2 weeks | Medium | Rewrite all 80+ database calls. Need backend server. |
+| **Maximum Portability Refactor First** | 2-3 weeks | High | Create full DAL abstraction, then swap implementation. |
+| **Different Database (e.g., MongoDB)** | 3-4 weeks | High | Schema redesign + query rewrite. |
+
+---
+
+### 13.7 Recommended Migration Steps
+
+1. **Export current data** from Supabase (Dashboard → Settings → Database → Backups)
+2. **Set up new database** with schema from Section 12
+3. **Choose API approach** (PostgREST standalone vs custom API vs ORM)
+4. **Convert edge functions** to new serverless platform:
+   - AWS Lambda + API Gateway
+   - Cloudflare Workers
+   - Vercel Functions
+   - Node.js Express server
+5. **Update `client.ts`** with new database connection
+6. **Update hooks one by one**, testing each:
+   - Start with simple hooks (usePendingAssets, useLimitedLiquidityAssets)
+   - Then medium complexity (useFXRates, useAccountUpdateTracker)
+   - Finally complex hooks (useAssets)
+7. **Update auth flow last** (most critical, test thoroughly)
+8. **Set up scheduled jobs** using new platform's scheduler:
+   - AWS EventBridge + Lambda
+   - Cloudflare Cron Triggers
+   - Traditional cron + curl
+
+---
+
+### 13.8 Testing Checklist
+
+After migration, verify each feature:
+
+- [ ] Password authentication (login/logout)
+- [ ] Session expiration handling
+- [ ] Asset CRUD (create, read, update, delete)
+- [ ] Batch price updates
+- [ ] FX rate display and manual override
+- [ ] FX rate auto-update (scheduled job)
+- [ ] Stock price updates (manual trigger)
+- [ ] Stock price auto-update (scheduled job)
+- [ ] Portfolio snapshot creation
+- [ ] Portfolio snapshot comparison
+- [ ] Portfolio snapshot deletion
+- [ ] Pending assets management
+- [ ] Limited liquidity asset marking
+- [ ] Liquidation year settings
+- [ ] Account update tracker
+- [ ] Export to Excel functionality
 
 ---
 
