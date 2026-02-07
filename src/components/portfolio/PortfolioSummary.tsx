@@ -1171,33 +1171,25 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                   <TableBody>
                     {maturingBonds.map((bond) => {
                       const isExpanded = expandedBonds.has(bond.name);
-                      const hasMultipleHoldings = bond.holdings.length > 1;
-                      
                       return (
                         <Collapsible key={bond.name} open={isExpanded} onOpenChange={() => toggleBondExpanded(bond.name)} asChild>
                           <>
-                            <TableRow className={hasMultipleHoldings ? 'cursor-pointer hover:bg-muted/50' : ''}>
+                            <TableRow className="cursor-pointer hover:bg-muted/50">
                               <TableCell className="w-8">
-                                {hasMultipleHoldings && (
-                                  <CollapsibleTrigger asChild>
-                                    <button className="p-1 hover:bg-muted rounded">
-                                      {isExpanded ? (
-                                        <ChevronDown className="h-4 w-4" />
-                                      ) : (
-                                        <ChevronRight className="h-4 w-4" />
-                                      )}
-                                    </button>
-                                  </CollapsibleTrigger>
-                                )}
+                                <CollapsibleTrigger asChild>
+                                  <button className="p-1 hover:bg-muted rounded">
+                                    {isExpanded ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </button>
+                                </CollapsibleTrigger>
                               </TableCell>
                               <TableCell className="font-medium">
-                                {hasMultipleHoldings ? (
-                                  <CollapsibleTrigger className="hover:underline text-left">
-                                    {bond.name}
-                                  </CollapsibleTrigger>
-                                ) : (
-                                  bond.name
-                                )}
+                                <CollapsibleTrigger className="hover:underline text-left">
+                                  {bond.name}
+                                </CollapsibleTrigger>
                               </TableCell>
                               <TableCell>
                                 {bond.maturityDate && format(parseISO(bond.maturityDate), 'MMM dd, yyyy')}
@@ -1210,25 +1202,23 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
                               </TableCell>
                             </TableRow>
                             
-                            {hasMultipleHoldings && (
-                              <CollapsibleContent asChild>
-                                <>
-                                  {bond.holdings.map((holding, idx) => (
-                                    <TableRow key={`${bond.name}-${idx}`} className="bg-muted/30">
-                                      <TableCell></TableCell>
-                                      <TableCell className="pl-8 text-sm text-muted-foreground">
-                                        {holding.entity} • {holding.bank}
-                                      </TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell className="text-right font-mono text-sm text-muted-foreground">
-                                        {formatCurrency(holding.value, viewCurrency)}
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </>
-                              </CollapsibleContent>
-                            )}
+                            <CollapsibleContent asChild>
+                              <>
+                                {bond.holdings.map((holding, idx) => (
+                                  <TableRow key={`${bond.name}-${idx}`} className="bg-muted/30">
+                                    <TableCell></TableCell>
+                                    <TableCell className="pl-8 text-sm text-muted-foreground">
+                                      {holding.entity} • {holding.bank}
+                                    </TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell></TableCell>
+                                    <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                                      {formatCurrency(holding.value, viewCurrency)}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </>
+                            </CollapsibleContent>
                           </>
                         </Collapsible>
                       );
