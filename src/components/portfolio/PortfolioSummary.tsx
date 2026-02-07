@@ -1,16 +1,20 @@
-import { Asset, ViewCurrency, FXRates, AssetCalculations, AssetClass } from "@/types/portfolio";
+import { Asset, ViewCurrency, FXRates, AssetCalculations, AssetClass, AccountEntity, AccountBank } from "@/types/portfolio";
 import {
   calculateAssetValue,
   formatCurrency,
   formatPercentage,
   calculateWeightedYTW,
   isMaturityWithinYear,
+  calculateDaysToMaturity,
 } from "@/lib/portfolio-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { PendingAssets } from "./PendingAssets";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import { format, parseISO } from "date-fns";
 
 import {
   PieChart,
@@ -48,6 +52,9 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
   // State for Private Equity table sorting
   const [peSortColumn, setPeSortColumn] = useState<'name' | 'value'>('value');
   const [peSortDirection, setPeSortDirection] = useState<'asc' | 'desc'>('desc');
+
+  // State for expanded bonds in maturity table
+  const [expandedBonds, setExpandedBonds] = useState<Set<string>>(new Set());
 
   // Helper function to format values in millions for Y-axis
   const formatMillions = (value: number): string => {
@@ -433,6 +440,97 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
       setPeSortColumn(column);
       setPeSortDirection(column === 'name' ? 'asc' : 'desc');
     }
+  };
+
+  // Toggle expanded bond in maturity table
+  const toggleBondExpanded = (bondName: string) => {
+    setExpandedBonds(prev => {
+      const next = new Set(prev);
+      if (next.has(bondName)) {
+        next.delete(bondName);
+      } else {
+        next.add(bondName);
+      }
+      return next;
+    });
+  };
+
+  // Calculate maturing bonds (within 365 days) aggregated by bond name
+  interface MaturityBondHolding {
+    entity: AccountEntity;
+    bank: AccountBank;
+    value: number;
+  }
+  interface MaturityBond {
+    name: string;
+    maturityDate: string;
+    daysToMaturity: number;
+    totalValue: number;
+    holdings: MaturityBondHolding[];
+  }
+
+  const maturingBonds = useMemo<MaturityBond[]>(() => {
+    // Filter Fixed Income assets with maturity within 365 days
+    const maturingAssets = assets.filter(asset => {
+      if (asset.class !== 'Fixed Income') return false;
+      const days = calculateDaysToMaturity(asset.maturity_date);
+      return days !== null && days >= 0 && days <= 365;
+    });
+
+    // Group by bond name
+    const grouped = new Map<string, {
+      maturityDate: string;
+      daysToMaturity: number;
+      totalValue: number;
+      holdings: MaturityBondHolding[];
+    }>();
+
+    maturingAssets.forEach(asset => {
+      const calc = calculations.get(asset.id);
+      const value = calc?.display_value || 0;
+      const days = calculateDaysToMaturity(asset.maturity_date) || 0;
+
+      const existing = grouped.get(asset.name);
+      if (existing) {
+        existing.totalValue += value;
+        existing.holdings.push({
+          entity: asset.account_entity,
+          bank: asset.account_bank,
+          value,
+        });
+        // Use the soonest maturity date for the group
+        if (days < existing.daysToMaturity) {
+          existing.maturityDate = asset.maturity_date || '';
+          existing.daysToMaturity = days;
+        }
+      } else {
+        grouped.set(asset.name, {
+          maturityDate: asset.maturity_date || '',
+          daysToMaturity: days,
+          totalValue: value,
+          holdings: [{
+            entity: asset.account_entity,
+            bank: asset.account_bank,
+            value,
+          }],
+        });
+      }
+    });
+
+    // Convert to array and sort by days to maturity (ascending)
+    return Array.from(grouped.entries())
+      .map(([name, data]) => ({
+        name,
+        ...data,
+      }))
+      .sort((a, b) => a.daysToMaturity - b.daysToMaturity);
+  }, [assets, calculations]);
+
+  // Helper function to get color class for days to maturity
+  const getDaysToMaturityColor = (days: number): string => {
+    if (days <= 14) return 'text-red-500 font-semibold';
+    if (days <= 60) return 'text-yellow-500 font-semibold';
+    return '';
   };
 
   // Custom Legend Component
@@ -1047,6 +1145,99 @@ export function PortfolioSummary({ assets, viewCurrency, fxRates, onCreateAssetF
               </CardContent>
             </Card>
           </div>
+
+          {/* Upcoming Maturities Table */}
+          {maturingBonds.length > 0 && (
+            <Card className="bg-gradient-to-br from-card to-muted/20 shadow-card border-border/50 mt-6">
+              <CardHeader className="py-3 px-4 md:py-4 md:px-6">
+                <CardTitle className="text-lg font-bold text-financial-primary">
+                  Upcoming Maturities (Next 365 Days)
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {maturingBonds.length} bond{maturingBonds.length !== 1 ? 's' : ''} maturing
+                </p>
+              </CardHeader>
+              <CardContent className="py-3 px-4 md:py-4 md:px-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8"></TableHead>
+                      <TableHead>Bond Name</TableHead>
+                      <TableHead>Maturity Date</TableHead>
+                      <TableHead className="text-right">Days</TableHead>
+                      <TableHead className="text-right">Total Value</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {maturingBonds.map((bond) => {
+                      const isExpanded = expandedBonds.has(bond.name);
+                      const hasMultipleHoldings = bond.holdings.length > 1;
+                      
+                      return (
+                        <Collapsible key={bond.name} open={isExpanded} onOpenChange={() => toggleBondExpanded(bond.name)} asChild>
+                          <>
+                            <TableRow className={hasMultipleHoldings ? 'cursor-pointer hover:bg-muted/50' : ''}>
+                              <TableCell className="w-8">
+                                {hasMultipleHoldings && (
+                                  <CollapsibleTrigger asChild>
+                                    <button className="p-1 hover:bg-muted rounded">
+                                      {isExpanded ? (
+                                        <ChevronDown className="h-4 w-4" />
+                                      ) : (
+                                        <ChevronRight className="h-4 w-4" />
+                                      )}
+                                    </button>
+                                  </CollapsibleTrigger>
+                                )}
+                              </TableCell>
+                              <TableCell className="font-medium">
+                                {hasMultipleHoldings ? (
+                                  <CollapsibleTrigger className="hover:underline text-left">
+                                    {bond.name}
+                                  </CollapsibleTrigger>
+                                ) : (
+                                  bond.name
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {bond.maturityDate && format(parseISO(bond.maturityDate), 'MMM dd, yyyy')}
+                              </TableCell>
+                              <TableCell className={`text-right ${getDaysToMaturityColor(bond.daysToMaturity)}`}>
+                                {bond.daysToMaturity}
+                              </TableCell>
+                              <TableCell className="text-right font-mono">
+                                {formatCurrency(bond.totalValue, viewCurrency)}
+                              </TableCell>
+                            </TableRow>
+                            
+                            {hasMultipleHoldings && (
+                              <CollapsibleContent asChild>
+                                <>
+                                  {bond.holdings.map((holding, idx) => (
+                                    <TableRow key={`${bond.name}-${idx}`} className="bg-muted/30">
+                                      <TableCell></TableCell>
+                                      <TableCell className="pl-8 text-sm text-muted-foreground">
+                                        {holding.entity} • {holding.bank}
+                                      </TableCell>
+                                      <TableCell></TableCell>
+                                      <TableCell></TableCell>
+                                      <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                                        {formatCurrency(holding.value, viewCurrency)}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </>
+                              </CollapsibleContent>
+                            )}
+                          </>
+                        </Collapsible>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
