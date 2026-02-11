@@ -374,16 +374,12 @@ export function PortfolioDashboard() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              <div className="lg:col-span-1">
-                <AccountUpdateTracker 
-                  assets={assets} 
-                  onAccountClick={handleAccountClick}
-                />
-              </div>
-              <div className="lg:col-span-3">
-              <AssetTable
-                assets={filteredAssets}
+            <AccountUpdateTracker 
+              assets={assets} 
+              onAccountClick={handleAccountClick}
+            />
+            <AssetTable
+              assets={filteredAssets}
               viewCurrency={viewCurrency}
               fxRates={fxRates}
               filters={filters}
@@ -394,8 +390,6 @@ export function PortfolioDashboard() {
               onDuplicateAsset={handleDuplicateAsset}
               onAddAsset={handleAddAsset}
             />
-              </div>
-            </div>
           </TabsContent>
 
           <TabsContent value="summary" className="space-y-6">
