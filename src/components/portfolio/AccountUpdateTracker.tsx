@@ -114,13 +114,13 @@ export const AccountUpdateTracker = ({ assets, onAccountClick }: AccountUpdateTr
             return (
               <Badge
                 key={entity}
-                variant="outline"
+                variant={isExpanded ? "default" : "outline"}
                 className={`cursor-pointer select-none gap-1.5 px-3 py-1 text-sm transition-colors ${
-                  isExpanded ? 'bg-muted' : 'hover:bg-muted/50'
+                  isExpanded ? 'bg-financial-primary text-white' : 'hover:bg-muted/50'
                 }`}
                 onClick={() => toggleEntity(entity)}
               >
-                <span className={`text-xs ${entityStatusColor}`}>●</span>
+                <span className={`text-xs ${isExpanded ? 'text-white' : entityStatusColor}`}>●</span>
                 {entity}
               </Badge>
             );
