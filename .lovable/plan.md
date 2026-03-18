@@ -1,69 +1,28 @@
 
 
-## Redesign Account Update Tracker as Full-Width Horizontal Bar
+## Set Up Daily FX Rate Cron Job
 
-### Problem
-The Account Update Tracker currently sits in a 1/4-width sidebar (`lg:grid-cols-4` with `lg:col-span-1`), squeezing the Assets table into 3/4 width and forcing horizontal scrolling.
+The stock price cron job already exists and runs at `0 6 * * *` (6:00 AM UTC daily). I'll add an identical cron job for FX rates.
 
-### Solution
-Move the tracker above the table at full width, redesigning it as a compact horizontal card where each entity is displayed as an inline expandable column/chip.
+### What I'll Do
 
-### New Layout
+Run this SQL via the Supabase SQL tools to schedule the FX rate update:
 
-```text
-Before:
-+------------------+----------------------------------------------+
-| Account Tracker  |                                              |
-| (1/4 width)      |          Assets Table (3/4 width)            |
-|  Entity A        |          (needs horizontal scroll)           |
-|    - Bank 1      |                                              |
-|    - Bank 2      |                                              |
-|  Entity B        |                                              |
-|    - Bank 3      |                                              |
-+------------------+----------------------------------------------+
-
-After:
-+---------------------------------------------------------------------+
-| Account Update Tracker                                          [3] |
-| [Entity A *] [Entity B *] [Entity C *]  (clickable chips)          |
-|  v Entity A expanded:  Bank1 - Jan 15 [Mark] | Bank2 - Feb 01 [Mark]|
-+---------------------------------------------------------------------+
-|                                                                     |
-|              Assets Table (FULL WIDTH - no scroll)                  |
-|                                                                     |
-+---------------------------------------------------------------------+
+```sql
+SELECT cron.schedule(
+  'daily-fx-rate-update',
+  '0 6 * * *',
+  $$
+  SELECT net.http_post(
+    url := 'https://ntvpatckjaqkfozizszm.supabase.co/functions/v1/update-fx-rates',
+    headers := '{"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im50dnBhdGNramFxa2Zveml6c3ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5NDM5MDQsImV4cCI6MjA3MTUxOTkwNH0.r-EU8bZsnDIMDOoZMKZAm8B5feDcxAYSM1yMvjAbnw8"}'::jsonb,
+    body := '{}'::jsonb
+  );
+  $$
+);
 ```
 
-### Design Details
+This mirrors the existing stock price cron job pattern exactly. Both will run daily at 6:00 AM UTC.
 
-Each entity becomes a horizontal chip/badge showing:
-- Entity name + status dot (worst color of its banks)
-- Clicking a chip expands a row below showing that entity's banks in a horizontal flow
-- Banks display inline: `BankName - LastUpdated [Mark Updated]`
-- Multiple entities can be expanded simultaneously
-- "Mark All" button appears next to the entity name when expanded
+No code changes needed — just the cron job registration.
 
-### Technical Changes
-
-**File 1: `src/components/portfolio/PortfolioDashboard.tsx`**
-- Remove the `grid grid-cols-1 lg:grid-cols-4` wrapper
-- Place `AccountUpdateTracker` above `AssetTable` at full width (stacked vertically)
-- `AssetTable` gets full width with no grid constraint
-
-**File 2: `src/components/portfolio/AccountUpdateTracker.tsx`**
-- Replace the vertical collapsible list layout with a horizontal design:
-  - Card header stays compact (single row with title + count badge)
-  - Entity list becomes a horizontal flex row of clickable chips/badges
-  - Each chip shows: entity name + colored status dot
-  - Expanded content appears below the chips row as a horizontal flow of bank items
-  - Bank items laid out with `flex-wrap` so they flow naturally across the full width
-  - Each bank item: `BankName - Date [Mark Updated]` in a compact inline format
-  - "Mark All for Entity" button moves inline next to the entity name in the expanded section
-  - Confirmation dialogs remain unchanged
-
-### Visual Spec
-
-- Chips: Use existing `Badge` component with `variant="outline"`, add status dot, cursor-pointer
-- Active/expanded chip: slightly different background (`bg-muted`)
-- Expanded bank row: light border-top, `flex flex-wrap gap-3`, compact items
-- Each bank item: small text, status-colored date, small "Mark Updated" button
